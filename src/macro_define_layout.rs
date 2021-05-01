@@ -1,6 +1,7 @@
 // TODO Document.
 // - Also document the View class that gets generated. Since they probably don't see the rustdoc for it in the package_view crate, let's also add its documentation to the define_layout! documentation
 // - Document different styles of storage: &[u8], &mut [u8], Vec<u8>
+// - warn against reserved names: "into_", "_mut", "storage"
 #[macro_export]
 macro_rules! define_layout {
     ($name: ident, $endianness: ident, {$($field_name: ident : $field_type: ty),* $(,)?}) => {
@@ -17,6 +18,10 @@ macro_rules! define_layout {
             impl <S> View<S> {
                 pub fn new(storage: S) -> Self {
                     Self {storage}
+                }
+
+                pub fn into_storage(self) -> S {
+                    self.storage
                 }
 
                 $crate::define_layout!(_impl_view_into {$($field_name),*});
@@ -90,12 +95,21 @@ mod tests {
         define_layout!(sliceonly, LittleEndian, { field: [u8] });
 
         #[test]
-        fn fields() {
+        fn metadata() {
             assert_eq!(0, sliceonly::field::OFFSET);
+        }
+
+        #[test]
+        fn fields() {
             let mut storage = data_region(1024, 5);
+
+            // Test initial data is read correctly
             assert_eq!(&data_region(1024, 5), sliceonly::field::data(&storage));
 
+            // Test data can be written
             sliceonly::field::data_mut(&mut storage).copy_from_slice(&data_region(1024, 6));
+
+            // Test reading will return changed data
             assert_eq!(&data_region(1024, 6), sliceonly::field::data(&storage));
         }
 
@@ -103,31 +117,69 @@ mod tests {
         fn view_readonly() {
             let storage = data_region(1024, 5);
             let view = sliceonly::View::new(&storage);
+
+            // Test initial data is read correctly
             assert_eq!(&data_region(1024, 5), view.field().data());
+
+            // Test into_storage will return correct data
+            let extracted_storage = view.into_storage();
+            assert_eq!(extracted_storage, &storage);
         }
 
         #[test]
         fn view_readwrite() {
             let mut storage = data_region(1024, 5);
             let mut view = sliceonly::View::new(&mut storage);
+
+            // Test initial data is read correctly
             assert_eq!(&data_region(1024, 5), view.field().data());
 
-            assert_eq!(&data_region(1024, 5), view.field().data());
+            // Test data can be written
             view.field_mut()
                 .data_mut()
                 .copy_from_slice(&data_region(1024, 6));
+
+            // Test reading will return changed data
             assert_eq!(&data_region(1024, 6), view.field().data());
+
+            // Test into_storage will return correct data
+            let extracted_storage = view.into_storage().clone();
+            assert_eq!(&storage, &extracted_storage);
+
+            // Test original storage is changed
+            assert_eq!(&data_region(1024, 6), &storage);
         }
 
         #[test]
-        fn view_vec() {
+        fn view_vec_readonly() {
+            let view = sliceonly::View::new(data_region(1024, 5));
+
+            // Test initial data is read correctly
+            assert_eq!(&data_region(1024, 5), view.field().data());
+
+            // Test into_storage will return correct data
+            let storage = view.into_storage();
+            assert_eq!(&data_region(1024, 5), &storage);
+        }
+
+        #[test]
+        fn view_vec_readwrite() {
             let mut view = sliceonly::View::new(data_region(1024, 5));
 
+            // Test initial data is read correctly
             assert_eq!(&data_region(1024, 5), view.field().data());
+
+            // Test data can be written
             view.field_mut()
                 .data_mut()
                 .copy_from_slice(&data_region(1024, 6));
+
+            // Test reading will return changed data
             assert_eq!(&data_region(1024, 6), view.field().data());
+
+            // Test into_storage will return correct data
+            let extracted_storage = view.into_storage();
+            assert_eq!(&data_region(1024, 6), &extracted_storage);
         }
     }
 
@@ -139,30 +191,180 @@ mod tests {
             second: i64,
             third: u16,
         });
-
         #[test]
-        fn fields() {
-            let mut storage = data_region(1024, 5);
-
+        fn metadata() {
             assert_eq!(0, noslice::first::OFFSET);
             assert_eq!(1, noslice::first::SIZE);
             assert_eq!(1, noslice::second::OFFSET);
             assert_eq!(8, noslice::second::SIZE);
             assert_eq!(9, noslice::third::OFFSET);
             assert_eq!(2, noslice::third::SIZE);
+        }
 
+        #[test]
+        fn fields() {
+            let mut storage = data_region(1024, 5);
+
+            // Test initial data is read correctly
+            assert_eq!(
+                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
+                noslice::first::read(&storage)
+            );
+            assert_eq!(
+                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
+                noslice::second::read(&storage)
+            );
+            assert_eq!(
+                u16::from_le_bytes((&data_region(1024, 5)[9..11]).try_into().unwrap()),
+                noslice::third::read(&storage)
+            );
+
+            // Test data can be written
             noslice::first::write(&mut storage, 60);
             noslice::second::write(&mut storage, -100_000_000_000);
             noslice::third::write(&mut storage, 1_000);
 
+            // Test reading will return changed data
             assert_eq!(60, noslice::first::read(&storage));
             assert_eq!(-100_000_000_000, noslice::second::read(&storage));
             assert_eq!(1_000, noslice::third::read(&storage));
         }
 
-        // TODO view_readonly
-        // TODO view_readwrite
-        // TODO view_vec
+        #[test]
+        fn view_readonly() {
+            let storage = data_region(1024, 5);
+            let view = noslice::View::new(&storage);
+
+            // Test initial data is read correctly
+            assert_eq!(
+                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
+                view.first().read()
+            );
+            assert_eq!(
+                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
+                view.second().read()
+            );
+            assert_eq!(
+                u16::from_le_bytes((&data_region(1024, 5)[9..11]).try_into().unwrap()),
+                view.third().read()
+            );
+
+            // Test into_storage will return correct data
+            let extracted_storage = view.into_storage();
+            assert_eq!(extracted_storage, &storage);
+        }
+
+        #[test]
+        fn view_readwrite() {
+            let mut storage = data_region(1024, 5);
+            let mut view = noslice::View::new(&mut storage);
+
+            // Test initial data is read correctly
+            assert_eq!(
+                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
+                view.first().read()
+            );
+            assert_eq!(
+                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
+                view.second().read()
+            );
+            assert_eq!(
+                u16::from_le_bytes((&data_region(1024, 5)[9..11]).try_into().unwrap()),
+                view.third().read()
+            );
+
+            // Test data can be written
+            view.first_mut().write(50);
+            view.second_mut().write(10i64.pow(15));
+            view.third_mut().write(1000);
+
+            // Test reading will return changed data
+            assert_eq!(50, view.first().read());
+            assert_eq!(10i64.pow(15), view.second().read());
+            assert_eq!(1000, view.third().read());
+
+            // Test into_storage will return correct data
+            let extracted_storage = view.into_storage().clone();
+            assert_eq!(&storage, &extracted_storage);
+
+            // Test original storage is actually changed
+            assert_eq!(50, i8::from_le_bytes((&storage[0..1]).try_into().unwrap()));
+            assert_eq!(
+                10i64.pow(15),
+                i64::from_le_bytes((&storage[1..9]).try_into().unwrap())
+            );
+            assert_eq!(
+                1000,
+                u16::from_le_bytes((&storage[9..11]).try_into().unwrap())
+            );
+        }
+
+        #[test]
+        fn view_vec_readonly() {
+            let view = noslice::View::new(data_region(1024, 5));
+
+            // Test initial data is read correctly
+            assert_eq!(
+                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
+                view.first().read()
+            );
+            assert_eq!(
+                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
+                view.second().read()
+            );
+            assert_eq!(
+                u16::from_le_bytes((&data_region(1024, 5)[9..11]).try_into().unwrap()),
+                view.third().read()
+            );
+
+            // Test into_storage will return correct data
+            let extracted_storage = view.into_storage();
+            assert_eq!(&data_region(1024, 5), &extracted_storage);
+        }
+
+        #[test]
+        fn view_vec_readwrite() {
+            let mut view = noslice::View::new(data_region(1024, 5));
+
+            // Test initial data is read correctly
+            assert_eq!(
+                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
+                view.first().read()
+            );
+            assert_eq!(
+                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
+                view.second().read()
+            );
+            assert_eq!(
+                u16::from_le_bytes((&data_region(1024, 5)[9..11]).try_into().unwrap()),
+                view.third().read()
+            );
+
+            // Test data can be written
+            view.first_mut().write(50);
+            view.second_mut().write(10i64.pow(15));
+            view.third_mut().write(1000);
+
+            // Test reading will return changed data
+            assert_eq!(50, view.first().read());
+            assert_eq!(10i64.pow(15), view.second().read());
+            assert_eq!(1000, view.third().read());
+
+            // Test into_storage will return correct data
+            let extracted_storage = view.into_storage();
+            assert_eq!(
+                50,
+                i8::from_le_bytes((&extracted_storage[0..1]).try_into().unwrap())
+            );
+            assert_eq!(
+                10i64.pow(15),
+                i64::from_le_bytes((&extracted_storage[1..9]).try_into().unwrap())
+            );
+            assert_eq!(
+                1000,
+                u16::from_le_bytes((&extracted_storage[9..11]).try_into().unwrap())
+            );
+        }
     }
 
     mod withslice {
@@ -176,9 +378,7 @@ mod tests {
         });
 
         #[test]
-        fn fields() {
-            let mut storage = data_region(1024, 5);
-
+        fn metadata() {
             assert_eq!(0, withslice::first::OFFSET);
             assert_eq!(1, withslice::first::SIZE);
             assert_eq!(1, withslice::second::OFFSET);
@@ -188,17 +388,26 @@ mod tests {
             assert_eq!(14, withslice::fourth::OFFSET);
             assert_eq!(2, withslice::fourth::SIZE);
             assert_eq!(16, withslice::fifth::OFFSET);
+        }
+
+        #[test]
+        fn fields() {
+            let mut storage = data_region(1024, 5);
+
+            // Test initial data is read correctly
             assert_eq!(5, withslice::third::data(&storage).len());
             assert_eq!(5, withslice::third::data_mut(&mut storage).len());
             assert_eq!(1024 - 16, withslice::fifth::data(&storage).len());
             assert_eq!(1024 - 16, withslice::fifth::data_mut(&mut storage).len());
 
+            // Test data can be written
             withslice::first::write(&mut storage, 60);
             withslice::second::write(&mut storage, -100_000_000_000);
             withslice::third::data_mut(&mut storage).copy_from_slice(&[10, 20, 30, 40, 50]);
             withslice::fourth::write(&mut storage, 1_000);
             withslice::fifth::data_mut(&mut storage).copy_from_slice(&data_region(1024 - 16, 6));
 
+            // Test reading will return changed data
             assert_eq!(60, withslice::first::read(&storage));
             assert_eq!(-100_000_000_000, withslice::second::read(&storage));
             assert_eq!(&[10, 20, 30, 40, 50], withslice::third::data(&storage));
@@ -206,9 +415,169 @@ mod tests {
             assert_eq!(&data_region(1024 - 16, 6), withslice::fifth::data(&storage));
         }
 
-        // TODO view_readonly
-        // TODO view_readwrite
-        // TODO view_vec
+        #[test]
+        fn view_readonly() {
+            let storage = data_region(1024, 5);
+            let view = withslice::View::new(&storage);
+
+            // Test initial data is read correctly
+            assert_eq!(
+                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
+                view.first().read()
+            );
+            assert_eq!(
+                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
+                view.second().read()
+            );
+            assert_eq!(&data_region(1024, 5)[9..14], view.third().data(),);
+            assert_eq!(
+                u16::from_le_bytes((&data_region(1024, 5)[14..16]).try_into().unwrap()),
+                view.fourth().read()
+            );
+            assert_eq!(&data_region(1024, 5)[16..], view.fifth().data());
+
+            // Test into_storage will return correct data
+            let extracted_storage = view.into_storage();
+            assert_eq!(&storage, extracted_storage);
+        }
+
+        #[test]
+        fn view_readwrite() {
+            let mut storage = data_region(1024, 5);
+            let mut view = withslice::View::new(&mut storage);
+
+            // Test initial data is read correctly
+            assert_eq!(
+                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
+                view.first().read()
+            );
+            assert_eq!(
+                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
+                view.second().read()
+            );
+            assert_eq!(&data_region(1024, 5)[9..14], view.third().data(),);
+            assert_eq!(
+                u16::from_le_bytes((&data_region(1024, 5)[14..16]).try_into().unwrap()),
+                view.fourth().read()
+            );
+            assert_eq!(&data_region(1024, 5)[16..], view.fifth().data());
+
+            // Test data can be written
+            view.first_mut().write(50);
+            view.second_mut().write(10i64.pow(15));
+            view.third_mut()
+                .data_mut()
+                .copy_from_slice(&[10, 20, 30, 40, 50]);
+            view.fourth_mut().write(1000);
+            view.fifth_mut()
+                .data_mut()
+                .copy_from_slice(&data_region(1024, 6)[16..]);
+
+            // Test reading will return changed data
+            assert_eq!(50, view.first().read());
+            assert_eq!(10i64.pow(15), view.second().read());
+            assert_eq!(&[10, 20, 30, 40, 50], view.third().data());
+            assert_eq!(1000, view.fourth().read());
+            assert_eq!(&data_region(1024, 6)[16..], view.fifth().data());
+
+            // Test into_storage will return correct data
+            let extracted_storage = view.into_storage().clone();
+            assert_eq!(&storage, &extracted_storage);
+
+            // Test storage is actually changed
+            assert_eq!(50, i8::from_le_bytes((&storage[0..1]).try_into().unwrap()));
+            assert_eq!(
+                10i64.pow(15),
+                i64::from_le_bytes((&storage[1..9]).try_into().unwrap())
+            );
+            assert_eq!(&[10, 20, 30, 40, 50], &storage[9..14]);
+            assert_eq!(
+                1000,
+                u16::from_le_bytes((&storage[14..16]).try_into().unwrap())
+            );
+            assert_eq!(&data_region(1024, 6)[16..], &storage[16..]);
+        }
+
+        #[test]
+        fn view_vec_readonly() {
+            let view = withslice::View::new(data_region(1024, 5));
+
+            // Test initial data is read correctly
+            assert_eq!(
+                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
+                view.first().read()
+            );
+            assert_eq!(
+                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
+                view.second().read()
+            );
+            assert_eq!(&data_region(1024, 5)[9..14], view.third().data(),);
+            assert_eq!(
+                u16::from_le_bytes((&data_region(1024, 5)[14..16]).try_into().unwrap()),
+                view.fourth().read()
+            );
+            assert_eq!(&data_region(1024, 5)[16..], view.fifth().data());
+
+            // Test into_storage will return correct data
+            let extracted_storage = view.into_storage();
+            assert_eq!(&data_region(1024, 5), &extracted_storage);
+        }
+
+        #[test]
+        fn view_vec_readwrite() {
+            let mut view = withslice::View::new(data_region(1024, 5));
+
+            // Test initial data is read correctly
+            assert_eq!(
+                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
+                view.first().read()
+            );
+            assert_eq!(
+                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
+                view.second().read()
+            );
+            assert_eq!(&data_region(1024, 5)[9..14], view.third().data(),);
+            assert_eq!(
+                u16::from_le_bytes((&data_region(1024, 5)[14..16]).try_into().unwrap()),
+                view.fourth().read()
+            );
+            assert_eq!(&data_region(1024, 5)[16..], view.fifth().data());
+
+            // Test data can be written
+            view.first_mut().write(50);
+            view.second_mut().write(10i64.pow(15));
+            view.third_mut()
+                .data_mut()
+                .copy_from_slice(&[10, 20, 30, 40, 50]);
+            view.fourth_mut().write(1000);
+            view.fifth_mut()
+                .data_mut()
+                .copy_from_slice(&data_region(1024, 6)[16..]);
+
+            // Test reading will return changed data
+            assert_eq!(50, view.first().read());
+            assert_eq!(10i64.pow(15), view.second().read());
+            assert_eq!(&[10, 20, 30, 40, 50], view.third().data());
+            assert_eq!(1000, view.fourth().read());
+            assert_eq!(&data_region(1024, 6)[16..], view.fifth().data());
+
+            // Test into_storage will return correct data
+            let extracted_storage = view.into_storage();
+            assert_eq!(
+                50,
+                i8::from_le_bytes((&extracted_storage[0..1]).try_into().unwrap())
+            );
+            assert_eq!(
+                10i64.pow(15),
+                i64::from_le_bytes((&extracted_storage[1..9]).try_into().unwrap())
+            );
+            assert_eq!(&[10, 20, 30, 40, 50], &extracted_storage[9..14]);
+            assert_eq!(
+                1000,
+                u16::from_le_bytes((&extracted_storage[14..16]).try_into().unwrap())
+            );
+            assert_eq!(&data_region(1024, 6)[16..], &extracted_storage[16..]);
+        }
     }
 
     #[test]
@@ -371,7 +740,17 @@ mod tests {
         );
     }
 
-    // TODO Test View
-    //   - based on &[u8], &mut [u8], Vec<u8> storage
-    // TODO Test that there can be multiple views if they're readonly
+    #[test]
+    fn there_can_be_multiple_views_if_readonly() {
+        define_layout!(my_layout, BigEndian, {
+            field1: u16,
+            field2: i64,
+        });
+
+        let storage = data_region(1024, 0);
+        let view1 = my_layout::View::new(&storage);
+        let view2 = my_layout::View::new(&storage);
+        view1.field1().read();
+        view2.field1().read();
+    }
 }

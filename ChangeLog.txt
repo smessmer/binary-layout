@@ -2,6 +2,8 @@
 ------
 - Improve README.md
 - Fix documentation
+- More unit tests
+- Add View::into_storage()
 
 0.2.0
 ------
