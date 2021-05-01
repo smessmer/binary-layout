@@ -23,4 +23,7 @@ sed -i 's|\[\([a-zA-Z_]\+\)!\]\([^(]\)|[\1!](https://docs.rs/binary-layout/lates
 # Replace [MyStructName::my_method_name] with [MyStructName::my_method_name](https://docs.rs/binary-layout/latest/binary_layout/struct.MyStructName.html#method.my_method_name)
 sed -i 's|\[\([a-zA-Z_]\+\)::\([a-zA-Z_]\+\)\]\([^(]\)|[\1::\2](https://docs.rs/binary-layout/latest/binary_layout/struct.\1.html#method.\2)\3|g' README.md
 
+# Replace [...](crate::example::icmp_packet) with [...](https://docs.rs/binary-layout/latest/binary_layout/example/icmp_packet/index.html)
+sed -i 's|\[\([a-zA-Z_]\+\)\](crate::example::icmp_packet)|[\1](https://docs.rs/binary-layout/latest/binary_layout/example/icmp_packet/index.html)|g' README.md
+
 echo Success

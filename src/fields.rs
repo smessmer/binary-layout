@@ -1,9 +1,11 @@
 use std::convert::TryFrom;
 use std::marker::PhantomData;
 
-// TODO With const_evaluatable_checked, FieldSize and Field could be merged by adding a size() function to Field,
-// but we'd need https://github.com/rust-lang/rust/issues/76560 first.
+/// This is an internal type that only exists because [const_evaluatable_checked](https://github.com/rust-lang/rust/issues/76560) isn't stabilized yet.
+/// TODO Once [const_evaluatable_checked](https://github.com/rust-lang/rust/issues/76560) is stabilized, we should delete this and
+/// instead add a SIZE constant to [Field].
 pub trait FieldSize {
+    /// Returns the size the data type would occupy in a layout.
     const SIZE: usize;
 }
 

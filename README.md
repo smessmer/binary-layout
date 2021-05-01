@@ -49,13 +49,15 @@ fn func(packet_data: &mut [u8]) {
 }
 ```
 
+See the [icmp_packet](https://docs.rs/binary-layout/latest/binary_layout/example/icmp_packet/index.html) module for what this [define_layout!](https://docs.rs/binary-layout/latest/binary_layout/macro.define_layout.html) macro generates for you.
+
 ## What to use this library for?
 Anything that needs inplace zero-copy access to structured binary data.
 - Network packets are an obvious example
 - File system inodes
 - Structured binary data in files if you want to avoid explicit (de)serialization, possibly in combination with [memmap](https://docs.rs/memmap).
 
-## Why use this library?
+### Why use this library?
 - Inplace, zero-copy, type-safe access to your data.
 - Data layout is defined in one central place, call sites can't accidentally use wrong field offsets.
 - Convenient and simple macro DSL to define layouts.
@@ -64,18 +66,19 @@ Anything that needs inplace zero-copy access to structured binary data.
 - Const generics make sure that all offset calculations happen at compile time and will not have a runtime overhead.
 - Comprehensive test coverage.
 
-## Why not `#[repr(packed)]`?
+### Why not `#[repr(packed)]`?
 Annotating structs with `#[repr(packed)]` gives some of the features of this crate, namely it lays out the data fields exactly in the order they're specified
 without padding. But it has serious shortcomings that this library solves.
 - `#[repr(packed)]` uses the system byte order, which will be different depending on if you're running on a little endian or big endian system. `#[repr(packed)]` is not cross-platform compatible. This library is.
 - `#[repr(packed)]` [can cause undefined behavior on some CPUs when taking references to unaligned data](https://doc.rust-lang.org/nomicon/other-reprs.html#reprpacked).
    This library avoids that by not offering any API that takes references to unaligned data. The only data type you can get a reference to is byte arrays, and they only require an alignment of 1 which is trivially always fulfilled.
 
-## When not to use this library?
-- You need dynamic data structures, e.g. a list that can change size. This library only supports static data layouts.
-- Not all of your data fits into the memory and you need to process streams of data.
+### When not to use this library?
+- You need dynamic data structures, e.g. a list that can change size. This library only supports static data layouts (with the exception of open ended byte arrays at the end of a layout).
+- Not all of your layout fits into the memory and you need to process streams of data.
+  Note that this crate can still be helpful if you have smaller layouted packages as part of a larger stream, as long as any one layouted packet fits into memory.
 
-## Alternatives
+### Alternatives
 To the best of my knowledge, there is no other library offering inplace, zero-copy and type-safe access to structured binary data.
 But if you don't need direct access to your data and are ok with a serialization/deserialization step, then there is a number of amazing libraries out there.
 - [Nom](https://crates.io/crates/nom) is a great crate for all your parsing needs. It can for example parse binary data and put them in your custom structs.
@@ -87,17 +90,17 @@ Layouts are defined using the [define_layout!](https://docs.rs/binary-layout/lat
    This is not the API used in the example above, see [Field](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html) for an API example.
 2. The [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API that wraps a slice of storage data and remembers it in a `View` object, allowing access to the fields without having to pass in the packed data slice each time. This is the API used in the example above. See [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) for another example.
 
-## Supported field types
-### Primitive integer types
+### Supported field types
+#### Primitive integer types
 - [u8](https://doc.rust-lang.org/stable/std/primitive.u8.html), [u16](https://doc.rust-lang.org/stable/std/primitive.u16.html), [u32](https://doc.rust-lang.org/stable/std/primitive.u32.html), [u64](https://doc.rust-lang.org/stable/std/primitive.u64.html)
 - [i8](https://doc.rust-lang.org/stable/std/primitive.i8.html), [i16](https://doc.rust-lang.org/stable/std/primitive.i16.html), [i32](https://doc.rust-lang.org/stable/std/primitive.i32.html), [i64](https://doc.rust-lang.org/stable/std/primitive.i64.html)
 
 For these fields, the [Field](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html) API offers [Field::read](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html#method.read), [Field::write](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html#method.write) and the [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API offers [FieldView::read](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.read) and [FieldView::write](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.write).
 
-### Fixed size byte arrays: `[u8; N]`.
+#### Fixed size byte arrays: `[u8; N]`.
 For these fields, the [Field](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html) API offers [Field::data](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html#method.data), [Field::data_mut](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html#method.data_mut), and the [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API offers [FieldView::data](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.data) and [FieldView::data_mut](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.data_mut).
 
-### Open ended byte arrays: `[u8]`.
+#### Open ended byte arrays: `[u8]`.
 This field type can only occur as the last field of a layout and will mach the remaining data until the end of the storage.
 This field has a dynamic size, depending on how large the package data is.
 For these fields, the [Field](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html) API offers [Field::data](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html#method.data), [Field::data_mut](Field::data_mut) and the [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API offers [FieldView::data](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.data), [FieldView::data_mut](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.data_mut) and [FieldView::extract](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.extract).
@@ -107,7 +110,7 @@ These data types aren't supported yet, but they could be added in theory and mig
 - [bool](https://doc.rust-lang.org/stable/std/primitive.bool.html) stored as 1 byte
 - [bool](https://doc.rust-lang.org/stable/std/primitive.bool.html) stored as 1 bit
 
-### Data types with dynamic length
+#### Data types with dynamic length
 This crate relies on a static layout, it cannot support data types with dynamic length.
 In theory, types with dynamic length could be supported if they either
 - are the last field of a layout, an already implemented example of this are open ended byte arrays.
@@ -116,11 +119,11 @@ In theory, types with dynamic length could be supported if they either
 
 Both of these, however, would be some effort to implement and it is unclear if that will ever happen (unless somebody opens a PR for it).
 
-### Strings
+#### Strings
 For strings, note that even fixed-size UTF-8 strings take a variable number of characters because of the UTF-8 encoding and that brings all the issues of data types with dynamic length with it.
 This is why strings aren't supported yet.
 
-### Fixed-size arrays other than `[u8; N]`
+#### Fixed-size arrays other than `[u8; N]`
 Say we wanted to have a `[u32; N]` field. The API couldn't just return a zero-copy `&[u32; N]` to the caller because that would use the system byte order (i.e. endianness) which might be different from the byte order defined in the package layout.
 To make this cross-platform compatible, we'd have to wrap these slices into our own slice type that enforces the correct byte order and return that from the API.
 This complexity is why it wasn't implemented yet, but feel free to open a PR if you need this.
