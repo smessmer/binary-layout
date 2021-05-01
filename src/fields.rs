@@ -47,11 +47,9 @@ pub trait FieldMetadata {
     ///   field3: u8,
     /// });
     ///
-    /// fn main() {
-    ///     assert_eq!(0, my_layout::field1::OFFSET);
-    ///     assert_eq!(2, my_layout::field2::OFFSET);
-    ///     assert_eq!(6, my_layout::field3::OFFSET);
-    /// }
+    /// assert_eq!(0, my_layout::field1::OFFSET);
+    /// assert_eq!(2, my_layout::field2::OFFSET);
+    /// assert_eq!(6, my_layout::field3::OFFSET);
     /// ```
     const OFFSET: usize;
 }
@@ -74,11 +72,9 @@ pub trait SizedFieldMetadata {
     ///   field3: u8,
     /// });
     ///
-    /// fn main() {
-    ///     assert_eq!(2, my_layout::field1::SIZE);
-    ///     assert_eq!(4, my_layout::field2::SIZE);
-    ///     assert_eq!(1, my_layout::field3::SIZE);
-    /// }
+    /// assert_eq!(2, my_layout::field1::SIZE);
+    /// assert_eq!(4, my_layout::field2::SIZE);
+    /// assert_eq!(1, my_layout::field3::SIZE);
     /// ```
     const SIZE: usize;
 }
@@ -388,7 +384,7 @@ impl<E: Endianness, const OFFSET_: usize> Field<[u8], E, OFFSET_> {
         "},
         #[allow(dead_code)]
         pub fn data(storage: &[u8]) -> &[u8] {
-            &storage.as_ref()[Self::OFFSET..]
+            &storage[Self::OFFSET..]
         }
     }
 }
@@ -417,7 +413,7 @@ impl<E: Endianness, const OFFSET_: usize> Field<[u8], E, OFFSET_> {
         "},
         #[allow(dead_code)]
         pub fn data_mut(storage: &mut [u8]) -> &mut [u8] {
-            &mut storage.as_mut()[Self::OFFSET..]
+            &mut storage[Self::OFFSET..]
         }
     }
 }
@@ -588,7 +584,7 @@ impl<E: Endianness, const N: usize, const OFFSET_: usize> Field<[u8; N], E, OFFS
         "},
         #[allow(dead_code)]
         pub fn data(storage: &[u8]) -> &[u8; N] {
-            <&[u8; N]>::try_from(&storage.as_ref()[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
+            <&[u8; N]>::try_from(&storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
         }
     }
 }
@@ -618,7 +614,7 @@ impl<E: Endianness, const N: usize, const OFFSET_: usize> Field<[u8; N], E, OFFS
         "},
         #[allow(dead_code)]
         pub fn data_mut(storage: &mut [u8]) -> &mut [u8; N] {
-            <&mut [u8; N]>::try_from(&mut storage.as_mut()[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
+            <&mut [u8; N]>::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
         }
     }
 }
@@ -815,7 +811,7 @@ mod tests {
         );
 
         assert_eq!(10i32.pow(8), Field1::read(&storage));
-        assert_eq!(-10i32.pow(7), Field2::read(&storage));
+        assert_eq!(-(10i32.pow(7)), Field2::read(&storage));
 
         assert_eq!(4, Field::<i32, LittleEndian, 5>::SIZE);
         assert_eq!(4, Field::<i32, LittleEndian, 5>::SIZE);
@@ -841,7 +837,7 @@ mod tests {
         );
 
         assert_eq!(10i32.pow(8), Field1::read(&storage));
-        assert_eq!(-10i32.pow(7), Field2::read(&storage));
+        assert_eq!(-(10i32.pow(7)), Field2::read(&storage));
 
         assert_eq!(4, Field::<i32, BigEndian, 5>::SIZE);
         assert_eq!(4, Field::<i32, BigEndian, 5>::SIZE);
@@ -867,7 +863,7 @@ mod tests {
         );
 
         assert_eq!(10i64.pow(15), Field1::read(&storage));
-        assert_eq!(-10i64.pow(14), Field2::read(&storage));
+        assert_eq!(-(10i64.pow(14)), Field2::read(&storage));
 
         assert_eq!(8, Field::<i64, LittleEndian, 5>::SIZE);
         assert_eq!(8, Field::<i64, LittleEndian, 5>::SIZE);
@@ -893,7 +889,7 @@ mod tests {
         );
 
         assert_eq!(10i64.pow(15), Field1::read(&storage));
-        assert_eq!(-10i64.pow(14), Field2::read(&storage));
+        assert_eq!(-(10i64.pow(14)), Field2::read(&storage));
 
         assert_eq!(8, Field::<i64, BigEndian, 5>::SIZE);
         assert_eq!(8, Field::<i64, BigEndian, 5>::SIZE);
