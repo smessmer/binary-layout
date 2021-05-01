@@ -116,6 +116,8 @@
 //! To make this cross-platform compatible, we'd have to wrap these slices into our own slice type that enforces the correct byte order and return that from the API.
 //! This complexity is why it wasn't implemented yet, but feel free to open a PR if you need this.
 
+#![forbid(unsafe_code)]
+
 mod fields;
 mod macro_define_layout;
 
