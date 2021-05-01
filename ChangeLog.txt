@@ -1,6 +1,7 @@
 0.3.0
 ------
 - Improve README.md
+- Fix documentation
 
 0.2.0
 ------

@@ -28,7 +28,7 @@
 //!
 //!   // write some data
 //!   view.checksum_mut().write(10);
-//!   // equivalent: packet_data[2..4].copy_from_slice(&10u16.to_le_bytes());
+//!   // equivalent: packet_data[2..4].copy_from_slice(&10u16.to_be_bytes());
 //!
 //!   // access an open ended byte array
 //!   let data_section: &[u8] = view.data_section().data();
