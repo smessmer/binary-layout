@@ -220,14 +220,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-    - uses: actions-rs/cargo@v1
-      with:
-        command: build
-    - run: cargo install cargo-sync-readme
-    - uses: actions-rs/cargo@v1
-      with:
-        command: sync-readme
-        args: --check
+    - run: cargo install cargo-readme
+    - run: ./gen_readme.sh
+    # Fail job if gen_readme.sh introduced changes. If this fails, then we need to run gen_readme.sh locally and add it to the commit.
+    - run: git diff --exit-code
