@@ -1,11 +1,11 @@
 [![Build Status](https://github.com/smessmer/binary-layout/actions/workflows/ci.yml/badge.svg)](https://github.com/smessmer/binary-layout/actions/workflows/ci.yml)
+[![Latest Version](https://img.shields.io/crates/v/binary-layout.svg)](https://crates.io/crates/binary-layout)
+[![docs.rs](https://docs.rs/binary-layout/badge.svg)](https://docs.rs/binary-layout)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/smessmer/binary-layout/blob/master/LICENSE-MIT)
 [![License](https://img.shields.io/badge/license-APACHE-blue.svg)](https://github.com/smessmer/binary-layout/blob/master/LICENSE-APACHE)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 
 # binary-layout
-
-Current version: 0.2.0
 
 The [binary-layout](https://crates.io/crates/binary-layout) library allows type-safe, inplace, zero-copy access to structured binary data.
 You define a custom data layout and give it a slice of binary data, and it will allow you to read and
