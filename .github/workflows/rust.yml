@@ -1,0 +1,217 @@
+name: Rust
+
+on:
+  - push
+  - pull_request
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_arm_stable_release:
+    name: Build (ARM, stable, release)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: armv5te-unknown-linux-gnueabi
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --release --target armv5te-unknown-linux-gnueabi
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Executable
+          path: target/armv5te-unknown-linux-gnueabi/release/ev3
+  build_arm_stable_debug:
+    name: Build (ARM, stable, debug)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: armv5te-unknown-linux-gnueabi
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --target armv5te-unknown-linux-gnueabi
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Executable
+          path: target/armv5te-unknown-linux-gnueabi/debug/ev3
+  test_arm_stable_release:
+    name: Test (ARM, stable, release)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: armv5te-unknown-linux-gnueabi
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: test
+          args: --release --all-features --target armv5te-unknown-linux-gnueabi
+  test_arm_stable_debug:
+    name: Test (ARM, stable, debug)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: armv5te-unknown-linux-gnueabi
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: test
+          args: --all-features --target armv5te-unknown-linux-gnueabi
+  test_x64_stable_release:
+    name: Test (x64, stable, release)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --release --all-features
+  test_x64_stable_debug:
+    name: Test (x64, stable, debug)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features
+  build_arm_nightly_release:
+    name: Build (ARM, nightly, release)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          target: armv5te-unknown-linux-gnueabi
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --release --target armv5te-unknown-linux-gnueabi
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Executable
+          path: target/armv5te-unknown-linux-gnueabi/release/ev3
+  build_arm_nightly_debug:
+    name: Build (ARM, nightly, debug)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          target: armv5te-unknown-linux-gnueabi
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --target armv5te-unknown-linux-gnueabi
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Executable
+          path: target/armv5te-unknown-linux-gnueabi/debug/ev3
+  test_arm_nightly_release:
+    name: Test (ARM, nightly, release)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          target: armv5te-unknown-linux-gnueabi
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: test
+          args: --release --all-features --target armv5te-unknown-linux-gnueabi
+  test_arm_nightly_debug:
+    name: Test (ARM, nightly, debug)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          target: armv5te-unknown-linux-gnueabi
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: test
+          args: --all-features --target armv5te-unknown-linux-gnueabi
+  test_x64_nightly_release:
+    name: Test (x64, nightly, release)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --release --all-features
+  test_x64_nightly_debug:
+    name: Test (x64, nightly, debug)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features
+  clippy_check:
+    name: Linter (clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: rustup component add clippy
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features --all-targets -- -D warnings
+  code_format:
+    name: Code Formatter (rustfmt)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+            components: rustfmt
+            override: true
+      - uses: mbrobbel/rustfmt-check@0.3.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

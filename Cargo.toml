@@ -1,0 +1,14 @@
+[package]
+authors = ["Sebastian Messmer <messmer@cryfs.org>"]
+edition = "2018"
+name = "binary-layout"
+version = "0.1.0"
+
+[dependencies]
+doc-comment = "0.3.3"
+paste = "1.0.5"
+
+[dev-dependencies]
+#generic-tests = "^0.1.1"
+#tempdir = "^0.3.7"
+rand = "^0.8.1"
