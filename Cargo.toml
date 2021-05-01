@@ -7,9 +7,10 @@ readme = "README.md"
 documentation = "https://docs.rs/binary-layout"
 homepage = "https://github.com/smessmer/binary-layout"
 repository = "https://github.com/smessmer/binary-layout"
-license = "MIT or Apache-2.0"
+license = "MIT OR Apache-2.0"
 keywords = ["binary", "layout", "data", "structured", "format"]
 categories = ["data-structures", "encoding", "memory-management", "network-programming"]
+description = "The binary-layout library allows type-safe, inplace, zero-copy access to structured binary data. You define a custom data layout and give it a slice of binary data, and it will allow you to read and write the fields defined in the layout from the binary data without having to copy any of the data. It's similar to transmuting to/from a `#[repr(packed)]` struct, but much safer."
 
 [badges]
 github = {repository = "smessmer/binary-layout", workflow = "rust.yml"}
