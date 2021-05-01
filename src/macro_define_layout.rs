@@ -1,7 +1,75 @@
-// TODO Document.
-// - Also document the View class that gets generated. Since they probably don't see the rustdoc for it in the package_view crate, let's also add its documentation to the define_layout! documentation
-// - Document different styles of storage: &[u8], &mut [u8], Vec<u8>
-// - warn against reserved names: "into_", "_mut", "storage"
+/// This macro defines a data layout. Given such a layout, the [Field](crate::Field) or [FieldView](crate::FieldView) APIs can be used to access data based on it.
+///
+/// Data layouts define
+/// - a name for the layout
+/// - and endianness for its fields ([BigEndian](crate::BigEndian) or [LittleEndian](crate::LittleEndian))
+/// - and an ordered collection of typed fields.
+///
+/// See [supported field types](crate#supported-field-types) for a list of supported field types.
+///
+/// # API
+/// ```text
+/// define_layout!(<<Name>>, <<Endianness>>, {
+///   <<FieldName>>: <<FieldType>>,
+///   <<FieldName>>: <<FieldType>>,
+///   ...
+/// });
+/// ```
+///
+/// ## Field names
+/// Field names can be any valid Rust identifiers, but it is recommended to avoid names that contain `storage`, `into_` or `_mut`.
+/// This is because the [define_layout!] macro creates a [View class with several accessors](#struct-view) for each field that contain those identifier parts.
+///
+/// ## Example
+/// ```
+/// use binary_layout::prelude::*;
+///
+/// define_layout!(icmp_packet, BigEndian, {
+///   packet_type: u8,
+///   code: u8,
+///   checksum: u16,
+///   rest_of_header: [u8; 4],
+///   data_section: [u8], // open ended byte array, matches until the end of the packet
+/// });
+/// ```
+///
+/// # Generated code
+/// This macro will define a module for you with several members:
+/// - For each field, there will be a struct containing
+///   - metadata like [OFFSET](crate::FieldMetadata::OFFSET) and [SIZE](crate::SizedFieldMetadata::SIZE) as rust `const`s
+///   - data accessors for the [Field](crate::Field) API
+/// - The module will also contain a `View` struct that offers the [FieldView](crate::FieldView) API.
+///
+/// ## Metadata Example
+/// ```
+/// use binary_layout::prelude::*;
+///
+/// define_layout!(my_layout, LittleEndian, {
+///   field1: u16,
+///   field2: u32,
+/// });
+/// assert_eq!(2, my_layout::field2::OFFSET);
+/// assert_eq!(4, my_layout::field2::SIZE);
+/// ```
+///
+/// ## struct View
+/// You can create views over a storage by calling `View::new`. Views can be created based on
+/// - Immutable borrowed storage: `&[u8]`
+/// - Mutable borrowed storage: `&mut [u8]`
+/// - Owning storage: impl `AsRef<u8>` (for example: `Vec<u8>`)
+///
+/// The generated `View` struct will offer
+/// - `View::new(storage)` to create a `View`
+/// - `View::into_storage(self)` to destroy a `View` and return the storage held
+///
+/// and it will offer the following accessors for each field
+/// - `${field_name}()`: Read access. This returns a [FieldView](crate::FieldView) instance with read access.
+/// - `${field_name}_mut()`: Read access. This returns a [FieldView](crate::FieldView) instance with write access.
+/// - `into_${field_name}`: Extract access. This destroys the `View` and returns a [FieldView](crate::FieldView) instance owning the storage. Mostly useful for [FieldView::extract](crate::FieldView::extract).
+///
+/// // TODO Show an example of using the View API
+/// // TODO Show an example for generated code
+/// // TODO maybe as an actual example crate?
 #[macro_export]
 macro_rules! define_layout {
     ($name: ident, $endianness: ident, {$($field_name: ident : $field_type: ty),* $(,)?}) => {

@@ -1,7 +1,7 @@
 0.3.0
 ------
 - Improve README.md
-- Fix documentation
+- Improve documentation
 - More unit tests
 - Fix clippy lints
 - Add View::into_storage()

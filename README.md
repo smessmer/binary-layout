@@ -25,7 +25,7 @@ define_layout!(icmp_packet, BigEndian, {
   code: u8,
   checksum: u16,
   rest_of_header: [u8; 4],
-  data_section: [u8], // open ended byte array, matches until the end of the package
+  data_section: [u8], // open ended byte array, matches until the end of the packet
 });
 
 fn func(packet_data: &mut [u8]) {
@@ -82,7 +82,7 @@ But if you don't need direct access to your data and are ok with a serialization
 - [Binread](https://crates.io/crates/binread), [Binwrite](https://crates.io/crates/binwrite), [Binrw](https://crates.io/crates/binrw) are great libraries for (de)serializing binary data.
 
 ## APIs
-This library offers two alternative APIs:
+Layouts are defined using the [define_layout!](https://docs.rs/binary-layout/latest/binary_layout/macro.define_layout.html) macro. Based on such a layout, this library offers two alternative APIs for data access:
 1. The [Field](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html) API that offers free functions to read/write the data based on an underlying slice of storage (`packet_data` in the example above) holding the packet data. This API does not wrap the underlying slice of storage data, which means you have to pass it in to each accessor.
    This is not the API used in the example above, see [Field](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html) for an API example.
 2. The [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API that wraps a slice of storage data and remembers it in a `View` object, allowing access to the fields without having to pass in the packed data slice each time. This is the API used in the example above. See [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) for another example.

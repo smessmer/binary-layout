@@ -73,7 +73,7 @@
 //! - [Binread](https://crates.io/crates/binread), [Binwrite](https://crates.io/crates/binwrite), [Binrw](https://crates.io/crates/binrw) are great libraries for (de)serializing binary data.
 //!
 //! # APIs
-//! This library offers two alternative APIs:
+//! Layouts are defined using the [define_layout!] macro. Based on such a layout, this library offers two alternative APIs for data access:
 //! 1. The [Field] API that offers free functions to read/write the data based on an underlying slice of storage (`packet_data` in the example above) holding the packet data. This API does not wrap the underlying slice of storage data, which means you have to pass it in to each accessor.
 //!    This is not the API used in the example above, see [Field] for an API example.
 //! 2. The [FieldView] API that wraps a slice of storage data and remembers it in a `View` object, allowing access to the fields without having to pass in the packed data slice each time. This is the API used in the example above. See [FieldView] for another example.
