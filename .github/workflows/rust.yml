@@ -209,9 +209,25 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
-            toolchain: stable
-            components: rustfmt
-            override: true
+          toolchain: stable
+          components: rustfmt
+          override: true
       - uses: mbrobbel/rustfmt-check@0.3.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+  sync_readme:
+    name: Sync README.md (cargo sync-readme)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+    - uses: actions-rs/cargo@v1
+      with:
+        command: build
+    - run: cargo install cargo-sync-readme
+    - uses: actions-rs/cargo@v1
+      with:
+        command: sync-readme
+        args: --check
