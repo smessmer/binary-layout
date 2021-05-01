@@ -1,4 +1,4 @@
-//! The [binary-layout] library allows type-safe, inplace, zero-copy access to structured binary data.
+//! The [binary-layout](crate) library allows type-safe, inplace, zero-copy access to structured binary data.
 //! You define a custom data layout and give it a slice of binary data, and it will allow you to read and
 //! write the fields defined in the layout from the binary data without having to copy any of the data.
 //! It's similar to transmuting to/from a `#[repr(packed)]` struct, but [much safer](#why-not-reprpacked).
@@ -42,9 +42,9 @@
 //!
 //! # APIs
 //! This library offers two alternative APIs:
-//! 1. The [Field] API that offers free functions to read/write the data based on an underlying slice of storage (`packet_data` in the example above) holding the packet data. This API does not wrap the underlying slice of storage data, which means you have to pass it in to each accessor.
-//!    This is not the API used in the example above, see [Field] for an API example.
-//! 2. The [FieldView] API that wraps a slice of storage data and remembers it in a `View` object, allowing access to the fields without having to pass in the packed data slice each time. This is the API used in the example above. See [FieldView] for another example.
+//! 1. The [Field](binary_layout::Field) API that offers free functions to read/write the data based on an underlying slice of storage (`packet_data` in the example above) holding the packet data. This API does not wrap the underlying slice of storage data, which means you have to pass it in to each accessor.
+//!    This is not the API used in the example above, see [Field](binary_layout::Field) for an API example.
+//! 2. The [FieldView](binary_layout::FieldView) API that wraps a slice of storage data and remembers it in a `View` object, allowing access to the fields without having to pass in the packed data slice each time. This is the API used in the example above. See [FieldView](binary_layout::FieldView) for another example.
 //!
 //! # What to use this library for?
 //! Anything that needs inplace zero-copy access to structured binary data.
@@ -80,23 +80,23 @@
 //!
 //! # Supported field types
 //! ## Primitive integer types
-//! - [u8], [u16], [u32], [u64]
-//! - [i8], [i16], [i32], [i64]
+//! - [u8](::std::primitive.u8), [u16](::std::primitive.u16), [u32](::std::primitive.u32), [u64](::std::primitive.u64)
+//! - [i8](::std::primitive.i8), [i16](::std::primitive.i16), [i32](::std::primitive.i32), [i64](::std::primitive.i64)
 //!
-//! For these fields, the [Field] API offers [Field::read], [Field::write] and the [FieldView] API offers [FieldView::read] and [FieldView::write].
+//! For these fields, the [Field](binary_layout::Field) API offers [Field::read](binary_layout::Field::read), [Field::write](binary_layout::Field::write) and the [FieldView](binary_layout::FieldView) API offers [FieldView::read](binary_layout::FieldView::Read) and [FieldView::write](binary_layout::FieldView::write).
 //!
 //! ## Fixed size byte arrays: `[u8; N]`.
-//! For these fields, the [Field] API offers [Field::data], [Field::data_mut], and the [FieldView] API offers [FieldView::data] and [FieldView::data_mut].
+//! For these fields, the [Field](binary_layout::Field) API offers [Field::data](binary_layout::Field::data), [Field::data_mut](binary_layout::Field::data_mut), and the [FieldView](binary_layout::FieldView) API offers [FieldView::data](binary_layout::FieldView::data) and [FieldView::data_mut](binary_layout::FieldView::data_mut).
 //!
 //! ## Open ended byte arrays: `[u8]`.
 //! This field type can only occur as the last field of a layout and will mach the remaining data until the end of the storage.
 //! This field has a dynamic size, depending on how large the package data is.
-//! For these fields, the [Field] API offers [Field::data], [Field::data_mut] and the [FieldView] API offers [FieldView::data], [FieldView::data_mut] and [FieldView::extract].
+//! For these fields, the [Field](binary_layout::Field) API offers [Field::data](binary_layout::Field::data), [Field::data_mut](binary_layout::Field::data_mut) and the [FieldView](binary_layout::FieldView) API offers [FieldView::data](binary_layout::FieldView::data), [FieldView::data_mut](binary_layout::FieldView::data_mut) and [FieldView::extract](binary_layout::FieldView::extract).
 //!
 //! # Data types maybe supported in the future
 //! These data types aren't supported yet, but they could be added in theory and might be added in future versions.
-//! - [bool] stored as 1 byte
-//! - [bool] stored as 1 bit
+//! - [bool](::std::primitive.bool) stored as 1 byte
+//! - [bool](::std::primitive.bool) stored as 1 bit
 //!
 //! ## Data types with dynamic length
 //! This crate relies on a static layout, it cannot support data types with dynamic length.

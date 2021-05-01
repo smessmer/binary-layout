@@ -68,7 +68,7 @@ macro_rules! define_layout {
 
 #[cfg(test)]
 mod tests {
-    use crate::{BigEndian, FieldMetadata, LittleEndian, SizedFieldMetadata};
+    use crate::{FieldMetadata, SizedFieldMetadata};
 
     use rand::{rngs::StdRng, RngCore, SeedableRng};
     use std::convert::TryInto;
