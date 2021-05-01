@@ -11,6 +11,9 @@ license = "MIT or Apache-2.0"
 keywords = ["binary", "layout", "data", "structured", "format"]
 categories = ["data-structures", "encoding", "memory-management", "network-programming"]
 
+[badges]
+github = {repository = "smessmer/binary-layout", workflow = "rust.yml"}
+
 [dependencies]
 doc-comment = "0.3.3"
 paste = "1.0.5"

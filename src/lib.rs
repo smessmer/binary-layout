@@ -1,4 +1,4 @@
-//! The [binary-layout](crate) library allows type-safe, inplace, zero-copy access to structured binary data.
+//! The [binary-layout](https://crates.io/crates/binary-layout) library allows type-safe, inplace, zero-copy access to structured binary data.
 //! You define a custom data layout and give it a slice of binary data, and it will allow you to read and
 //! write the fields defined in the layout from the binary data without having to copy any of the data.
 //! It's similar to transmuting to/from a `#[repr(packed)]` struct, but [much safer](#why-not-reprpacked).
