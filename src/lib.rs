@@ -16,7 +16,7 @@
 //!   code: u8,
 //!   checksum: u16,
 //!   rest_of_header: [u8; 4],
-//!   data_section: [u8], // open ended byte array, matches until the end of the package
+//!   data_section: [u8], // open ended byte array, matches until the end of the packet
 //! });
 //!
 //! fn func(packet_data: &mut [u8]) {
