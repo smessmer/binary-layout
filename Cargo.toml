@@ -2,7 +2,7 @@
 authors = ["Sebastian Messmer <messmer@cryfs.org>"]
 edition = "2018"
 name = "binary-layout"
-version = "0.2.0"
+version = "0.3.0"
 readme = "README.md"
 documentation = "https://docs.rs/binary-layout"
 homepage = "https://github.com/smessmer/binary-layout"
