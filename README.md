@@ -37,7 +37,7 @@ fn func(packet_data: &mut [u8]) {
 
   // write some data
   view.checksum_mut().write(10);
-  // equivalent: packet_data[2..4].copy_from_slice(&10u16.to_le_bytes());
+  // equivalent: packet_data[2..4].copy_from_slice(&10u16.to_be_bytes());
 
   // access an open ended byte array
   let data_section: &[u8] = view.data_section().data();
@@ -81,7 +81,7 @@ But if you don't need direct access to your data and are ok with a serialization
 - [Nom](https://crates.io/crates/nom) is a great crate for all your parsing needs. It can for example parse binary data and put them in your custom structs.
 - [Binread](https://crates.io/crates/binread), [Binwrite](https://crates.io/crates/binwrite), [Binrw](https://crates.io/crates/binrw) are great libraries for (de)serializing binary data.
 
-//! # APIs
+## APIs
 This library offers two alternative APIs:
 1. The [Field](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html) API that offers free functions to read/write the data based on an underlying slice of storage (`packet_data` in the example above) holding the packet data. This API does not wrap the underlying slice of storage data, which means you have to pass it in to each accessor.
    This is not the API used in the example above, see [Field](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html) for an API example.
