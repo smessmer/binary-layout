@@ -111,7 +111,7 @@
 //! Both of these, however, would be some effort to implement and it is unclear if that will ever happen (unless somebody opens a PR for it).
 //!
 //! ### Strings
-//! For strings, note that even fixed-size UTF-8 strings take a variable number of characters because of the UTF-8 encoding and that brings all the issues of data types with dynamic length with it.
+//! For strings, note that even fixed-size UTF-8 strings take a variable number of bytes because of the UTF-8 encoding and that brings all the issues of data types with dynamic length with it.
 //! This is why strings aren't supported yet.
 //!
 //! ### Fixed-size arrays other than `[u8; N]`
