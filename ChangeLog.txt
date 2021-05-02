@@ -1,6 +1,7 @@
 0.4.0
 ------
 - Add Code Coverage to CI
+- Improve documentation
 
 0.3.0
 ------

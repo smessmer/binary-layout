@@ -120,7 +120,7 @@
 //! This complexity is why it wasn't implemented yet, but feel free to open a PR if you need this.
 
 #![forbid(unsafe_code)]
-// TODO #![deny(missing_docs)]
+#![deny(missing_docs)]
 
 pub mod example;
 mod fields;
