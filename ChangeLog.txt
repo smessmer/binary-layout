@@ -1,5 +1,6 @@
 1.0.1 (unreleased)
 ------
+- Fix dependencies on third party macros
 
 1.0.0
 ------

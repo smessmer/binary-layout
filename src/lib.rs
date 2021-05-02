@@ -130,6 +130,9 @@ pub use fields::{
     BigEndian, Field, FieldMetadata, FieldSize, FieldView, LittleEndian, SizedFieldMetadata,
 };
 
+pub use doc_comment::doc_comment;
+pub use paste::paste;
+
 /// Import this to get everything into scope that you need for defining and using layouts.
 ///
 /// # Example

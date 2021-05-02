@@ -118,7 +118,7 @@ macro_rules! define_layout {
 
     (_impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {};
     (_impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty $(, $name_tail: ident : $type_tail: ty)*}) => {
-        doc_comment::doc_comment!{
+        $crate::doc_comment!{
             concat!("Metadata and [Field](binary_layout::Field) API accessors for the `", stringify!($name), "` field"),
             #[allow(non_camel_case_types)]
             pub type $name = $crate::Field::<$type, $endianness, $offset_accumulator>;
@@ -128,7 +128,7 @@ macro_rules! define_layout {
 
     (_impl_view_asref {}) => {};
     (_impl_view_asref {$name: ident $(, $name_tail: ident)*}) => {
-        doc_comment::doc_comment!{
+        $crate::doc_comment!{
             concat!("Return a [FieldView](binary_layout::FieldView) with read access to the `", stringify!($name), "` field"),
             pub fn $name(&self) -> $crate::FieldView::<&[u8], $name> {
                 $crate::FieldView::new(self.storage.as_ref())
@@ -139,8 +139,8 @@ macro_rules! define_layout {
 
     (_impl_view_asmut {}) => {};
     (_impl_view_asmut {$name: ident $(, $name_tail: ident)*}) => {
-        paste::paste!{
-            doc_comment::doc_comment!{
+        $crate::paste!{
+            $crate::doc_comment!{
                 concat!("Return a [FieldView](binary_layout::FieldView) with write access to the `", stringify!($name), "` field"),
                 pub fn [<$name _mut>](&mut self) -> $crate::FieldView::<&mut [u8], $name> {
                     $crate::FieldView::new(self.storage.as_mut())
@@ -152,8 +152,8 @@ macro_rules! define_layout {
 
     (_impl_view_into {}) => {};
     (_impl_view_into {$name: ident $(, $name_tail: ident)*}) => {
-        paste::paste!{
-            doc_comment::doc_comment!{
+        $crate::paste!{
+            $crate::doc_comment!{
                 concat!("Destroy the [View] and return a field accessor to the `", stringify!($name), "` field owning the storage. This is mostly useful for [FieldView::extract](binary_layout::FieldView::extract)"),
                 pub fn [<into_ $name>](self) -> $crate::FieldView::<S, $name> {
                     $crate::FieldView::new(self.storage)
