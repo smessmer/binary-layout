@@ -1,4 +1,7 @@
-1.0.1 (unreleased)
+1.0.2 (unreleased)
+------
+
+1.0.1
 ------
 - Fix dependencies on third party macros
 
