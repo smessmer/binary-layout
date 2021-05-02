@@ -23,10 +23,6 @@ jobs:
           use-cross: true
           command: build
           args: --release --target armv5te-unknown-linux-gnueabi
-      - uses: actions/upload-artifact@v2
-        with:
-          name: Executable
-          path: target/armv5te-unknown-linux-gnueabi/release/ev3
   build_arm_stable_debug:
     name: Build (ARM, stable, debug)
     runs-on: ubuntu-latest
@@ -42,10 +38,6 @@ jobs:
           use-cross: true
           command: build
           args: --target armv5te-unknown-linux-gnueabi
-      - uses: actions/upload-artifact@v2
-        with:
-          name: Executable
-          path: target/armv5te-unknown-linux-gnueabi/debug/ev3
   test_arm_stable_release:
     name: Test (ARM, stable, release)
     runs-on: ubuntu-latest
@@ -115,10 +107,6 @@ jobs:
           use-cross: true
           command: build
           args: --release --target armv5te-unknown-linux-gnueabi
-      - uses: actions/upload-artifact@v2
-        with:
-          name: Executable
-          path: target/armv5te-unknown-linux-gnueabi/release/ev3
   build_arm_nightly_debug:
     name: Build (ARM, nightly, debug)
     runs-on: ubuntu-latest
@@ -134,10 +122,6 @@ jobs:
           use-cross: true
           command: build
           args: --target armv5te-unknown-linux-gnueabi
-      - uses: actions/upload-artifact@v2
-        with:
-          name: Executable
-          path: target/armv5te-unknown-linux-gnueabi/debug/ev3
   test_arm_nightly_release:
     name: Test (ARM, nightly, release)
     runs-on: ubuntu-latest
