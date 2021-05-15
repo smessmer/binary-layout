@@ -1,5 +1,6 @@
-1.0.2 (unreleased)
+1.1.0 (unreleased)
 ------
+- Improve documentation, e.g. include layout definition in documentation for the generated code
 
 1.0.1
 ------
