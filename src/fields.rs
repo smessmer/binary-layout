@@ -223,7 +223,7 @@ macro_rules! int_field {
         doc_comment::doc_comment! {
             concat! {
                 "Field type [", stringify!($type), "]: ",
-                "This field represents a primitive integer. In this impl, we define read accessors for such integer fields. See [supported primitive integer types](crate#primitive-integer-types)."
+                "This field represents a primitive integer. In this impl, we define read and write accessors for such integer fields. See [supported primitive integer types](crate#primitive-integer-types)."
             },
             impl<E: Endianness, const OFFSET_: usize> Field<$type, E, OFFSET_> {
                 doc_comment::doc_comment! {
@@ -258,17 +258,7 @@ macro_rules! int_field {
                         }
                     }
                 }
-            }
-        }
-        impl FieldSize for $type {
-            const SIZE: usize = std::mem::size_of::<$type>();
-        }
-        doc_comment::doc_comment! {
-            concat! {
-                "Field type [", stringify!($type), "]: ",
-                "This field represents a little endian integer. In this impl, we define write accessors for such integer fields. See [supported primitive integer types](crate#primitive-integer-types).",
-            },
-            impl<E: Endianness, const OFFSET_: usize> Field<$type, E, OFFSET_> {
+
                 doc_comment::doc_comment! {
                     concat! {"
                     Write the integer field to a given data region, assuming the defined layout, using the [Field] API.
@@ -300,6 +290,9 @@ macro_rules! int_field {
                     }
                 }
             }
+        }
+        impl FieldSize for $type {
+            const SIZE: usize = std::mem::size_of::<$type>();
         }
         doc_comment::doc_comment! {
             concat! {
@@ -385,118 +378,95 @@ int_field!(u64);
 /// This field represents an [open ended byte array](crate#open-ended-byte-arrays-u8).
 /// In this impl, we define read accessors for such fields.
 impl<E: Endianness, const OFFSET_: usize> Field<[u8], E, OFFSET_> {
-    doc_comment::doc_comment! {
-        concat! {"
-        Borrow the data in the byte array with read access using the [Field] API.
-        
-        # Example:
-        
-        ```
-        use binary_layout::prelude::*;
-            
-        define_layout!(my_layout, LittleEndian, {
-           //... other fields ...
-           tail_data: [u8],
-        });
+    /// Borrow the data in the byte array with read access using the [Field] API.
+    ///
+    /// # Example:
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///
+    /// define_layout!(my_layout, LittleEndian, {
+    ///     //... other fields ...
+    ///     tail_data: [u8],
+    /// });
+    ///
+    /// fn func(storage_data: &[u8]) {
+    ///     let tail_data: &[u8] = my_layout::tail_data::data(storage_data);
+    /// }
+    /// ```
+    #[allow(dead_code)]
+    pub fn data(storage: &[u8]) -> &[u8] {
+        &storage[Self::OFFSET..]
+    }
 
-        fn func(storage_data: &[u8]) {
-            let tail_data: &[u8] = my_layout::tail_data::data(storage_data);
-        }
-        ```
-        "},
-        #[allow(dead_code)]
-        pub fn data(storage: &[u8]) -> &[u8] {
-            &storage[Self::OFFSET..]
-        }
+    /// Borrow the data in the byte array with write access using the [Field] API.
+    ///
+    /// # Example:
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///     
+    /// define_layout!(my_layout, LittleEndian, {
+    ///     //... other fields ...
+    ///     tail_data: [u8],
+    /// });
+    ///
+    /// fn func(storage_data: &mut [u8]) {
+    ///     let tail_data: &mut [u8] = my_layout::tail_data::data_mut(storage_data);
+    /// }
+    /// ```
+    #[allow(dead_code)]
+    pub fn data_mut(storage: &mut [u8]) -> &mut [u8] {
+        &mut storage[Self::OFFSET..]
     }
 }
-/// Field type `[u8]`:
-/// This field represents an [open ended byte array](crate#open-ended-byte-arrays-u8).
-/// In this impl, we define read accessors for such fields.
-impl<E: Endianness, const OFFSET_: usize> Field<[u8], E, OFFSET_> {
-    doc_comment::doc_comment! {
-        concat! {"
-        Borrow the data in the byte array with write access using the [Field] API.
-        
-        # Example:
-        
-        ```
-        use binary_layout::prelude::*;
-            
-        define_layout!(my_layout, LittleEndian, {
-           //... other fields ...
-           tail_data: [u8],
-        });
 
-        fn func(storage_data: &mut [u8]) {
-            let tail_data: &mut [u8] = my_layout::tail_data::data_mut(storage_data);
-        }
-        ```
-        "},
-        #[allow(dead_code)]
-        pub fn data_mut(storage: &mut [u8]) -> &mut [u8] {
-            &mut storage[Self::OFFSET..]
-        }
-    }
-}
 /// Field type `[u8]`:
 /// This field represents an [open ended byte array](crate#open-ended-byte-arrays-u8).
 /// In this impl, we define accessors that transfer ownership of the underlying immutable package data for such fields.
 impl<S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> FieldView<S, Field<[u8], E, OFFSET_>> {
-    doc_comment::doc_comment! {
-        concat! {"
-        Borrow the data in the byte array with read access using the [FieldView] API.
-        
-        # Example:
-        
-        ```
-        use binary_layout::prelude::*;
-            
-        define_layout!(my_layout, LittleEndian, {
-           //... other fields ...
-           tail_data: [u8],
-        });
-
-        fn func(storage_data: &[u8]) {
-            let view = my_layout::View::new(storage_data);
-            let tail_data: &[u8] = view.tail_data().data();
-        }
-        ```
-        "},
-        #[allow(dead_code)]
-        pub fn data(&self) -> &[u8] {
-            <Self as FieldTypeAccessor>::Field::data(self.storage.as_ref())
-        }
+    /// Borrow the data in the byte array with read access using the [FieldView] API.
+    ///
+    /// # Example:
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///     
+    /// define_layout!(my_layout, LittleEndian, {
+    ///     //... other fields ...
+    ///     tail_data: [u8],
+    /// });
+    ///
+    /// fn func(storage_data: &[u8]) {
+    ///     let view = my_layout::View::new(storage_data);
+    ///     let tail_data: &[u8] = view.tail_data().data();
+    /// }
+    /// ```
+    #[allow(dead_code)]
+    pub fn data(&self) -> &[u8] {
+        <Self as FieldTypeAccessor>::Field::data(self.storage.as_ref())
     }
 }
 /// Field type `[u8]`:
 /// This field represents an [open ended byte array](crate#open-ended-byte-arrays-u8).
 /// In this impl, we define write accessors for such fields.
 impl<S: AsMut<[u8]>, E: Endianness, const OFFSET_: usize> FieldView<S, Field<[u8], E, OFFSET_>> {
-    doc_comment::doc_comment! {
-        concat! {"
-        Borrow the data in the byte array with write access using the [FieldView] API.
-        
-        # Example:
-        
-        ```
-        use binary_layout::prelude::*;
-            
-        define_layout!(my_layout, LittleEndian, {
-           //... other fields ...
-           tail_data: [u8],
-        });
-
-        fn func(storage_data: &mut [u8]) {
-            let mut view = my_layout::View::new(storage_data);
-            let tail_data: &mut [u8] = view.tail_data_mut().data_mut();
-        }
-        ```
-        "},
-        #[allow(dead_code)]
-        pub fn data_mut(&mut self) -> &mut [u8] {
-            <Self as FieldTypeAccessor>::Field::data_mut(self.storage.as_mut())
-        }
+    /// Borrow the data in the byte array with write access using the [FieldView] API.
+    ///  
+    /// # Example:
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///
+    /// define_layout!(my_layout, LittleEndian, {
+    ///     //... other fields ...
+    ///     tail_data: [u8],
+    /// });
+    ///
+    /// fn func(storage_data: &mut [u8]) {
+    ///     let mut view = my_layout::View::new(storage_data);
+    ///     let tail_data: &mut [u8] = view.tail_data_mut().data_mut();
+    /// }
+    /// ```
+    #[allow(dead_code)]
+    pub fn data_mut(&mut self) -> &mut [u8] {
+        <Self as FieldTypeAccessor>::Field::data_mut(self.storage.as_mut())
     }
 }
 /// Field type `[u8]`:
@@ -505,38 +475,33 @@ impl<S: AsMut<[u8]>, E: Endianness, const OFFSET_: usize> FieldView<S, Field<[u8
 impl<'a, S: AsRef<[u8]> + ?Sized, E: Endianness, const OFFSET_: usize>
     FieldView<&'a S, Field<[u8], E, OFFSET_>>
 {
-    doc_comment::doc_comment! {
-        concat! {"
-        Similar to [FieldView::data], but this also extracts the lifetime. The reference returned by [FieldView::data] can only life as long as the [FieldView] object lives.
-        The reference returned by this function can live for as long as the original `packed_data` reference that as put into the [FieldView] lives.
-        However, you can only call this if you let the [FieldView] die, it takes the `self` parameter by value.
-        Also note that this function can only be called when the [FieldView] was constructed with either a `&[u8]` or a `&mut [u8]` as underlying storage for the `storage_data`.
-        If the [FieldView] was constructed based on `Vec<u8>` storage, then this function semantically would have to return an owning subvector, but such a thing doesn't exist in Rust.
-        
-        # Example:
-        
-        ```
-        use binary_layout::prelude::*;
-            
-        define_layout!(my_layout, LittleEndian, {
-           another_field: u64,
-           tail_data: [u8],
-        });
-
-        fn func(storage_data: &[u8]) -> &[u8] {
-            let view = my_layout::View::new(storage_data);
-            let tail_data: &[u8] = view.into_tail_data().extract();
-            // Now we return tail_data. Note that the view object doesn't survive
-            // this function but we can still return the `tail_data` reference.
-            // This wouldn't be possible with `FieldView::data`.
-            tail_data
-        }
-        ```
-        "},
-        #[allow(dead_code)]
-        pub fn extract(self) -> &'a [u8] {
-            <Self as FieldTypeAccessor>::Field::data(self.storage.as_ref())
-        }
+    /// Similar to [FieldView::data], but this also extracts the lifetime. The reference returned by [FieldView::data] can only life as long as the [FieldView] object lives.
+    /// The reference returned by this function can live for as long as the original `packed_data` reference that as put into the [FieldView] lives.
+    /// However, you can only call this if you let the [FieldView] die, it takes the `self` parameter by value.
+    /// Also note that this function can only be called when the [FieldView] was constructed with either a `&[u8]` or a `&mut [u8]` as underlying storage for the `storage_data`.
+    /// If the [FieldView] was constructed based on `Vec<u8>` storage, then this function semantically would have to return an owning subvector, but such a thing doesn't exist in Rust.
+    ///
+    /// # Example:
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///
+    /// define_layout!(my_layout, LittleEndian, {
+    ///     another_field: u64,
+    ///     tail_data: [u8],
+    /// });
+    ///
+    /// fn func(storage_data: &[u8]) -> &[u8] {
+    ///     let view = my_layout::View::new(storage_data);
+    ///     let tail_data: &[u8] = view.into_tail_data().extract();
+    ///     // Now we return tail_data. Note that the view object doesn't survive
+    ///     // this function but we can still return the `tail_data` reference.
+    ///     // This wouldn't be possible with `FieldView::data`.
+    ///     tail_data
+    /// }
+    /// ```
+    #[allow(dead_code)]
+    pub fn extract(self) -> &'a [u8] {
+        <Self as FieldTypeAccessor>::Field::data(self.storage.as_ref())
     }
 }
 /// Field type `[u8]`:
@@ -545,38 +510,33 @@ impl<'a, S: AsRef<[u8]> + ?Sized, E: Endianness, const OFFSET_: usize>
 impl<'a, S: AsMut<[u8]> + ?Sized, E: Endianness, const OFFSET_: usize>
     FieldView<&'a mut S, Field<[u8], E, OFFSET_>>
 {
-    doc_comment::doc_comment! {
-        concat! {"
-        Similar to [FieldView::data], but this also extracts the lifetime. The reference returned by [FieldView::data] can only life as long as the [FieldView] object lives.
-        The reference returned by this function can live for as long as the original `packed_data` reference that as put into the [FieldView] lives.
-        However, you can only call this if you let the [FieldView] die, it takes the `self` parameter by value.
-        Also note that this function can only be called when the [FieldView] was constructed with either a `&[u8]` or a `&mut [u8]` as underlying storage for the `storage_data`.
-        If the [FieldView] was constructed based on `Vec<u8>` storage, then this function semantically would have to return an owning subvector, but such a thing doesn't exist in Rust.
-        
-        # Example:
-        
-        ```
-        use binary_layout::prelude::*;
-            
-        define_layout!(my_layout, LittleEndian, {
-           another_field: u64,
-           tail_data: [u8],
-        });
-
-        fn func(storage_data: &[u8]) -> &[u8] {
-            let view = my_layout::View::new(storage_data);
-            let tail_data: &[u8] = view.into_tail_data().extract();
-            // Now we return tail_data. Note that the view object doesn't survive
-            // this function but we can still return the `tail_data` reference.
-            // This wouldn't be possible with `FieldView::data`.
-            tail_data
-        }
-        ```
-        "},
-        #[allow(dead_code)]
-        pub fn extract(self) -> &'a mut [u8] {
-            <Self as FieldTypeAccessor>::Field::data_mut(self.storage.as_mut())
-        }
+    /// Similar to [FieldView::data], but this also extracts the lifetime. The reference returned by [FieldView::data] can only life as long as the [FieldView] object lives.
+    /// The reference returned by this function can live for as long as the original `packed_data` reference that as put into the [FieldView] lives.
+    /// However, you can only call this if you let the [FieldView] die, it takes the `self` parameter by value.
+    /// Also note that this function can only be called when the [FieldView] was constructed with either a `&[u8]` or a `&mut [u8]` as underlying storage for the `storage_data`.
+    /// If the [FieldView] was constructed based on `Vec<u8>` storage, then this function semantically would have to return an owning subvector, but such a thing doesn't exist in Rust.
+    ///
+    /// # Example:
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///     
+    /// define_layout!(my_layout, LittleEndian, {
+    ///     another_field: u64,
+    ///     tail_data: [u8],
+    /// });
+    ///
+    /// fn func(storage_data: &[u8]) -> &[u8] {
+    ///     let view = my_layout::View::new(storage_data);
+    ///     let tail_data: &[u8] = view.into_tail_data().extract();
+    ///     // Now we return tail_data. Note that the view object doesn't survive
+    ///     // this function but we can still return the `tail_data` reference.
+    ///     // This wouldn't be possible with `FieldView::data`.
+    ///     tail_data
+    /// }
+    /// ```
+    #[allow(dead_code)]
+    pub fn extract(self) -> &'a mut [u8] {
+        <Self as FieldTypeAccessor>::Field::data_mut(self.storage.as_mut())
     }
 }
 
@@ -584,60 +544,50 @@ impl<'a, S: AsMut<[u8]> + ?Sized, E: Endianness, const OFFSET_: usize>
 /// This field represents a [fixed size byte array](crate#fixed-size-byte-arrays-u8-n).
 /// In this impl, we define read accessors for such fields.
 impl<E: Endianness, const N: usize, const OFFSET_: usize> Field<[u8; N], E, OFFSET_> {
-    doc_comment::doc_comment! {
-        concat! {"
-        Borrow the data in the byte array with read access using the [Field] API.
-        
-        # Example:
-        
-        ```
-        use binary_layout::prelude::*;
-            
-        define_layout!(my_layout, LittleEndian, {
-           //... other fields ...
-           some_field: [u8; 5],
-           //... other fields
-        });
-
-        fn func(storage_data: &[u8]) {
-            let some_field: &[u8; 5] = my_layout::some_field::data(storage_data);
-        }
-        ```
-        "},
-        #[allow(dead_code)]
-        pub fn data(storage: &[u8]) -> &[u8; N] {
-            <&[u8; N]>::try_from(&storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
-        }
+    /// Borrow the data in the byte array with read access using the [Field] API.
+    ///  
+    /// # Example:
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///     
+    /// define_layout!(my_layout, LittleEndian, {
+    ///     //... other fields ...
+    ///     some_field: [u8; 5],
+    ///     //... other fields
+    /// });
+    ///
+    /// fn func(storage_data: &[u8]) {
+    ///     let some_field: &[u8; 5] = my_layout::some_field::data(storage_data);
+    /// }
+    /// ```
+    #[allow(dead_code)]
+    pub fn data(storage: &[u8]) -> &[u8; N] {
+        <&[u8; N]>::try_from(&storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
 }
 /// Field type `[u8; N]`:
 /// This field represents a [fixed size byte array](crate#fixed-size-byte-arrays-u8-n).
 /// In this impl, we define write accessors for such fields.
 impl<E: Endianness, const N: usize, const OFFSET_: usize> Field<[u8; N], E, OFFSET_> {
-    doc_comment::doc_comment! {
-        concat! {"
-        Borrow the data in the byte array with write access using the [Field] API.
-        
-        # Example:
-        
-        ```
-        use binary_layout::prelude::*;
-            
-        define_layout!(my_layout, LittleEndian, {
-           //... other fields ...
-           some_field: [u8; 5],
-           //... other fields
-        });
-
-        fn func(storage_data: &mut [u8]) {
-            let some_field: &mut [u8; 5] = my_layout::some_field::data_mut(storage_data);
-        }
-        ```
-        "},
-        #[allow(dead_code)]
-        pub fn data_mut(storage: &mut [u8]) -> &mut [u8; N] {
-            <&mut [u8; N]>::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
-        }
+    /// Borrow the data in the byte array with write access using the [Field] API.
+    ///  
+    /// # Example:
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///     
+    /// define_layout!(my_layout, LittleEndian, {
+    ///     //... other fields ...
+    ///     some_field: [u8; 5],
+    ///     //... other fields
+    /// });
+    ///
+    /// fn func(storage_data: &mut [u8]) {
+    ///     let some_field: &mut [u8; 5] = my_layout::some_field::data_mut(storage_data);
+    /// }
+    /// ```
+    #[allow(dead_code)]
+    pub fn data_mut(storage: &mut [u8]) -> &mut [u8; N] {
+        <&mut [u8; N]>::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
 }
 impl<const N: usize> FieldSize for [u8; N] {
@@ -649,31 +599,26 @@ impl<const N: usize> FieldSize for [u8; N] {
 impl<S: AsRef<[u8]>, E: Endianness, const N: usize, const OFFSET_: usize>
     FieldView<S, Field<[u8; N], E, OFFSET_>>
 {
-    doc_comment::doc_comment! {
-        concat! {"
-        Borrow the data in the byte array with read access using the [FieldView] API.
-        
-        # Example:
-        
-        ```
-        use binary_layout::prelude::*;
-            
-        define_layout!(my_layout, LittleEndian, {
-           //... other fields ...
-           some_field: [u8; 5],
-           //... other fields
-        });
-
-        fn func(storage_data: &[u8]) {
-            let view = my_layout::View::new(storage_data);
-            let some_field: &[u8; 5] = view.some_field().data();
-        }
-        ```
-        "},
-        #[allow(dead_code)]
-        pub fn data(&self) -> &[u8; N] {
-            <Self as FieldTypeAccessor>::Field::data(self.storage.as_ref())
-        }
+    /// Borrow the data in the byte array with read access using the [FieldView] API.
+    ///  
+    /// # Example:
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///     
+    /// define_layout!(my_layout, LittleEndian, {
+    ///     //... other fields ...
+    ///     some_field: [u8; 5],
+    ///     //... other fields
+    /// });
+    ///
+    /// fn func(storage_data: &[u8]) {
+    ///     let view = my_layout::View::new(storage_data);
+    ///     let some_field: &[u8; 5] = view.some_field().data();
+    /// }
+    /// ```
+    #[allow(dead_code)]
+    pub fn data(&self) -> &[u8; N] {
+        <Self as FieldTypeAccessor>::Field::data(self.storage.as_ref())
     }
 }
 /// Field type `[u8; N]`:
@@ -682,31 +627,26 @@ impl<S: AsRef<[u8]>, E: Endianness, const N: usize, const OFFSET_: usize>
 impl<S: AsMut<[u8]>, E: Endianness, const N: usize, const OFFSET_: usize>
     FieldView<S, Field<[u8; N], E, OFFSET_>>
 {
-    doc_comment::doc_comment! {
-        concat! {"
-        Borrow the data in the byte array with write access using the [FieldView] API.
-        
-        # Example:
-        
-        ```
-        use binary_layout::prelude::*;
-            
-        define_layout!(my_layout, LittleEndian, {
-           //... other fields ...
-           some_field: [u8; 5],
-           //... other fields
-        });
-
-        fn func(storage_data: &mut [u8]) {
-            let mut view = my_layout::View::new(storage_data);
-            let some_field: &mut [u8; 5] = view.some_field_mut().data_mut();
-        }
-        ```
-        "},
-        #[allow(dead_code)]
-        pub fn data_mut(&mut self) -> &mut [u8; N] {
-            <Self as FieldTypeAccessor>::Field::data_mut(self.storage.as_mut())
-        }
+    /// Borrow the data in the byte array with write access using the [FieldView] API.
+    ///  
+    /// # Example:
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///     
+    /// define_layout!(my_layout, LittleEndian, {
+    ///     //... other fields ...
+    ///     some_field: [u8; 5],
+    ///     //... other fields
+    /// });
+    ///
+    /// fn func(storage_data: &mut [u8]) {
+    ///     let mut view = my_layout::View::new(storage_data);
+    ///     let some_field: &mut [u8; 5] = view.some_field_mut().data_mut();
+    /// }
+    /// ```
+    #[allow(dead_code)]
+    pub fn data_mut(&mut self) -> &mut [u8; N] {
+        <Self as FieldTypeAccessor>::Field::data_mut(self.storage.as_mut())
     }
 }
 
