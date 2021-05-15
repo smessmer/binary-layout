@@ -297,7 +297,7 @@ macro_rules! int_field {
         doc_comment::doc_comment! {
             concat! {
                 "Field type [", stringify!($type), "]: ",
-                "This field represents a little endian integer. In this impl, we define read accessors for such integer fields. See [supported primitive integer types](crate#primitive-integer-types).",
+                "This field represents an integer. In this impl, we define read accessors for such integer fields. See [supported primitive integer types](crate#primitive-integer-types).",
             },
             impl<S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> FieldView<S, Field<$type, E, OFFSET_>> {
                 doc_comment::doc_comment! {
@@ -331,7 +331,7 @@ macro_rules! int_field {
         doc_comment::doc_comment! {
             concat! {
                 "Field type [", stringify!($type), "]: ",
-                "This field represents a little endian integer. In this impl, we define write accessors for such integer fields. See [supported primitive integer types](crate#primitive-integer-types).",
+                "This field represents an integer. In this impl, we define write accessors for such integer fields. See [supported primitive integer types](crate#primitive-integer-types).",
             },
             impl<S: AsMut<[u8]>, E: Endianness, const OFFSET_: usize> FieldView<S, Field<$type, E, OFFSET_>> {
                 doc_comment::doc_comment! {
