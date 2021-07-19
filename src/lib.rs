@@ -122,14 +122,19 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
-pub mod example;
+mod endianness;
 mod fields;
 mod macro_define_layout;
+mod view;
 
+pub mod example;
+
+pub use endianness::{BigEndian, LittleEndian};
 pub use fields::{
-    BigEndian, Field, /*FieldSize,*/ FieldView, IField, IFieldCopyAccess, IFieldSliceAccess,
-    ISizedField, LittleEndian, PrimitiveField,
+    primitive::PrimitiveField, wrapped::Field, IField, IFieldCopyAccess, IFieldSliceAccess,
+    ISizedField,
 };
+pub use view::FieldView;
 
 pub use doc_comment::doc_comment;
 pub use paste::paste;
