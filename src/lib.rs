@@ -131,8 +131,9 @@ pub mod example;
 
 pub use endianness::{BigEndian, LittleEndian};
 pub use fields::{
-    primitive::PrimitiveField, wrapped::Field, IField, IFieldCopyAccess, IFieldSliceAccess,
-    ISizedField,
+    primitive::PrimitiveField,
+    wrapped::{LayoutAs, WrappedField},
+    IField, IFieldCopyAccess, IFieldSliceAccess, ISizedField,
 };
 pub use view::FieldView;
 
