@@ -10,7 +10,7 @@ pub mod wrapped;
 ///
 /// A field does not hold any data storage, so if you use this API directly, you have to pass in
 /// the storage pointer for each call. If you want an API object that remembers the storage,
-/// take a look at the [FieldView] based API instead.
+/// take a look at the [FieldView](crate::FieldView) based API instead.
 ///
 /// By itself, [Field] only offers the things common to all fields, but there
 /// are additional traits for fields that fulfill certain properties:
@@ -50,7 +50,7 @@ pub mod wrapped;
 /// }
 /// ```
 pub trait Field {
-    /// The endianness of the field. Can be [LittleEndian] or [BigEndian].
+    /// The endianness of the field. Can be [LittleEndian](crate::LittleEndian) or [BigEndian](crate::BigEndian).
     type Endian: Endianness;
 
     /// The offset of the field in the layout.
@@ -109,9 +109,41 @@ pub trait FieldCopyAccess: Field {
     /// calls (or vice versa unwrapped when writing).
     type HighLevelType;
 
-    /// TODO Doc
+    /// Read the field from a given data region, assuming the defined layout, using the [Field] API.
+    ///
+    /// # Example:
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///
+    /// define_layout!(my_layout, LittleEndian, {
+    ///   //... other fields ...
+    ///   some_integer_field: u16,
+    ///   //... other fields ...
+    /// });
+    ///
+    /// fn func(storage_data: &[u8]) {
+    ///   let read: u16 = my_layout::some_integer_field::read(storage_data);
+    /// }
+    /// ```
     fn read(storage: &[u8]) -> Self::HighLevelType;
-    /// TODO Doc
+
+    /// Write the field to a given data region, assuming the defined layout, using the [Field] API.
+    ///
+    /// # Example:
+    ///         
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///
+    /// define_layout!(my_layout, LittleEndian, {
+    ///   //... other fields ...
+    ///   some_integer_field: u16,
+    ///   //... other fields ...
+    /// });
+    ///
+    /// fn func(storage_data: &mut [u8]) {
+    ///   my_layout::some_integer_field::write(storage_data, 10);
+    /// }
+    /// ```
     fn write(storage: &mut [u8], v: Self::HighLevelType);
 }
 

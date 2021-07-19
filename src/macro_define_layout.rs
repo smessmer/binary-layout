@@ -38,7 +38,7 @@
 ///
 /// This macro will define a module for you with several members:
 /// - For each field, there will be a struct containing
-///   - metadata like [OFFSET](crate::FieldMetadata::OFFSET) and [SIZE](crate::SizedFieldMetadata::SIZE) as rust `const`s
+///   - metadata like [OFFSET](crate::Field::OFFSET) and [SIZE](crate::SizedField::SIZE) as rust `const`s
 ///   - data accessors for the [Field](crate::Field) API
 /// - The module will also contain a `View` struct that offers the [FieldView](crate::FieldView) API.
 ///

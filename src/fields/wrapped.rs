@@ -40,7 +40,7 @@ pub trait LayoutAs<U> {
     fn write(v: Self) -> U;
 }
 
-/// A [WrappedField] is a [Field] that, unlike [PrimitiveField], does not directly represents a primitive type.
+/// A [WrappedField] is a [Field] that, unlike [crate::PrimitiveField], does not directly represents a primitive type.
 /// Instead, it represents a wrapper type that can be converted to/from a primitive type using the [LayoutAs] trait.
 /// See [Field] for more info on this API.
 ///

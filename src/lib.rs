@@ -79,7 +79,7 @@
 //! Layouts are defined using the [define_layout!] macro. Based on such a layout, this library offers two alternative APIs for data access:
 //! 1. The [trait@Field] API that offers free functions to read/write the data based on an underlying slice of storage (`packet_data` in the example above) holding the packet data. This API does not wrap the underlying slice of storage data, which means you have to pass it in to each accessor.
 //!    This is not the API used in the example above, see [trait@Field] for an API example.
-//! 2. The [struct@FieldView] API that wraps a slice of storage data and remembers it in a `View` object, allowing access to the fields without having to pass in the packed data slice each time. This is the API used in the example above. See [trait@FieldView] for another example.
+//! 2. The [struct@FieldView] API that wraps a slice of storage data and remembers it in a `View` object, allowing access to the fields without having to pass in the packed data slice each time. This is the API used in the example above. See [struct@FieldView] for another example.
 //!
 //! ## Supported field types
 //! ### Primitive integer types
@@ -94,7 +94,7 @@
 //! ### Open ended byte arrays: `[u8]`.
 //! This field type can only occur as the last field of a layout and will mach the remaining data until the end of the storage.
 //! This field has a dynamic size, depending on how large the package data is.
-//! For these fields, the [trait@Field] API offers [Field::data], [Field::data_mut] and the [struct@FieldView] API offers [FieldView::data], [FieldView::data_mut] and [FieldView::extract].
+//! For these fields, the [trait@Field] API offers [FieldSliceAccess::data], [FieldSliceAccess::data_mut] and the [struct@FieldView] API offers [FieldView::data], [FieldView::data_mut] and [FieldView::extract].
 //!
 //! ### Custom field types
 //! You can define your own custom types as long as they implement the [trait@LayoutAs] trait to define how to convert them from/to a primitive type.
