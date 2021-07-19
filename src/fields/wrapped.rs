@@ -41,20 +41,20 @@ pub trait LayoutAs<U> {
 }
 
 /// TODO Doc
-pub struct WrappedField<U, T, F: IField> {
+pub struct WrappedField<U, T: LayoutAs<U>, F: IField> {
     _p1: PhantomData<U>,
     _p2: PhantomData<T>,
     _p3: PhantomData<F>,
 }
 
-impl<U, T, F: IField> IField for WrappedField<U, T, F> {
+impl<U, T: LayoutAs<U>, F: IField> IField for WrappedField<U, T, F> {
     // TODO Doc
     type Endian = F::Endian;
     // TODO Doc
     const OFFSET: usize = F::OFFSET;
 }
 
-impl<U, T, F: ISizedField> ISizedField for WrappedField<U, T, F> {
+impl<U, T: LayoutAs<U>, F: ISizedField> ISizedField for WrappedField<U, T, F> {
     // TODO Doc
     const SIZE: usize = F::SIZE;
 }
