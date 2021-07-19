@@ -105,7 +105,7 @@ pub trait FieldCopyAccess: Field {
     /// The data type that is returned from read calls and has to be
     /// passed in to write calls. This can be different from the primitive
     /// type used in the binary blob, since that primitive type can be
-    /// wrapped (see [crate::WrappedField] ) into a high level type before being returned from read
+    /// wrapped (see [WrappedField](crate::WrappedField) ) into a high level type before being returned from read
     /// calls (or vice versa unwrapped when writing).
     type HighLevelType;
 

@@ -40,7 +40,7 @@ pub trait LayoutAs<U> {
     fn write(v: Self) -> U;
 }
 
-/// A [WrappedField] is a [Field] that, unlike [crate::PrimitiveField], does not directly represents a primitive type.
+/// A [WrappedField] is a [Field] that, unlike [PrimitiveField](crate::PrimitiveField), does not directly represents a primitive type.
 /// Instead, it represents a wrapper type that can be converted to/from a primitive type using the [LayoutAs] trait.
 /// See [Field] for more info on this API.
 ///
@@ -75,7 +75,10 @@ pub trait LayoutAs<U> {
 ///   // equivalent: data_slice[18..22].copy_from_slice(&10u32.to_le_bytes());
 /// }
 ///
-/// # fn main() {}
+/// # fn main() {
+/// #   let mut storage = [0; 1024];
+/// #   func(&mut storage);
+/// # }
 /// ```
 pub struct WrappedField<U, T: LayoutAs<U>, F: Field> {
     _p1: PhantomData<U>,
@@ -101,13 +104,49 @@ impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
     /// See [FieldCopyAccess::HighLevelType]
     type HighLevelType = T;
 
-    /// TODO Doc
+    /// Read the field from a given data region, assuming the defined layout, using the [Field] API.
+    ///
+    /// # Example:
+    /// ```
+    /// use binary_layout::{prelude::*, LayoutAs};
+    ///
+    /// #[derive(Debug, PartialEq, Eq)]
+    /// struct MyIdType(u64);
+    /// impl LayoutAs<u64> for MyIdType {
+    ///   fn read(v: u64) -> MyIdType {
+    ///     MyIdType(v)
+    ///   }
+    ///
+    ///   fn write(v: MyIdType) -> u64 {
+    ///     v.0
+    ///   }
+    /// }
+    ///
+    /// define_layout!(my_layout, LittleEndian, {
+    ///   //... other fields ...
+    ///   some_integer_field: MyIdType as u64,
+    ///   //... other fields ...
+    /// });
+    ///
+    /// fn func(storage_data: &mut [u8]) {
+    ///   my_layout::some_integer_field::write(storage_data, MyIdType(50));
+    ///   assert_eq!(MyIdType(50), my_layout::some_integer_field::read(storage_data));
+    /// }
+    ///
+    /// # fn main() {
+    /// #   let mut storage = [0; 1024];
+    /// #   func(&mut storage);
+    /// # }
+    /// ```
     fn read(storage: &[u8]) -> Self::HighLevelType {
         let v = F::read(storage);
         <T as LayoutAs<U>>::read(v)
     }
 
-    /// TODO Doc
+    /// Write the field to a given data region, assuming the defined layout, using the [Field] API.
+    ///
+    /// # Example:
+    /// See [FieldCopyAccess::read] for an example
     fn write(storage: &mut [u8], v: Self::HighLevelType) {
         let v = <T as LayoutAs<U>>::write(v);
         F::write(storage, v)
