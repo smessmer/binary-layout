@@ -27,6 +27,8 @@ use super::{IField, IFieldCopyAccess, ISizedField};
 ///   field: MyIdType as u64,
 ///   // ... other fields ...
 /// });
+///
+/// # fn main() {}
 /// ```
 pub trait LayoutAs<U> {
     /// Implement this to define how the custom type is constructed from the underlying type
