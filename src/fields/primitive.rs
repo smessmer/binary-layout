@@ -169,7 +169,7 @@ impl<'a, E: Endianness, const OFFSET_: usize> IFieldSliceAccess<'a>
     /// }
     /// ```
     fn data(storage: &'a [u8]) -> &'a [u8] {
-        &storage.as_ref()[Self::OFFSET..]
+        &storage[Self::OFFSET..]
     }
 
     /// Borrow the data in the byte array with write access using the [Field] API.
@@ -188,7 +188,7 @@ impl<'a, E: Endianness, const OFFSET_: usize> IFieldSliceAccess<'a>
     /// }
     /// ```
     fn data_mut(storage: &'a mut [u8]) -> &'a mut [u8] {
-        &mut storage.as_mut()[Self::OFFSET..]
+        &mut storage[Self::OFFSET..]
     }
 }
 
@@ -220,7 +220,7 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> IFieldSliceAccess<
     /// }
     /// ```
     fn data(storage: &'a [u8]) -> &'a [u8; N] {
-        <&[u8; N]>::try_from(&storage.as_ref()[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
+        <&[u8; N]>::try_from(&storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
 
     /// Borrow the data in the byte array with write access using the [Field] API.
@@ -240,7 +240,7 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> IFieldSliceAccess<
     /// }
     /// ```
     fn data_mut(storage: &'a mut [u8]) -> &'a mut [u8; N] {
-        <&mut [u8; N]>::try_from(&mut storage.as_mut()[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
+        <&mut [u8; N]>::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
 }
 impl<E: Endianness, const N: usize, const OFFSET_: usize> ISizedField
