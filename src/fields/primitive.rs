@@ -3,15 +3,10 @@ use std::marker::PhantomData;
 
 use crate::endianness::{EndianKind, Endianness};
 
-use super::{IField, IFieldCopyAccess, IFieldSliceAccess, ISizedField};
+use super::{Field, FieldCopyAccess, FieldSliceAccess, SizedField};
 
-/// A field represents one of the fields in the data layout and offers accessors
-/// for it. It remembers the offset of the field in its const generic parameter
-/// and the accessors use that to access the field.
-///
-/// A field does not hold any data storage, so if you use this API directly, you have to pass in
-/// the storage pointer for each call. If you want an API object that remembers the storage,
-/// take a look at the [FieldView] based API instead.
+/// A [PrimitiveField] is a [Field] that directly represents a primitive type like [u8], [i16], ...
+/// See [Field] for more info on this API.
 ///
 /// # Example:
 /// ```
@@ -47,17 +42,17 @@ pub struct PrimitiveField<T: ?Sized, E: Endianness, const OFFSET_: usize> {
     _p2: PhantomData<E>,
 }
 
-impl<T: ?Sized, E: Endianness, const OFFSET_: usize> IField for PrimitiveField<T, E, OFFSET_> {
-    // TODO Doc
+impl<T: ?Sized, E: Endianness, const OFFSET_: usize> Field for PrimitiveField<T, E, OFFSET_> {
+    /// See [Field::Endian]
     type Endian = E;
-    // TODO Doc
+    /// See [Field::OFFSET]
     const OFFSET: usize = OFFSET_;
 }
 
 macro_rules! int_field {
     ($type:ident) => {
-        impl<E: Endianness, const OFFSET_: usize> IFieldCopyAccess for PrimitiveField<$type, E, OFFSET_> {
-            // TODO Doc
+        impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<$type, E, OFFSET_> {
+            /// See [FieldCopyAccess::HighLevelType]
             type HighLevelType = $type;
 
             doc_comment::doc_comment! {
@@ -123,13 +118,10 @@ macro_rules! int_field {
             }
         }
 
-        impl<E: Endianness, const OFFSET_: usize> ISizedField for PrimitiveField<$type, E, OFFSET_> {
-            // TODO Doc
+        impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<$type, E, OFFSET_> {
+            /// See [SizedField::SIZE]
             const SIZE: usize = std::mem::size_of::<$type>();
         }
-        // impl FieldSize for $type {
-        //     const SIZE: usize = std::mem::size_of::<$type>();
-        // }
     };
 }
 
@@ -145,12 +137,10 @@ int_field!(u64);
 /// Field type `[u8]`:
 /// This field represents an [open ended byte array](crate#open-ended-byte-arrays-u8).
 /// In this impl, we define accessors for such fields.
-impl<'a, E: Endianness, const OFFSET_: usize> IFieldSliceAccess<'a>
+impl<'a, E: Endianness, const OFFSET_: usize> FieldSliceAccess<'a>
     for PrimitiveField<[u8], E, OFFSET_>
 {
-    // TODO Docs
     type SliceType = &'a [u8];
-    // TODO Docs
     type MutSliceType = &'a mut [u8];
 
     /// Borrow the data in the byte array with read access using the [Field] API.
@@ -195,15 +185,14 @@ impl<'a, E: Endianness, const OFFSET_: usize> IFieldSliceAccess<'a>
 /// Field type `[u8; N]`:
 /// This field represents a [fixed size byte array](crate#fixed-size-byte-arrays-u8-n).
 /// In this impl, we define accessors for such fields.
-impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> IFieldSliceAccess<'a>
+impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'a>
     for PrimitiveField<[u8; N], E, OFFSET_>
 {
-    // TODO Docs
     type SliceType = &'a [u8; N];
-    // TODO Docs
     type MutSliceType = &'a mut [u8; N];
 
     /// Borrow the data in the byte array with read access using the [Field] API.
+    /// See also [FieldSliceAccess::data].
     ///  
     /// # Example:
     /// ```
@@ -224,6 +213,7 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> IFieldSliceAccess<
     }
 
     /// Borrow the data in the byte array with write access using the [Field] API.
+    /// See also [FieldSliceAccess::data_mut]
     ///  
     /// # Example:
     /// ```
@@ -243,9 +233,10 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> IFieldSliceAccess<
         <&mut [u8; N]>::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
 }
-impl<E: Endianness, const N: usize, const OFFSET_: usize> ISizedField
+impl<E: Endianness, const N: usize, const OFFSET_: usize> SizedField
     for PrimitiveField<[u8; N], E, OFFSET_>
 {
+    /// See [SizedField::SIZE]
     const SIZE: usize = N;
 }
 

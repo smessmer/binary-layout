@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use super::{IField, IFieldCopyAccess, ISizedField};
+use super::{Field, FieldCopyAccess, SizedField};
 
 /// Implementing the [LayoutAs] trait for a custom type allows that custom type to be used
 /// as the type of a layout field. Note that the value of this type is copied each time it
@@ -40,29 +40,65 @@ pub trait LayoutAs<U> {
     fn write(v: Self) -> U;
 }
 
-/// TODO Doc
-pub struct WrappedField<U, T: LayoutAs<U>, F: IField> {
+/// A [WrappedField] is a [Field] that, unlike [PrimitiveField], does not directly represents a primitive type.
+/// Instead, it represents a wrapper type that can be converted to/from a primitive type using the [LayoutAs] trait.
+/// See [Field] for more info on this API.
+///
+/// # Example:
+/// ```
+/// use binary_layout::{prelude::*, LayoutAs};
+///
+/// struct MyIdType(u64);
+/// impl LayoutAs<u64> for MyIdType {
+///   fn read(v: u64) -> MyIdType {
+///     MyIdType(v)
+///   }
+///
+///   fn write(v: MyIdType) -> u64 {
+///     v.0
+///   }
+/// }
+///
+/// define_layout!(my_layout, BigEndian, {
+///   // ... other fields ...
+///   field: MyIdType as u64,
+///   // ... other fields ...
+/// });
+///
+/// fn func(storage_data: &mut [u8]) {
+///   // read some data
+///   let read_data: MyIdType = my_layout::field::read(storage_data);
+///   // equivalent: let read_data = MyIdType(u16::from_le_bytes((&storage_data[0..2]).try_into().unwrap()));
+///
+///   // write some data
+///   my_layout::field::write(storage_data, MyIdType(10));
+///   // equivalent: data_slice[18..22].copy_from_slice(&10u32.to_le_bytes());
+/// }
+///
+/// # fn main() {}
+/// ```
+pub struct WrappedField<U, T: LayoutAs<U>, F: Field> {
     _p1: PhantomData<U>,
     _p2: PhantomData<T>,
     _p3: PhantomData<F>,
 }
 
-impl<U, T: LayoutAs<U>, F: IField> IField for WrappedField<U, T, F> {
-    // TODO Doc
+impl<U, T: LayoutAs<U>, F: Field> Field for WrappedField<U, T, F> {
+    /// See [Field::Endian]
     type Endian = F::Endian;
-    // TODO Doc
+    /// See [Field::OFFSET]
     const OFFSET: usize = F::OFFSET;
 }
 
-impl<U, T: LayoutAs<U>, F: ISizedField> ISizedField for WrappedField<U, T, F> {
-    // TODO Doc
+impl<U, T: LayoutAs<U>, F: SizedField> SizedField for WrappedField<U, T, F> {
+    /// See [SizedField::SIZE]
     const SIZE: usize = F::SIZE;
 }
 
-impl<U, T: LayoutAs<U>, F: IFieldCopyAccess<HighLevelType = U>> IFieldCopyAccess
+impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
     for WrappedField<U, T, F>
 {
-    /// TODO Doc
+    /// See [FieldCopyAccess::HighLevelType]
     type HighLevelType = T;
 
     /// TODO Doc

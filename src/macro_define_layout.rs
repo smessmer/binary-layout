@@ -42,6 +42,9 @@
 ///   - data accessors for the [Field](crate::Field) API
 /// - The module will also contain a `View` struct that offers the [FieldView](crate::FieldView) API.
 ///
+/// This macro will also generate rustdoc documentation for everything it generates. One of the best ways to figure out
+/// how to use the generated layouts is to read the rustdoc documentation that was generated for them.
+///
 /// ## Metadata Example
 /// ```
 /// use binary_layout::prelude::*;
@@ -143,7 +146,7 @@ macro_rules! define_layout {
             #[allow(non_camel_case_types)]
             pub type $name = $crate::WrappedField::<$underlying_type, $type, $crate::PrimitiveField::<$underlying_type, $endianness, $offset_accumulator>>;
         }
-        $crate::define_layout!(_impl_fields $endianness, {($offset_accumulator + <$name as $crate::ISizedField>::SIZE)}, {$($name_tail : $type_tail $(as $underlying_tail)?),*});
+        $crate::define_layout!(_impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($name_tail : $type_tail $(as $underlying_tail)?),*});
     };
 
     (_impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {};
@@ -153,7 +156,7 @@ macro_rules! define_layout {
             #[allow(non_camel_case_types)]
             pub type $name = $crate::PrimitiveField::<$type, $endianness, $offset_accumulator>;
         }
-        $crate::define_layout!(_impl_fields $endianness, {($offset_accumulator + <$name as $crate::ISizedField>::SIZE)}, {$($name_tail : $type_tail $(as $underlying_tail)?),*});
+        $crate::define_layout!(_impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($name_tail : $type_tail $(as $underlying_tail)?),*});
     };
 
     (_impl_view_asref {}) => {};
@@ -196,7 +199,7 @@ macro_rules! define_layout {
 
 #[cfg(test)]
 mod tests {
-    use crate::{IField, IFieldCopyAccess, IFieldSliceAccess, ISizedField};
+    use crate::{Field, FieldCopyAccess, FieldSliceAccess, SizedField};
 
     use rand::{rngs::StdRng, RngCore, SeedableRng};
     use std::convert::TryInto;
