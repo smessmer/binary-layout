@@ -127,7 +127,8 @@ mod fields;
 mod macro_define_layout;
 
 pub use fields::{
-    BigEndian, Field, FieldMetadata, FieldSize, FieldView, LittleEndian, SizedFieldMetadata,
+    BigEndian, Field, /*FieldSize,*/ FieldView, IField, IFieldCopyAccess, IFieldSliceAccess,
+    ISizedField, LittleEndian, PrimitiveField,
 };
 
 pub use doc_comment::doc_comment;
@@ -140,6 +141,6 @@ pub use paste::paste;
 /// use binary_layout::prelude::*;
 /// ```
 pub mod prelude {
-    pub use super::{FieldMetadata, SizedFieldMetadata};
+    pub use super::{IField, IFieldCopyAccess, IFieldSliceAccess, ISizedField};
     pub use crate::define_layout;
 }

@@ -141,9 +141,9 @@ macro_rules! define_layout {
         $crate::doc_comment!{
             concat!("Metadata and [Field](binary_layout::Field) API accessors for the `", stringify!($name), "` field"),
             #[allow(non_camel_case_types)]
-            pub type $name = $crate::Field::<$type, $endianness, $offset_accumulator>;
+            pub type $name = $crate::PrimitiveField::<$type, $endianness, $offset_accumulator>;
         }
-        $crate::define_layout!(_impl_fields $endianness, {($offset_accumulator + <$type as $crate::FieldSize>::SIZE)}, {$($name_tail : $type_tail),*});
+        $crate::define_layout!(_impl_fields $endianness, {($offset_accumulator + <$name as $crate::ISizedField>::SIZE)}, {$($name_tail : $type_tail),*});
     };
 
     (_impl_view_asref {}) => {};
@@ -186,7 +186,7 @@ macro_rules! define_layout {
 
 #[cfg(test)]
 mod tests {
-    use crate::{FieldMetadata, SizedFieldMetadata};
+    use crate::{IField, IFieldCopyAccess, IFieldSliceAccess, ISizedField};
 
     use rand::{rngs::StdRng, RngCore, SeedableRng};
     use std::convert::TryInto;
@@ -785,7 +785,7 @@ mod tests {
         let mut storage = data_region(1024, 0);
         let extracted: &mut [u8] = {
             let view: layout::View<&mut [u8]> = layout::View::new(&mut storage);
-            view.into_tail().extract()
+            view.into_tail().extract_mut()
         };
 
         assert_eq!(&data_region(1024, 0)[1..], extracted);
@@ -801,7 +801,7 @@ mod tests {
         let mut storage = data_region(1024, 0);
         let extracted: &mut [u8] = {
             let view: layout::View<&mut Vec<u8>> = layout::View::new(&mut storage);
-            view.into_tail().extract()
+            view.into_tail().extract_mut()
         };
 
         assert_eq!(&data_region(1024, 0)[1..], extracted);

@@ -1,6 +1,8 @@
 1.1.0 (unreleased)
 ------
 - Improve documentation, e.g. include layout definition in documentation for the generated code
+- Allow defining custom field types by implementing the LayoutAs trait
+- Refactor: Simplify traits and their dependencies
 
 1.0.1
 ------
