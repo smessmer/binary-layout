@@ -86,10 +86,10 @@
 //! - [u8](https://doc.rust-lang.org/stable/std/primitive.u8.html), [u16](https://doc.rust-lang.org/stable/std/primitive.u16.html), [u32](https://doc.rust-lang.org/stable/std/primitive.u32.html), [u64](https://doc.rust-lang.org/stable/std/primitive.u64.html)
 //! - [i8](https://doc.rust-lang.org/stable/std/primitive.i8.html), [i16](https://doc.rust-lang.org/stable/std/primitive.i16.html), [i32](https://doc.rust-lang.org/stable/std/primitive.i32.html), [i64](https://doc.rust-lang.org/stable/std/primitive.i64.html)
 //!
-//! For these fields, the [trait@Field] API offers [Field::read], [Field::write] and the [struct@FieldView] API offers [FieldView::read] and [FieldView::write].
+//! For these fields, the [trait@Field] API offers [FieldCopyAccess::read], [FieldCopyAccess::write] and the [struct@FieldView] API offers [FieldView::read] and [FieldView::write].
 //!
 //! ### Fixed size byte arrays: `[u8; N]`.
-//! For these fields, the [trait@Field] API offers [Field::data], [Field::data_mut], and the [struct@FieldView] API offers [FieldView::data] and [FieldView::data_mut].
+//! For these fields, the [trait@Field] API offers [FieldSliceAccess::data], [FieldSliceAccess::data_mut], and the [struct@FieldView] API offers [FieldView::data] and [FieldView::data_mut].
 //!
 //! ### Open ended byte arrays: `[u8]`.
 //! This field type can only occur as the last field of a layout and will mach the remaining data until the end of the storage.

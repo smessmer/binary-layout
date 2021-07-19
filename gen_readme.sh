@@ -4,7 +4,8 @@
 #
 # Note that this currently only supports the following types of links:
 # - [struct@StructName]
-# - [Field::method_name]
+# - [FieldCopyAccess::method_name]
+# - [FieldSliceAccess::method_name]
 # - [FieldView::method_name]
 # - [trait@TraitName]
 # other types (e.g. namespaces, different crates, ...) are not supported
@@ -28,8 +29,11 @@ sed -i 's|\[\([a-zA-Z_]\+\)!\]\([^(]\)|[\1!](https://docs.rs/binary-layout/lates
 # Replace [FieldView::my_method_name] with [FieldView::my_method_name](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.my_method_name)
 sed -i 's|\[FieldView::\([a-zA-Z_]\+\)\]\([^(]\)|[FieldView::\1](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.\1)\2|g' README.md
 
-# Replace [Field::my_method_name] with [Field::my_method_name](https://docs.rs/binary-layout/latest/binary_layout/struct.Field.html#method.my_method_name)
-sed -i 's|\[Field::\([a-zA-Z_]\+\)\]\([^(]\)|[Field::\1](https://docs.rs/binary-layout/latest/binary_layout/trait.Field.html#method.\1)\2|g' README.md
+# Replace [FieldCopyAccess::my_method_name] with [FieldCopyAccess::my_method_name](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldCopyAccess.html#method.my_method_name)
+sed -i 's|\[FieldCopyAccess::\([a-zA-Z_]\+\)\]\([^(]\)|[FieldCopyAccess::\1](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldCopyAccess.html#method.\1)\2|g' README.md
+
+# Replace [FieldSliceAccess::my_method_name] with [FieldSliceAccess::my_method_name](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldSliceAccess.html#method.my_method_name)
+sed -i 's|\[FieldSliceAccess::\([a-zA-Z_]\+\)\]\([^(]\)|[FieldSliceAccess::\1](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldSliceAccess.html#method.\1)\2|g' README.md
 
 # Replace [...](crate::example::icmp_packet) with [...](https://docs.rs/binary-layout/latest/binary_layout/example/icmp_packet/index.html)
 sed -i 's|\[\([a-zA-Z_]\+\)\](crate::example::icmp_packet)|[\1](https://docs.rs/binary-layout/latest/binary_layout/example/icmp_packet/index.html)|g' README.md
