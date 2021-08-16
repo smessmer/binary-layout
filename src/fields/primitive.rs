@@ -1,5 +1,5 @@
-use std::convert::TryFrom;
-use std::marker::PhantomData;
+use core::convert::TryFrom;
+use core::marker::PhantomData;
 
 use crate::endianness::{EndianKind, Endianness};
 
@@ -76,9 +76,9 @@ macro_rules! int_field {
                 ```
                 "},
                 fn read(storage: &[u8]) -> $type {
-                    let mut value = [0; std::mem::size_of::<$type>()];
+                    let mut value = [0; core::mem::size_of::<$type>()];
                     value.copy_from_slice(
-                        &storage.as_ref()[Self::OFFSET..(Self::OFFSET + std::mem::size_of::<$type>())],
+                        &storage.as_ref()[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
                     );
                     match E::KIND {
                         EndianKind::Big => $type::from_be_bytes(value),
@@ -112,7 +112,7 @@ macro_rules! int_field {
                         EndianKind::Big => value.to_be_bytes(),
                         EndianKind::Little => value.to_le_bytes(),
                     };
-                    storage.as_mut()[Self::OFFSET..(Self::OFFSET + std::mem::size_of::<$type>())]
+                    storage.as_mut()[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
                         .copy_from_slice(&value_as_bytes);
                 }
             }
@@ -120,7 +120,7 @@ macro_rules! int_field {
 
         impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<$type, E, OFFSET_> {
             /// See [SizedField::SIZE]
-            const SIZE: usize = std::mem::size_of::<$type>();
+            const SIZE: usize = core::mem::size_of::<$type>();
         }
     };
 }
@@ -244,7 +244,7 @@ impl<E: Endianness, const N: usize, const OFFSET_: usize> SizedField
 mod tests {
     use super::*;
     use crate::endianness::{BigEndian, LittleEndian};
-    use std::convert::TryInto;
+    use core::convert::TryInto;
 
     #[test]
     fn test_i8_littleendian() {
