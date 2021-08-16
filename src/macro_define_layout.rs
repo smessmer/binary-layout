@@ -201,8 +201,8 @@ macro_rules! define_layout {
 mod tests {
     use crate::{Field, FieldCopyAccess, FieldSliceAccess, SizedField};
 
-    use rand::{rngs::StdRng, RngCore, SeedableRng};
     use core::convert::TryInto;
+    use rand::{rngs::StdRng, RngCore, SeedableRng};
 
     fn data_region(size: usize, seed: u64) -> Vec<u8> {
         let mut rng = StdRng::seed_from_u64(seed);
