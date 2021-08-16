@@ -202,7 +202,7 @@ mod tests {
     use crate::{Field, FieldCopyAccess, FieldSliceAccess, SizedField};
 
     use rand::{rngs::StdRng, RngCore, SeedableRng};
-    use std::convert::TryInto;
+    use core::convert::TryInto;
 
     fn data_region(size: usize, seed: u64) -> Vec<u8> {
         let mut rng = StdRng::seed_from_u64(seed);

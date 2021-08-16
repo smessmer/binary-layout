@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use super::{Field, FieldCopyAccess, SizedField};
 
@@ -158,7 +158,7 @@ mod tests {
     use super::*;
     use crate::endianness::{BigEndian, LittleEndian};
     use crate::PrimitiveField;
-    use std::convert::TryInto;
+    use core::convert::TryInto;
 
     #[derive(Debug, PartialEq, Eq)]
     struct Wrapped<T>(T);
