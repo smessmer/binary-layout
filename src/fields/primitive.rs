@@ -455,7 +455,7 @@ mod tests {
         let mut storage = vec![0; 1024];
 
         type Field1 = PrimitiveField<i128, LittleEndian, 5>;
-        type Field2 = PrimitiveField<i128, LittleEndian, 20>;
+        type Field2 = PrimitiveField<i128, LittleEndian, 200>;
 
         Field1::write(&mut storage, 10i128.pow(30));
         Field2::write(&mut storage, -(10i128.pow(28)));
@@ -466,7 +466,7 @@ mod tests {
         );
         assert_eq!(
             -(10i128.pow(28)),
-            i128::from_le_bytes((&storage[20..36]).try_into().unwrap())
+            i128::from_le_bytes((&storage[200..216]).try_into().unwrap())
         );
 
         assert_eq!(10i128.pow(30), Field1::read(&storage));
@@ -481,7 +481,7 @@ mod tests {
         let mut storage = vec![0; 1024];
 
         type Field1 = PrimitiveField<i128, BigEndian, 5>;
-        type Field2 = PrimitiveField<i128, BigEndian, 20>;
+        type Field2 = PrimitiveField<i128, BigEndian, 200>;
 
         Field1::write(&mut storage, 10i128.pow(30));
         Field2::write(&mut storage, -(10i128.pow(28)));
@@ -492,7 +492,7 @@ mod tests {
         );
         assert_eq!(
             -(10i128.pow(28)),
-            i128::from_be_bytes((&storage[20..36]).try_into().unwrap())
+            i128::from_be_bytes((&storage[200..216]).try_into().unwrap())
         );
 
         assert_eq!(10i128.pow(30), Field1::read(&storage));
@@ -709,7 +709,7 @@ mod tests {
         let mut storage = vec![0; 1024];
 
         type Field1 = PrimitiveField<u128, LittleEndian, 5>;
-        type Field2 = PrimitiveField<u128, LittleEndian, 20>;
+        type Field2 = PrimitiveField<u128, LittleEndian, 200>;
 
         Field1::write(&mut storage, 10u128.pow(30));
         Field2::write(&mut storage, 10u128.pow(28));
@@ -720,7 +720,7 @@ mod tests {
         );
         assert_eq!(
             10u128.pow(28),
-            u128::from_le_bytes((&storage[20..36]).try_into().unwrap())
+            u128::from_le_bytes((&storage[200..216]).try_into().unwrap())
         );
 
         assert_eq!(10u128.pow(30), Field1::read(&storage));
@@ -735,7 +735,7 @@ mod tests {
         let mut storage = vec![0; 1024];
 
         type Field1 = PrimitiveField<u128, BigEndian, 5>;
-        type Field2 = PrimitiveField<u128, BigEndian, 20>;
+        type Field2 = PrimitiveField<u128, BigEndian, 200>;
 
         Field1::write(&mut storage, 10u128.pow(30));
         Field2::write(&mut storage, 10u128.pow(28));
@@ -746,7 +746,7 @@ mod tests {
         );
         assert_eq!(
             10u128.pow(28),
-            u128::from_be_bytes((&storage[20..36]).try_into().unwrap())
+            u128::from_be_bytes((&storage[200..216]).try_into().unwrap())
         );
 
         assert_eq!(10u128.pow(30), Field1::read(&storage));
