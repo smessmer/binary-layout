@@ -422,6 +422,70 @@ mod tests {
     }
 
     #[test]
+    fn test_i128_littleendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = WrappedField<i128, Wrapped<i128>, PrimitiveField<i128, LittleEndian, 5>>;
+        type Field2 = WrappedField<i128, Wrapped<i128>, PrimitiveField<i128, LittleEndian, 200>>;
+
+        Field1::write(&mut storage, Wrapped(10i128.pow(30)));
+        Field2::write(&mut storage, Wrapped(-(10i128.pow(28))));
+
+        assert_eq!(
+            10i128.pow(30),
+            i128::from_le_bytes((&storage[5..21]).try_into().unwrap())
+        );
+        assert_eq!(
+            -(10i128.pow(28)),
+            i128::from_le_bytes((&storage[200..216]).try_into().unwrap())
+        );
+
+        assert_eq!(Wrapped(10i128.pow(30)), Field1::read(&storage));
+        assert_eq!(Wrapped(-(10i128.pow(28))), Field2::read(&storage));
+
+        assert_eq!(
+            16,
+            WrappedField::<i128, Wrapped<i128>, PrimitiveField::<i128, LittleEndian, 5>>::SIZE
+        );
+        assert_eq!(
+            16,
+            WrappedField::<i128, Wrapped<i128>, PrimitiveField::<i128, LittleEndian, 5>>::SIZE
+        );
+    }
+
+    #[test]
+    fn test_i128_bigendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = WrappedField<i128, Wrapped<i128>, PrimitiveField<i128, BigEndian, 5>>;
+        type Field2 = WrappedField<i128, Wrapped<i128>, PrimitiveField<i128, BigEndian, 200>>;
+
+        Field1::write(&mut storage, Wrapped(10i128.pow(30)));
+        Field2::write(&mut storage, Wrapped(-(10i128.pow(28))));
+
+        assert_eq!(
+            10i128.pow(30),
+            i128::from_be_bytes((&storage[5..21]).try_into().unwrap())
+        );
+        assert_eq!(
+            -(10i128.pow(28)),
+            i128::from_be_bytes((&storage[200..216]).try_into().unwrap())
+        );
+
+        assert_eq!(Wrapped(10i128.pow(30)), Field1::read(&storage));
+        assert_eq!(Wrapped(-(10i128.pow(28))), Field2::read(&storage));
+
+        assert_eq!(
+            16,
+            WrappedField::<i128, Wrapped<i128>, PrimitiveField::<i128, BigEndian, 5>>::SIZE
+        );
+        assert_eq!(
+            16,
+            WrappedField::<i128, Wrapped<i128>, PrimitiveField::<i128, BigEndian, 5>>::SIZE
+        );
+    }
+
+    #[test]
     fn test_u8_littleendian() {
         let mut storage = vec![0; 1024];
 
@@ -668,6 +732,70 @@ mod tests {
         assert_eq!(
             8,
             WrappedField::<u64, Wrapped<u64>, PrimitiveField::<u64, BigEndian, 5>>::SIZE
+        );
+    }
+
+    #[test]
+    fn test_u128_littleendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = WrappedField<u128, Wrapped<u128>, PrimitiveField<u128, LittleEndian, 5>>;
+        type Field2 = WrappedField<u128, Wrapped<u128>, PrimitiveField<u128, LittleEndian, 200>>;
+
+        Field1::write(&mut storage, Wrapped(10u128.pow(30)));
+        Field2::write(&mut storage, Wrapped(10u128.pow(28)));
+
+        assert_eq!(
+            10u128.pow(30),
+            u128::from_le_bytes((&storage[5..21]).try_into().unwrap())
+        );
+        assert_eq!(
+            10u128.pow(28),
+            u128::from_le_bytes((&storage[200..216]).try_into().unwrap())
+        );
+
+        assert_eq!(Wrapped(10u128.pow(30)), Field1::read(&storage));
+        assert_eq!(Wrapped(10u128.pow(28)), Field2::read(&storage));
+
+        assert_eq!(
+            16,
+            WrappedField::<u128, Wrapped<u128>, PrimitiveField::<u128, LittleEndian, 5>>::SIZE
+        );
+        assert_eq!(
+            16,
+            WrappedField::<u128, Wrapped<u128>, PrimitiveField::<u128, LittleEndian, 5>>::SIZE
+        );
+    }
+
+    #[test]
+    fn test_u128_bigendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = WrappedField<u128, Wrapped<u128>, PrimitiveField<u128, BigEndian, 5>>;
+        type Field2 = WrappedField<u128, Wrapped<u128>, PrimitiveField<u128, BigEndian, 200>>;
+
+        Field1::write(&mut storage, Wrapped(10u128.pow(30)));
+        Field2::write(&mut storage, Wrapped(10u128.pow(28)));
+
+        assert_eq!(
+            10u128.pow(30),
+            u128::from_be_bytes((&storage[5..21]).try_into().unwrap())
+        );
+        assert_eq!(
+            10u128.pow(28),
+            u128::from_be_bytes((&storage[200..216]).try_into().unwrap())
+        );
+
+        assert_eq!(Wrapped(10u128.pow(30)), Field1::read(&storage));
+        assert_eq!(Wrapped(10u128.pow(28)), Field2::read(&storage));
+
+        assert_eq!(
+            16,
+            WrappedField::<u128, Wrapped<u128>, PrimitiveField::<u128, BigEndian, 5>>::SIZE
+        );
+        assert_eq!(
+            16,
+            WrappedField::<u128, Wrapped<u128>, PrimitiveField::<u128, BigEndian, 5>>::SIZE
         );
     }
 }
