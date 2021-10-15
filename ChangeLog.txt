@@ -1,5 +1,6 @@
 2.0.2 (unreleased)
 - Add feature to use this in no-std builds
+- Added support for i128 and u128
 
 2.0.1
 ------

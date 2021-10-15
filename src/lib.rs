@@ -83,8 +83,8 @@
 //!
 //! ## Supported field types
 //! ### Primitive integer types
-//! - [u8](https://doc.rust-lang.org/stable/std/primitive.u8.html), [u16](https://doc.rust-lang.org/stable/std/primitive.u16.html), [u32](https://doc.rust-lang.org/stable/std/primitive.u32.html), [u64](https://doc.rust-lang.org/stable/std/primitive.u64.html)
-//! - [i8](https://doc.rust-lang.org/stable/std/primitive.i8.html), [i16](https://doc.rust-lang.org/stable/std/primitive.i16.html), [i32](https://doc.rust-lang.org/stable/std/primitive.i32.html), [i64](https://doc.rust-lang.org/stable/std/primitive.i64.html)
+//! - [u8](https://doc.rust-lang.org/stable/std/primitive.u8.html), [u16](https://doc.rust-lang.org/stable/std/primitive.u16.html), [u32](https://doc.rust-lang.org/stable/std/primitive.u32.html), [u64](https://doc.rust-lang.org/stable/std/primitive.u64.html), [u128](https://doc.rust-lang.org/stable/std/primitive.u128.html)
+//! - [i8](https://doc.rust-lang.org/stable/std/primitive.i8.html), [i16](https://doc.rust-lang.org/stable/std/primitive.i16.html), [i32](https://doc.rust-lang.org/stable/std/primitive.i32.html), [i64](https://doc.rust-lang.org/stable/std/primitive.i64.html), [i128](https://doc.rust-lang.org/stable/std/primitive.i128.html)
 //!
 //! For these fields, the [trait@Field] API offers [FieldCopyAccess::read], [FieldCopyAccess::write] and the [struct@FieldView] API offers [FieldView::read] and [FieldView::write].
 //!
