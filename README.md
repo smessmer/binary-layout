@@ -96,6 +96,9 @@ Layouts are defined using the [define_layout!](https://docs.rs/binary-layout/lat
 - [u8](https://doc.rust-lang.org/stable/std/primitive.u8.html), [u16](https://doc.rust-lang.org/stable/std/primitive.u16.html), [u32](https://doc.rust-lang.org/stable/std/primitive.u32.html), [u64](https://doc.rust-lang.org/stable/std/primitive.u64.html), [u128](https://doc.rust-lang.org/stable/std/primitive.u128.html)
 - [i8](https://doc.rust-lang.org/stable/std/primitive.i8.html), [i16](https://doc.rust-lang.org/stable/std/primitive.i16.html), [i32](https://doc.rust-lang.org/stable/std/primitive.i32.html), [i64](https://doc.rust-lang.org/stable/std/primitive.i64.html), [i128](https://doc.rust-lang.org/stable/std/primitive.i128.html)
 
+#### Primitive float types
+- [f32](https://doc.rust-lang.org/std/primitive.f32.html), [f64](https://doc.rust-lang.org/std/primitive.f64.html)
+
 For these fields, the [Field](https://docs.rs/binary-layout/latest/binary_layout/trait.Field.html) API offers [FieldCopyAccess::read](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldCopyAccess.html#tymethod.read), [FieldCopyAccess::write](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldCopyAccess.html#tymethod.write) and the [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API offers [FieldView::read](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.read) and [FieldView::write](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.write).
 
 #### Fixed size byte arrays: `[u8; N]`.
