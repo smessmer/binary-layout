@@ -927,4 +927,38 @@ mod tests {
             WrappedField::<f64, Wrapped<f64>, PrimitiveField::<f64, BigEndian, 5>>::SIZE
         );
     }
+
+    #[test]
+    fn test_unit_littleendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = WrappedField<(), Wrapped<()>, PrimitiveField<(), LittleEndian, 5>>;
+        type Field2 = WrappedField<(), Wrapped<()>, PrimitiveField<(), LittleEndian, 20>>;
+
+        Field1::write(&mut storage, Wrapped(()));
+        Field2::write(&mut storage, Wrapped(()));
+
+        assert_eq!(Wrapped(()), Field1::read(&storage));
+        assert_eq!(Wrapped(()), Field2::read(&storage));
+
+        // Unit is a zero sized type, so the storage should never be mutated.
+        assert_eq!(storage, vec![0; 1024]);
+    }
+
+    #[test]
+    fn test_unit_bigendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = WrappedField<(), Wrapped<()>, PrimitiveField<(), BigEndian, 5>>;
+        type Field2 = WrappedField<(), Wrapped<()>, PrimitiveField<(), BigEndian, 20>>;
+
+        Field1::write(&mut storage, Wrapped(()));
+        Field2::write(&mut storage, Wrapped(()));
+
+        assert_eq!(Wrapped(()), Field1::read(&storage));
+        assert_eq!(Wrapped(()), Field2::read(&storage));
+
+        // Unit is a zero sized type, so the storage should never be mutated.
+        assert_eq!(storage, vec![0; 1024]);
+    }
 }
