@@ -1063,6 +1063,7 @@ mod tests {
         assert_eq!(5, PrimitiveField::<[u8; 5], BigEndian, 5>::SIZE);
     }
 
+    #[allow(clippy::unit_cmp)]
     #[test]
     fn test_unit_bigendian() {
         let mut storage = vec![0; 1024];
@@ -1084,6 +1085,7 @@ mod tests {
         assert_eq!(storage, vec![0; 1024]);
     }
 
+    #[allow(clippy::unit_cmp)]
     #[test]
     fn test_unit_littleendian() {
         let mut storage = vec![0; 1024];
