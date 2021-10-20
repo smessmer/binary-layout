@@ -136,6 +136,99 @@ int_field!(u32);
 int_field!(u64);
 int_field!(u128);
 
+macro_rules! float_field {
+    ($type:ident) => {
+        impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<$type, E, OFFSET_> {
+            /// See [FieldCopyAccess::HighLevelType]
+            type HighLevelType = $type;
+
+            doc_comment::doc_comment! {
+                concat! {"
+                Read the float field from a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_float_field: ", stringify!($type), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &[u8]) {
+                    let read: ", stringify!($type), " = my_layout::some_float_field::read(storage_data);
+                }
+                ```
+
+                # WARNING
+
+                At it's core, this method uses [", stringify!($type), "::from_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.from_bits),
+                which has some weird behavior around signaling and non-signaling `NaN` values.  Read the
+                documentation for [", stringify!($type), "::from_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.from_bits) which
+                explains the situation.
+                "},
+                fn read(storage: &[u8]) -> $type {
+                    let mut value = [0; core::mem::size_of::<$type>()];
+                    value.copy_from_slice(
+                        &storage.as_ref()[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
+                    );
+                    match E::KIND {
+                        EndianKind::Big => $type::from_be_bytes(value),
+                        EndianKind::Little => $type::from_le_bytes(value),
+                    }
+                }
+            }
+
+            doc_comment::doc_comment! {
+                concat! {"
+                Write the float field to a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_float_field: ", stringify!($type), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &mut [u8]) {
+                    my_layout::some_float_field::write(storage_data, 10.0);
+                }
+                ```
+
+                # WARNING
+
+                At it's core, this method uses [", stringify!($type), "::to_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.to_bits),
+                which has some weird behavior around signaling and non-signaling `NaN` values.  Read the
+                documentation for [", stringify!($type), "::to_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.to_bits) which
+                explains the situation.
+                "},
+                fn write(storage: &mut [u8], value: $type) {
+                    let value_as_bytes = match E::KIND {
+                        EndianKind::Big => value.to_be_bytes(),
+                        EndianKind::Little => value.to_le_bytes(),
+                    };
+                    storage.as_mut()[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
+                        .copy_from_slice(&value_as_bytes);
+                }
+            }
+        }
+
+        impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<$type, E, OFFSET_> {
+            /// See [SizedField::SIZE]
+            const SIZE: usize = core::mem::size_of::<$type>();
+        }
+    };
+}
+
+float_field!(f32);
+float_field!(f64);
+
 /// Field type `[u8]`:
 /// This field represents an [open ended byte array](crate#open-ended-byte-arrays-u8).
 /// In this impl, we define accessors for such fields.
@@ -244,6 +337,7 @@ impl<E: Endianness, const N: usize, const OFFSET_: usize> SizedField
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::float_cmp)]
     use super::*;
     use crate::endianness::{BigEndian, LittleEndian};
     use core::convert::TryInto;
@@ -754,6 +848,110 @@ mod tests {
 
         assert_eq!(16, PrimitiveField::<u128, BigEndian, 5>::SIZE);
         assert_eq!(16, PrimitiveField::<u128, BigEndian, 5>::SIZE);
+    }
+
+    #[test]
+    fn test_f32_littleendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<f32, LittleEndian, 5>;
+        type Field2 = PrimitiveField<f32, LittleEndian, 20>;
+
+        Field1::write(&mut storage, 10f32.powf(8.31));
+        Field2::write(&mut storage, -(10f32.powf(7.31)));
+
+        assert_eq!(
+            10f32.powf(8.31),
+            f32::from_le_bytes((&storage[5..9]).try_into().unwrap())
+        );
+        assert_eq!(
+            -(10f32.powf(7.31)),
+            f32::from_le_bytes((&storage[20..24]).try_into().unwrap())
+        );
+
+        assert_eq!(10f32.powf(8.31), Field1::read(&storage));
+        assert_eq!(-(10f32.powf(7.31)), Field2::read(&storage));
+
+        assert_eq!(4, PrimitiveField::<f32, LittleEndian, 5>::SIZE);
+        assert_eq!(4, PrimitiveField::<f32, LittleEndian, 5>::SIZE);
+    }
+
+    #[test]
+    fn test_f32_bigendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<f32, BigEndian, 5>;
+        type Field2 = PrimitiveField<f32, BigEndian, 20>;
+
+        Field1::write(&mut storage, 10f32.powf(8.31));
+        Field2::write(&mut storage, -(10f32.powf(7.31)));
+
+        assert_eq!(
+            10f32.powf(8.31),
+            f32::from_be_bytes((&storage[5..9]).try_into().unwrap())
+        );
+        assert_eq!(
+            -(10f32.powf(7.31)),
+            f32::from_be_bytes((&storage[20..24]).try_into().unwrap())
+        );
+
+        assert_eq!(10f32.powf(8.31), Field1::read(&storage));
+        assert_eq!(-(10f32.powf(7.31)), Field2::read(&storage));
+
+        assert_eq!(4, PrimitiveField::<f32, BigEndian, 5>::SIZE);
+        assert_eq!(4, PrimitiveField::<f32, BigEndian, 5>::SIZE);
+    }
+
+    #[test]
+    fn test_f64_littleendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<f64, LittleEndian, 5>;
+        type Field2 = PrimitiveField<f64, LittleEndian, 20>;
+
+        Field1::write(&mut storage, 10f64.powf(15.31));
+        Field2::write(&mut storage, -(10f64.powf(15.31)));
+
+        assert_eq!(
+            10f64.powf(15.31),
+            f64::from_le_bytes((&storage[5..13]).try_into().unwrap())
+        );
+        assert_eq!(
+            -(10f64.powf(15.31)),
+            f64::from_le_bytes((&storage[20..28]).try_into().unwrap())
+        );
+
+        assert_eq!(10f64.powf(15.31), Field1::read(&storage));
+        assert_eq!(-(10f64.powf(15.31)), Field2::read(&storage));
+
+        assert_eq!(8, PrimitiveField::<f64, LittleEndian, 5>::SIZE);
+        assert_eq!(8, PrimitiveField::<f64, LittleEndian, 5>::SIZE);
+    }
+
+    #[test]
+    fn test_f64_bigendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<f64, BigEndian, 5>;
+        type Field2 = PrimitiveField<f64, BigEndian, 20>;
+
+        Field1::write(&mut storage, 10f64.powf(15.31));
+        Field2::write(&mut storage, -(10f64.powf(15.31)));
+
+        assert_eq!(
+            10f64.powf(15.31),
+            f64::from_be_bytes((&storage[5..13]).try_into().unwrap())
+        );
+        assert_eq!(
+            -(10f64.powf(15.31)),
+            f64::from_be_bytes((&storage[20..28]).try_into().unwrap())
+        );
+
+        assert_eq!(10f64.powf(15.31), Field1::read(&storage));
+        assert_eq!(-(10f64.powf(15.31)), Field2::read(&storage));
+
+        assert_eq!(8, PrimitiveField::<f64, BigEndian, 5>::SIZE);
+        assert_eq!(8, PrimitiveField::<f64, BigEndian, 5>::SIZE);
     }
 
     #[test]

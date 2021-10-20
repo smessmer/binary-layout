@@ -155,6 +155,7 @@ impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::float_cmp)]
     use super::*;
     use crate::endianness::{BigEndian, LittleEndian};
     use crate::PrimitiveField;
@@ -796,6 +797,135 @@ mod tests {
         assert_eq!(
             16,
             WrappedField::<u128, Wrapped<u128>, PrimitiveField::<u128, BigEndian, 5>>::SIZE
+        );
+    }
+
+
+    #[test]
+    fn test_f32_littleendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = WrappedField<f32, Wrapped<f32>, PrimitiveField<f32, LittleEndian, 5>>;
+        type Field2 = WrappedField<f32, Wrapped<f32>, PrimitiveField<f32, LittleEndian, 20>>;
+
+        Field1::write(&mut storage, Wrapped(10f32.powf(8.31)));
+        Field2::write(&mut storage, Wrapped(10f32.powf(7.31)));
+
+        assert_eq!(
+            10f32.powf(8.31),
+            f32::from_le_bytes((&storage[5..9]).try_into().unwrap())
+        );
+        assert_eq!(
+            10f32.powf(7.31),
+            f32::from_le_bytes((&storage[20..24]).try_into().unwrap())
+        );
+
+        assert_eq!(Wrapped(10f32.powf(8.31)), Field1::read(&storage));
+        assert_eq!(Wrapped(10f32.powf(7.31)), Field2::read(&storage));
+
+        assert_eq!(
+            4,
+            WrappedField::<f32, Wrapped<f32>, PrimitiveField::<f32, LittleEndian, 5>>::SIZE
+        );
+        assert_eq!(
+            4,
+            WrappedField::<f32, Wrapped<f32>, PrimitiveField::<f32, LittleEndian, 5>>::SIZE
+        );
+    }
+
+    #[test]
+    fn test_f32_bigendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = WrappedField<f32, Wrapped<f32>, PrimitiveField<f32, BigEndian, 5>>;
+        type Field2 = WrappedField<f32, Wrapped<f32>, PrimitiveField<f32, BigEndian, 20>>;
+
+        Field1::write(&mut storage, Wrapped(10f32.powf(8.31)));
+        Field2::write(&mut storage, Wrapped(10f32.powf(7.31)));
+
+        assert_eq!(
+            10f32.powf(8.31),
+            f32::from_be_bytes((&storage[5..9]).try_into().unwrap())
+        );
+        assert_eq!(
+            10f32.powf(7.31),
+            f32::from_be_bytes((&storage[20..24]).try_into().unwrap())
+        );
+
+        assert_eq!(Wrapped(10f32.powf(8.31)), Field1::read(&storage));
+        assert_eq!(Wrapped(10f32.powf(7.31)), Field2::read(&storage));
+
+        assert_eq!(
+            4,
+            WrappedField::<f32, Wrapped<f32>, PrimitiveField::<f32, BigEndian, 5>>::SIZE
+        );
+        assert_eq!(
+            4,
+            WrappedField::<f32, Wrapped<f32>, PrimitiveField::<f32, BigEndian, 5>>::SIZE
+        );
+    }
+
+    #[test]
+    fn test_f64_littleendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = WrappedField<f64, Wrapped<f64>, PrimitiveField<f64, LittleEndian, 5>>;
+        type Field2 = WrappedField<f64, Wrapped<f64>, PrimitiveField<f64, LittleEndian, 20>>;
+
+        Field1::write(&mut storage, Wrapped(10f64.powf(15.31)));
+        Field2::write(&mut storage, Wrapped(10f64.powf(14.31)));
+
+        assert_eq!(
+            10f64.powf(15.31),
+            f64::from_le_bytes((&storage[5..13]).try_into().unwrap())
+        );
+        assert_eq!(
+            10f64.powf(14.31),
+            f64::from_le_bytes((&storage[20..28]).try_into().unwrap())
+        );
+
+        assert_eq!(Wrapped(10f64.powf(15.31)), Field1::read(&storage));
+        assert_eq!(Wrapped(10f64.powf(14.31)), Field2::read(&storage));
+
+        assert_eq!(
+            8,
+            WrappedField::<f64, Wrapped<f64>, PrimitiveField::<f64, LittleEndian, 5>>::SIZE
+        );
+        assert_eq!(
+            8,
+            WrappedField::<f64, Wrapped<f64>, PrimitiveField::<f64, LittleEndian, 5>>::SIZE
+        );
+    }
+
+    #[test]
+    fn test_f64_bigendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = WrappedField<f64, Wrapped<f64>, PrimitiveField<f64, BigEndian, 5>>;
+        type Field2 = WrappedField<f64, Wrapped<f64>, PrimitiveField<f64, BigEndian, 20>>;
+
+        Field1::write(&mut storage, Wrapped(10f64.powf(15.31)));
+        Field2::write(&mut storage, Wrapped(10f64.powf(14.31)));
+
+        assert_eq!(
+            10f64.powf(15.31),
+            f64::from_be_bytes((&storage[5..13]).try_into().unwrap())
+        );
+        assert_eq!(
+            10f64.powf(14.31),
+            f64::from_be_bytes((&storage[20..28]).try_into().unwrap())
+        );
+
+        assert_eq!(Wrapped(10f64.powf(15.31)), Field1::read(&storage));
+        assert_eq!(Wrapped(10f64.powf(14.31)), Field2::read(&storage));
+
+        assert_eq!(
+            8,
+            WrappedField::<f64, Wrapped<f64>, PrimitiveField::<f64, BigEndian, 5>>::SIZE
+        );
+        assert_eq!(
+            8,
+            WrappedField::<f64, Wrapped<f64>, PrimitiveField::<f64, BigEndian, 5>>::SIZE
         );
     }
 }
