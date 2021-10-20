@@ -260,6 +260,7 @@ impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess
                 do. This implementation exists solely to make writing derive
                 macros simpler.
                 "},
+        #[allow(clippy::unused_unit)] // I don't want to remove this as it's part of the trait.
         fn read(_storage: &[u8]) -> () {
             ()
         }
@@ -292,6 +293,7 @@ impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess
                 do. This implementation exists solely to make writing derive
                 macros simpler.
                 "},
+        #[allow(clippy::unused_unit)] // I don't want to remove this as it's part of the trait.
         fn write(_storage: &mut [u8], _value: ()) {
             ()
         }
