@@ -800,7 +800,6 @@ mod tests {
         );
     }
 
-
     #[test]
     fn test_f32_littleendian() {
         let mut storage = vec![0; 1024];
