@@ -229,9 +229,7 @@ macro_rules! float_field {
 float_field!(f32);
 float_field!(f64);
 
-impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess
-    for PrimitiveField<(), E, OFFSET_>
-{
+impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<(), E, OFFSET_> {
     /// See [FieldCopyAccess::HighLevelType]
     type HighLevelType = ();
 
@@ -300,9 +298,7 @@ impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess
     }
 }
 
-impl<E: Endianness, const OFFSET_: usize> SizedField
-    for PrimitiveField<(), E, OFFSET_>
-{
+impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<(), E, OFFSET_> {
     /// See [SizedField::SIZE]
     const SIZE: usize = core::mem::size_of::<()>();
 }

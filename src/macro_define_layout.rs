@@ -220,9 +220,7 @@ mod tests {
     fn test_layout_with_unit() {
         let mut storage: [u8; 1024] = [0; 1024];
 
-        define_layout!(unit_layout_1, LittleEndian, {
-            field1: ()
-        });
+        define_layout!(unit_layout_1, LittleEndian, { field1: () });
         let mut view = unit_layout_1::View::new(&mut storage[0..0]); // Zero length slice
         view.field1_mut().write(()); // Shouldn't cause any issues.
         assert_eq!(storage, [0u8; 1024]);
@@ -299,9 +297,7 @@ mod tests {
         assert_eq!(storage[18..], [0u8; 1006]);
         storage.fill(0u8);
 
-        define_layout!(unit_layout_8, BigEndian, {
-            field1: ()
-        });
+        define_layout!(unit_layout_8, BigEndian, { field1: () });
         let mut view = unit_layout_8::View::new(&mut storage[0..0]); // Zero length slice
         view.field1_mut().write(()); // Shouldn't cause any issues.
         assert_eq!(storage, [0u8; 1024]);
