@@ -58,12 +58,12 @@ macro_rules! int_field {
             doc_comment::doc_comment! {
                 concat! {"
                 Read the integer field from a given data region, assuming the defined layout, using the [Field] API.
-                
+
                 # Example:
-                
+
                 ```
                 use binary_layout::prelude::*;
-                    
+
                 define_layout!(my_layout, LittleEndian, {
                     //... other fields ...
                     some_integer_field: ", stringify!($type), "
@@ -90,12 +90,12 @@ macro_rules! int_field {
             doc_comment::doc_comment! {
                 concat! {"
                 Write the integer field to a given data region, assuming the defined layout, using the [Field] API.
-                
+
                 # Example:
-                
+
                 ```
                 use binary_layout::prelude::*;
-                    
+
                 define_layout!(my_layout, LittleEndian, {
                     //... other fields ...
                     some_integer_field: ", stringify!($type), "
@@ -336,7 +336,7 @@ impl<'a, E: Endianness, const OFFSET_: usize> FieldSliceAccess<'a>
     /// # Example:
     /// ```
     /// use binary_layout::prelude::*;
-    ///     
+    ///
     /// define_layout!(my_layout, LittleEndian, {
     ///     //... other fields ...
     ///     tail_data: [u8],
@@ -362,11 +362,11 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'
 
     /// Borrow the data in the byte array with read access using the [Field] API.
     /// See also [FieldSliceAccess::data].
-    ///  
+    ///
     /// # Example:
     /// ```
     /// use binary_layout::prelude::*;
-    ///     
+    ///
     /// define_layout!(my_layout, LittleEndian, {
     ///     //... other fields ...
     ///     some_field: [u8; 5],
@@ -383,11 +383,11 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'
 
     /// Borrow the data in the byte array with write access using the [Field] API.
     /// See also [FieldSliceAccess::data_mut]
-    ///  
+    ///
     /// # Example:
     /// ```
     /// use binary_layout::prelude::*;
-    ///     
+    ///
     /// define_layout!(my_layout, LittleEndian, {
     ///     //... other fields ...
     ///     some_field: [u8; 5],

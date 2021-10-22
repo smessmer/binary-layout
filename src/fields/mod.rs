@@ -130,7 +130,7 @@ pub trait FieldCopyAccess: Field {
     /// Write the field to a given data region, assuming the defined layout, using the [Field] API.
     ///
     /// # Example:
-    ///         
+    ///
     /// ```
     /// use binary_layout::prelude::*;
     ///
@@ -178,7 +178,7 @@ pub trait FieldSliceAccess<'a>: Field {
     /// # Example:
     /// ```
     /// use binary_layout::prelude::*;
-    ///     
+    ///
     /// define_layout!(my_layout, LittleEndian, {
     ///     //... other fields ...
     ///     tail_data: [u8],

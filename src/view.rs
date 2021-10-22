@@ -64,7 +64,7 @@ impl<S: AsRef<[u8]>, F: FieldCopyAccess> FieldView<S, F> {
     /// # Example
     /// ```
     /// use binary_layout::prelude::*;
-    ///                       
+    ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
     ///   some_integer_field: i8
@@ -86,7 +86,7 @@ impl<S: AsMut<[u8]>, F: FieldCopyAccess> FieldView<S, F> {
     /// # Example
     /// ```
     /// use binary_layout::prelude::*;
-    ///                       
+    ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
     ///   some_integer_field: i8
@@ -109,7 +109,7 @@ impl<'a, S: 'a + AsRef<[u8]>, F: FieldSliceAccess<'a>> FieldView<S, F> {
     /// # Example
     /// ```
     /// use binary_layout::prelude::*;
-    ///             
+    ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
     ///   tail_data: [u8],
@@ -230,7 +230,7 @@ impl<
     /// # Example:
     /// ```
     /// use binary_layout::prelude::*;
-    ///     
+    ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   another_field: u64,
     ///   tail_data: [u8],
