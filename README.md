@@ -92,12 +92,19 @@ Layouts are defined using the [define_layout!](https://docs.rs/binary-layout/lat
 2. The [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API that wraps a slice of storage data and remembers it in a `View` object, allowing access to the fields without having to pass in the packed data slice each time. This is the API used in the example above. See [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) for another example.
 
 ### Supported field types
+
 #### Primitive integer types
 - [u8](https://doc.rust-lang.org/stable/std/primitive.u8.html), [u16](https://doc.rust-lang.org/stable/std/primitive.u16.html), [u32](https://doc.rust-lang.org/stable/std/primitive.u32.html), [u64](https://doc.rust-lang.org/stable/std/primitive.u64.html), [u128](https://doc.rust-lang.org/stable/std/primitive.u128.html)
 - [i8](https://doc.rust-lang.org/stable/std/primitive.i8.html), [i16](https://doc.rust-lang.org/stable/std/primitive.i16.html), [i32](https://doc.rust-lang.org/stable/std/primitive.i32.html), [i64](https://doc.rust-lang.org/stable/std/primitive.i64.html), [i128](https://doc.rust-lang.org/stable/std/primitive.i128.html)
 
 #### Primitive float types
 - [f32](https://doc.rust-lang.org/std/primitive.f32.html), [f64](https://doc.rust-lang.org/std/primitive.f64.html)
+
+#### Primitive Zero-Sized Types (ZSTs)
+
+ZSTs neither read nor write to the underlying storage, but the appropriate traits are implemented for them to support derive macros which may require all members of a struct to implement or enum to also support the various traits.
+
+- [`()`](https://doc.rust-lang.org/std/primitive.unit.html), also known as the `unit` type.
 
 For these fields, the [Field](https://docs.rs/binary-layout/latest/binary_layout/trait.Field.html) API offers [FieldCopyAccess::read](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldCopyAccess.html#tymethod.read), [FieldCopyAccess::write](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldCopyAccess.html#tymethod.write) and the [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API offers [FieldView::read](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.read) and [FieldView::write](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.write).
 

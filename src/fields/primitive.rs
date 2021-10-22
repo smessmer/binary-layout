@@ -229,6 +229,84 @@ macro_rules! float_field {
 float_field!(f32);
 float_field!(f64);
 
+impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess
+    for PrimitiveField<(), E, OFFSET_>
+{
+    /// See [FieldCopyAccess::HighLevelType]
+    type HighLevelType = ();
+
+    doc_comment::doc_comment! {
+        concat! {"
+                'Read' the `", stringify!(()), "`-typed field from a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_zst_field: ", stringify!(()), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &[u8]) {
+                    let read: ", stringify!(()), " = my_layout::some_zst_field::read(storage_data);
+                }
+                ```
+
+                In reality, this method doesn't do any work; `",
+                stringify!(()), "` is a zero-sized type, so there's no work to
+                do. This implementation exists solely to make writing derive
+                macros simpler.
+                "},
+        #[allow(clippy::unused_unit)] // I don't want to remove this as it's part of the trait.
+        fn read(_storage: &[u8]) -> () {
+            ()
+        }
+    }
+
+    doc_comment::doc_comment! {
+        concat! {"
+                'Write' the `", stringify!(()), "`-typed field to a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_zst_field: ", stringify!(()), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &mut [u8]) {
+                    my_layout::some_zst_field::write(storage_data, ());
+                }
+                ```
+
+                # WARNING
+
+                In reality, this method doesn't do any work; `",
+                stringify!(()), "` is a zero-sized type, so there's no work to
+                do. This implementation exists solely to make writing derive
+                macros simpler.
+                "},
+        #[allow(clippy::unused_unit)] // I don't want to remove this as it's part of the trait.
+        fn write(_storage: &mut [u8], _value: ()) {
+            ()
+        }
+    }
+}
+
+impl<E: Endianness, const OFFSET_: usize> SizedField
+    for PrimitiveField<(), E, OFFSET_>
+{
+    /// See [SizedField::SIZE]
+    const SIZE: usize = core::mem::size_of::<()>();
+}
+
 /// Field type `[u8]`:
 /// This field represents an [open ended byte array](crate#open-ended-byte-arrays-u8).
 /// In this impl, we define accessors for such fields.
@@ -983,5 +1061,49 @@ mod tests {
 
         assert_eq!(2, PrimitiveField::<[u8; 2], LittleEndian, 5>::SIZE);
         assert_eq!(5, PrimitiveField::<[u8; 5], BigEndian, 5>::SIZE);
+    }
+
+    #[allow(clippy::unit_cmp)]
+    #[test]
+    fn test_unit_bigendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<(), BigEndian, 5>;
+        type Field2 = PrimitiveField<(), BigEndian, 20>;
+
+        Field1::write(&mut storage, ());
+        Field2::write(&mut storage, ());
+
+        assert_eq!((), Field1::read(&storage));
+        assert_eq!((), Field2::read(&storage));
+
+        assert_eq!(0, PrimitiveField::<(), BigEndian, 5>::SIZE);
+        assert_eq!(0, PrimitiveField::<(), BigEndian, 20>::SIZE);
+
+        // Zero-sized types do not mutate the storage, so it should remain
+        // unchanged for all of time.
+        assert_eq!(storage, vec![0; 1024]);
+    }
+
+    #[allow(clippy::unit_cmp)]
+    #[test]
+    fn test_unit_littleendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<(), LittleEndian, 5>;
+        type Field2 = PrimitiveField<(), LittleEndian, 20>;
+
+        Field1::write(&mut storage, ());
+        Field2::write(&mut storage, ());
+
+        assert_eq!((), Field1::read(&storage));
+        assert_eq!((), Field2::read(&storage));
+
+        assert_eq!(0, PrimitiveField::<(), LittleEndian, 5>::SIZE);
+        assert_eq!(0, PrimitiveField::<(), LittleEndian, 20>::SIZE);
+
+        // Zero-sized types do not mutate the storage, so it should remain
+        // unchanged for all of time.
+        assert_eq!(storage, vec![0; 1024]);
     }
 }

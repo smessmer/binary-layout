@@ -1,6 +1,7 @@
-2.1.1 (unreleased
+2.1.1 (unreleased)
 ------
 - Added support for f32 and f64
+- Added support for unit (`()`)
 
 2.1.0
 ------
