@@ -1,52 +1,55 @@
-use core::convert::TryFrom;
-use core::marker::PhantomData;
-
+use super::PrimitiveField;
 use crate::endianness::{EndianKind, Endianness};
+use crate::{Field, SizedField};
 
-use super::{Field, FieldCopyAccess, FieldSliceAccess, SizedField};
+/// This trait is implemented for fields with "copy access",
+/// i.e. fields that read/write data by copying it from/to the
+/// binary blob. Examples of this are primitive types
+/// like u8, i32, ...
+pub trait FieldCopyAccess: Field {
+    /// The data type that is returned from read calls and has to be
+    /// passed in to write calls. This can be different from the primitive
+    /// type used in the binary blob, since that primitive type can be
+    /// wrapped (see [WrappedField](crate::WrappedField) ) into a high level type before being returned from read
+    /// calls (or vice versa unwrapped when writing).
+    type HighLevelType;
 
-/// A [PrimitiveField] is a [Field] that directly represents a primitive type like [u8], [i16], ...
-/// See [Field] for more info on this API.
-///
-/// # Example:
-/// ```
-/// use binary_layout::prelude::*;
-///
-/// define_layout!(my_layout, LittleEndian, {
-///   field_one: u16,
-///   another_field: [u8; 16],
-///   something_else: u32,
-///   tail_data: [u8],
-/// });
-///
-/// fn func(storage_data: &mut [u8]) {
-///   // read some data
-///   let format_version_header: u16 = my_layout::field_one::read(storage_data);
-///   // equivalent: let format_version_header = u16::from_le_bytes((&storage_data[0..2]).try_into().unwrap());
-///
-///   // write some data
-///   my_layout::something_else::write(storage_data, 10);
-///   // equivalent: data_slice[18..22].copy_from_slice(&10u32.to_le_bytes());
-///
-///   // access a data region
-///   let tail_data: &[u8] = my_layout::tail_data::data(storage_data);
-///   // equivalent: let tail_data: &[u8] = &data_slice[22..];
-///
-///   // and modify it
-///   my_layout::tail_data::data_mut(storage_data)[..5].copy_from_slice(&[1, 2, 3, 4, 5]);
-///   // equivalent: data_slice[18..22].copy_from_slice(&[1, 2, 3, 4, 5]);
-/// }
-/// ```
-pub struct PrimitiveField<T: ?Sized, E: Endianness, const OFFSET_: usize> {
-    _p1: PhantomData<T>,
-    _p2: PhantomData<E>,
-}
+    /// Read the field from a given data region, assuming the defined layout, using the [Field] API.
+    ///
+    /// # Example:
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///
+    /// define_layout!(my_layout, LittleEndian, {
+    ///   //... other fields ...
+    ///   some_integer_field: u16,
+    ///   //... other fields ...
+    /// });
+    ///
+    /// fn func(storage_data: &[u8]) {
+    ///   let read: u16 = my_layout::some_integer_field::read(storage_data);
+    /// }
+    /// ```
+    fn read(storage: &[u8]) -> Self::HighLevelType;
 
-impl<T: ?Sized, E: Endianness, const OFFSET_: usize> Field for PrimitiveField<T, E, OFFSET_> {
-    /// See [Field::Endian]
-    type Endian = E;
-    /// See [Field::OFFSET]
-    const OFFSET: usize = OFFSET_;
+    /// Write the field to a given data region, assuming the defined layout, using the [Field] API.
+    ///
+    /// # Example:
+    ///
+    /// ```
+    /// use binary_layout::prelude::*;
+    ///
+    /// define_layout!(my_layout, LittleEndian, {
+    ///   //... other fields ...
+    ///   some_integer_field: u16,
+    ///   //... other fields ...
+    /// });
+    ///
+    /// fn func(storage_data: &mut [u8]) {
+    ///   my_layout::some_integer_field::write(storage_data, 10);
+    /// }
+    /// ```
+    fn write(storage: &mut [u8], v: Self::HighLevelType);
 }
 
 macro_rules! int_field {
@@ -301,112 +304,6 @@ impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<(),
 impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<(), E, OFFSET_> {
     /// See [SizedField::SIZE]
     const SIZE: usize = core::mem::size_of::<()>();
-}
-
-/// Field type `[u8]`:
-/// This field represents an [open ended byte array](crate#open-ended-byte-arrays-u8).
-/// In this impl, we define accessors for such fields.
-impl<'a, E: Endianness, const OFFSET_: usize> FieldSliceAccess<'a>
-    for PrimitiveField<[u8], E, OFFSET_>
-{
-    type SliceType = &'a [u8];
-    type MutSliceType = &'a mut [u8];
-
-    /// Borrow the data in the byte array with read access using the [Field] API.
-    ///
-    /// # Example:
-    /// ```
-    /// use binary_layout::prelude::*;
-    ///
-    /// define_layout!(my_layout, LittleEndian, {
-    ///     //... other fields ...
-    ///     tail_data: [u8],
-    /// });
-    ///
-    /// fn func(storage_data: &[u8]) {
-    ///     let tail_data: &[u8] = my_layout::tail_data::data(storage_data);
-    /// }
-    /// ```
-    fn data(storage: &'a [u8]) -> &'a [u8] {
-        &storage[Self::OFFSET..]
-    }
-
-    /// Borrow the data in the byte array with write access using the [Field] API.
-    ///
-    /// # Example:
-    /// ```
-    /// use binary_layout::prelude::*;
-    ///
-    /// define_layout!(my_layout, LittleEndian, {
-    ///     //... other fields ...
-    ///     tail_data: [u8],
-    /// });
-    ///
-    /// fn func(storage_data: &mut [u8]) {
-    ///     let tail_data: &mut [u8] = my_layout::tail_data::data_mut(storage_data);
-    /// }
-    /// ```
-    fn data_mut(storage: &'a mut [u8]) -> &'a mut [u8] {
-        &mut storage[Self::OFFSET..]
-    }
-}
-
-/// Field type `[u8; N]`:
-/// This field represents a [fixed size byte array](crate#fixed-size-byte-arrays-u8-n).
-/// In this impl, we define accessors for such fields.
-impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'a>
-    for PrimitiveField<[u8; N], E, OFFSET_>
-{
-    type SliceType = &'a [u8; N];
-    type MutSliceType = &'a mut [u8; N];
-
-    /// Borrow the data in the byte array with read access using the [Field] API.
-    /// See also [FieldSliceAccess::data].
-    ///
-    /// # Example:
-    /// ```
-    /// use binary_layout::prelude::*;
-    ///
-    /// define_layout!(my_layout, LittleEndian, {
-    ///     //... other fields ...
-    ///     some_field: [u8; 5],
-    ///     //... other fields
-    /// });
-    ///
-    /// fn func(storage_data: &[u8]) {
-    ///     let some_field: &[u8; 5] = my_layout::some_field::data(storage_data);
-    /// }
-    /// ```
-    fn data(storage: &'a [u8]) -> &'a [u8; N] {
-        <&[u8; N]>::try_from(&storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
-    }
-
-    /// Borrow the data in the byte array with write access using the [Field] API.
-    /// See also [FieldSliceAccess::data_mut]
-    ///
-    /// # Example:
-    /// ```
-    /// use binary_layout::prelude::*;
-    ///
-    /// define_layout!(my_layout, LittleEndian, {
-    ///     //... other fields ...
-    ///     some_field: [u8; 5],
-    ///     //... other fields
-    /// });
-    ///
-    /// fn func(storage_data: &mut [u8]) {
-    ///     let some_field: &mut [u8; 5] = my_layout::some_field::data_mut(storage_data);
-    /// }
-    /// ```
-    fn data_mut(storage: &'a mut [u8]) -> &'a mut [u8; N] {
-        <&mut [u8; N]>::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
-    }
-}
-impl<E: Endianness, const N: usize, const OFFSET_: usize> SizedField
-    for PrimitiveField<[u8; N], E, OFFSET_>
-{
-    /// See [SizedField::SIZE]
-    const SIZE: usize = N;
 }
 
 #[cfg(test)]
@@ -1026,37 +923,6 @@ mod tests {
 
         assert_eq!(8, PrimitiveField::<f64, BigEndian, 5>::SIZE);
         assert_eq!(8, PrimitiveField::<f64, BigEndian, 5>::SIZE);
-    }
-
-    #[test]
-    fn test_slice() {
-        let mut storage = vec![0; 1024];
-
-        type Field1 = PrimitiveField<[u8], LittleEndian, 5>;
-        type Field2 = PrimitiveField<[u8], BigEndian, 7>;
-
-        Field1::data_mut(&mut storage)[..5].copy_from_slice(&[10, 20, 30, 40, 50]);
-        Field2::data_mut(&mut storage)[..5].copy_from_slice(&[60, 70, 80, 90, 100]);
-
-        assert_eq!(&[10, 20, 60, 70, 80], &Field1::data(&storage)[..5]);
-        assert_eq!(&[60, 70, 80, 90, 100], &Field2::data(&storage)[..5]);
-    }
-
-    #[test]
-    fn test_array() {
-        let mut storage = vec![0; 1024];
-
-        type Field1 = PrimitiveField<[u8; 2], LittleEndian, 5>;
-        type Field2 = PrimitiveField<[u8; 5], BigEndian, 6>;
-
-        Field1::data_mut(&mut storage).copy_from_slice(&[10, 20]);
-        Field2::data_mut(&mut storage).copy_from_slice(&[60, 70, 80, 90, 100]);
-
-        assert_eq!(&[10, 60], Field1::data(&storage));
-        assert_eq!(&[60, 70, 80, 90, 100], Field2::data(&storage));
-
-        assert_eq!(2, PrimitiveField::<[u8; 2], LittleEndian, 5>::SIZE);
-        assert_eq!(5, PrimitiveField::<[u8; 5], BigEndian, 5>::SIZE);
     }
 
     #[allow(clippy::unit_cmp)]

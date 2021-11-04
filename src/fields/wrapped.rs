@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use super::{Field, FieldCopyAccess, SizedField};
+use super::{primitive::FieldCopyAccess, Field, SizedField};
 
 /// Implementing the [LayoutAs] trait for a custom type allows that custom type to be used
 /// as the type of a layout field. Note that the value of this type is copied each time it

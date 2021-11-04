@@ -145,9 +145,9 @@ pub mod example;
 
 pub use endianness::{BigEndian, LittleEndian};
 pub use fields::{
-    primitive::PrimitiveField,
+    primitive::{FieldCopyAccess, FieldSliceAccess, PrimitiveField},
     wrapped::{LayoutAs, WrappedField},
-    Field, FieldCopyAccess, FieldSliceAccess, SizedField,
+    Field, SizedField,
 };
 pub use view::FieldView;
 
