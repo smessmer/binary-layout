@@ -309,8 +309,8 @@ impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<(), E, O
 #[cfg(test)]
 mod tests {
     #![allow(clippy::float_cmp)]
-    use super::*;
-    use crate::endianness::{BigEndian, LittleEndian};
+    use crate::prelude::*;
+    use crate::PrimitiveField;
     use core::convert::TryInto;
 
     #[test]

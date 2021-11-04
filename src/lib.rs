@@ -161,6 +161,8 @@ pub use paste::paste;
 /// use binary_layout::prelude::*;
 /// ```
 pub mod prelude {
-    pub use super::{Field, FieldCopyAccess, FieldSliceAccess, SizedField};
+    pub use super::{
+        BigEndian, Field, FieldCopyAccess, FieldSliceAccess, LittleEndian, SizedField,
+    };
     pub use crate::define_layout;
 }
