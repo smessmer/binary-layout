@@ -157,8 +157,8 @@ impl<E: Endianness, const N: usize, const OFFSET_: usize> SizedField
 #[cfg(test)]
 mod tests {
     #![allow(clippy::float_cmp)]
-    use super::*;
     use crate::prelude::*;
+    use crate::PrimitiveField;
 
     #[test]
     fn test_slice() {

@@ -199,7 +199,7 @@ macro_rules! define_layout {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Field, FieldCopyAccess, FieldSliceAccess, SizedField};
+    use crate::prelude::*;
 
     use core::convert::TryInto;
     use rand::{rngs::StdRng, RngCore, SeedableRng};

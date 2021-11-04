@@ -156,9 +156,8 @@ impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
 #[cfg(test)]
 mod tests {
     #![allow(clippy::float_cmp)]
-    use super::*;
-    use crate::endianness::{BigEndian, LittleEndian};
-    use crate::PrimitiveField;
+    use crate::prelude::*;
+    use crate::{LayoutAs, PrimitiveField, WrappedField};
     use core::convert::TryInto;
 
     #[derive(Debug, PartialEq, Eq)]
