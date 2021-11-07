@@ -150,7 +150,7 @@ macro_rules! define_layout {
             #[allow(non_camel_case_types)]
             pub type $name = $crate::WrappedField::<$underlying_type, $type, $crate::PrimitiveField::<$underlying_type, $endianness, {$crate::internal::unwrap_field_size($offset_accumulator)}>>;
         }
-        $crate::define_layout!(@impl_fields $endianness, ($crate::internal::option_usize_add($offset_accumulator, <$name as $crate::SizedField>::SIZE)), {$($($tail)*)?});
+        $crate::define_layout!(@impl_fields $endianness, ($crate::internal::option_usize_add(<$name as $crate::Field>::OFFSET, <$name as $crate::SizedField>::SIZE)), {$($($tail)*)?});
     };
     (@impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty $(, $($tail:tt)*)?}) => {
         $crate::doc_comment!{
@@ -158,7 +158,7 @@ macro_rules! define_layout {
             #[allow(non_camel_case_types)]
             pub type $name = $crate::PrimitiveField::<$type, $endianness, {$crate::internal::unwrap_field_size($offset_accumulator)}>;
         }
-        $crate::define_layout!(@impl_fields $endianness, ($crate::internal::option_usize_add($offset_accumulator, <$name as $crate::SizedField>::SIZE)), {$($($tail)*)?});
+        $crate::define_layout!(@impl_fields $endianness, ($crate::internal::option_usize_add(<$name as $crate::Field>::OFFSET, <$name as $crate::SizedField>::SIZE)), {$($($tail)*)?});
     };
 
     (@impl_view_asref {}) => {};
@@ -214,10 +214,10 @@ pub const fn unwrap_field_size(opt: Option<usize>) -> usize {
 }
 
 /// Internal function, don't use!
-pub const fn option_usize_add(lhs: Option<usize>, rhs: Option<usize>) -> Option<usize> {
+pub const fn option_usize_add(lhs: usize, rhs: Option<usize>) -> Option<usize> {
     match (lhs, rhs) {
-        (Some(lhs), Some(rhs)) => Some(lhs + rhs),
-        _ => None,
+        (lhs, Some(rhs)) => Some(lhs + rhs),
+        (_, None) => None,
     }
 }
 
