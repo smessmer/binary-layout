@@ -140,23 +140,23 @@ macro_rules! define_layout {
     };
 
     (@impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {};
-    (@impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty as $underlying_type: ty $(, $name_tail: ident : $type_tail: ty $(as $underlying_tail: ty)?)*}) => {
+    (@impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty as $underlying_type: ty $(, $($tail:tt)*)?}) => {
         $crate::doc_comment!{
             concat!("Metadata and [Field](binary_layout::Field) API accessors for the `", stringify!($name), "` field"),
             #[allow(non_camel_case_types)]
             pub type $name = $crate::WrappedField::<$underlying_type, $type, $crate::PrimitiveField::<$underlying_type, $endianness, $offset_accumulator>>;
         }
-        $crate::define_layout!(@impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($name_tail : $type_tail $(as $underlying_tail)?),*});
+        $crate::define_layout!(@impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($($tail)*)?});
     };
 
     (@impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {};
-    (@impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty $(, $name_tail: ident : $type_tail: ty $(as $underlying_tail: ty)?)*}) => {
+    (@impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty $(, $($tail:tt)*)?}) => {
         $crate::doc_comment!{
             concat!("Metadata and [Field](binary_layout::Field) API accessors for the `", stringify!($name), "` field"),
             #[allow(non_camel_case_types)]
             pub type $name = $crate::PrimitiveField::<$type, $endianness, $offset_accumulator>;
         }
-        $crate::define_layout!(@impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($name_tail : $type_tail $(as $underlying_tail)?),*});
+        $crate::define_layout!(@impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($($tail)*)?});
     };
 
     (@impl_view_asref {}) => {};
