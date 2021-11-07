@@ -207,7 +207,7 @@ pub const fn unwrap_field_size(opt: Option<usize>) -> usize {
         Some(x) => x,
         None => {
             #[allow(unconditional_panic)]
-            ["Fields without a static size can only be used at the end of a layout"][10];
+            ["Error: Fields without a static size (e.g. open-ended byte arrays) can only be used at the end of a layout"][10];
             loop {}
         }
     }
