@@ -148,8 +148,6 @@ macro_rules! define_layout {
         }
         $crate::define_layout!(@impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($($tail)*)?});
     };
-
-    (@impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {};
     (@impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty $(, $($tail:tt)*)?}) => {
         $crate::doc_comment!{
             concat!("Metadata and [Field](binary_layout::Field) API accessors for the `", stringify!($name), "` field"),
