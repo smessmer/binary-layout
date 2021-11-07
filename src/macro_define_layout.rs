@@ -54,7 +54,7 @@
 ///   field2: u32,
 /// });
 /// assert_eq!(2, my_layout::field2::OFFSET);
-/// assert_eq!(4, my_layout::field2::SIZE);
+/// assert_eq!(Some(4), my_layout::field2::SIZE);
 /// ```
 ///
 /// ## struct View
@@ -90,7 +90,7 @@ macro_rules! define_layout {
                 #[allow(unused_imports)]
                 use super::*;
 
-                $crate::define_layout!(@impl_fields $crate::$endianness, 0, {$($field_name : $field_type $(as $underlying_type)?),*});
+                $crate::define_layout!(@impl_fields $crate::$endianness, Some(0), {$($field_name : $field_type $(as $underlying_type)?),*});
 
                 $crate::doc_comment!{
                     concat!{"
@@ -139,22 +139,26 @@ macro_rules! define_layout {
         }
     };
 
-    (@impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {};
+    (@impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {
+        /// Total size of the layout in number of bytes.
+        /// This can be None if the layout ends with an open ended field like a byte slice.
+        pub const SIZE: Option<usize> = $offset_accumulator;
+    };
     (@impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty as $underlying_type: ty $(, $($tail:tt)*)?}) => {
         $crate::doc_comment!{
             concat!("Metadata and [Field](binary_layout::Field) API accessors for the `", stringify!($name), "` field"),
             #[allow(non_camel_case_types)]
-            pub type $name = $crate::WrappedField::<$underlying_type, $type, $crate::PrimitiveField::<$underlying_type, $endianness, $offset_accumulator>>;
+            pub type $name = $crate::WrappedField::<$underlying_type, $type, $crate::PrimitiveField::<$underlying_type, $endianness, {$crate::internal::unwrap_field_size($offset_accumulator)}>>;
         }
-        $crate::define_layout!(@impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($($tail)*)?});
+        $crate::define_layout!(@impl_fields $endianness, ($crate::internal::option_usize_add($offset_accumulator, <$name as $crate::SizedField>::SIZE)), {$($($tail)*)?});
     };
     (@impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty $(, $($tail:tt)*)?}) => {
         $crate::doc_comment!{
             concat!("Metadata and [Field](binary_layout::Field) API accessors for the `", stringify!($name), "` field"),
             #[allow(non_camel_case_types)]
-            pub type $name = $crate::PrimitiveField::<$type, $endianness, $offset_accumulator>;
+            pub type $name = $crate::PrimitiveField::<$type, $endianness, {$crate::internal::unwrap_field_size($offset_accumulator)}>;
         }
-        $crate::define_layout!(@impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($($tail)*)?});
+        $crate::define_layout!(@impl_fields $endianness, ($crate::internal::option_usize_add($offset_accumulator, <$name as $crate::SizedField>::SIZE)), {$($($tail)*)?});
     };
 
     (@impl_view_asref {}) => {};
@@ -193,6 +197,28 @@ macro_rules! define_layout {
         }
         $crate::define_layout!(@impl_view_into {$($name_tail),*});
     };
+}
+
+// TODO This only exists because Option<usize>::unwrap() isn't const. Remove this once it is.
+/// Internal function, don't use!
+/// Unwraps an option<usize>
+pub const fn unwrap_field_size(opt: Option<usize>) -> usize {
+    match opt {
+        Some(x) => x,
+        None => {
+            #[allow(unconditional_panic)]
+            ["Fields without a static size can only be used at the end of a layout"][10];
+            loop {}
+        }
+    }
+}
+
+/// Internal function, don't use!
+pub const fn option_usize_add(lhs: Option<usize>, rhs: Option<usize>) -> Option<usize> {
+    match (lhs, rhs) {
+        (Some(lhs), Some(rhs)) => Some(lhs + rhs),
+        _ => None,
+    }
 }
 
 #[cfg(test)]
@@ -262,5 +288,23 @@ mod tests {
         let view2 = my_layout::View::new(&storage);
         view1.field1().read();
         view2.field1().read();
+    }
+
+    #[test]
+    fn size_of_sized_layout() {
+        define_layout!(my_layout, LittleEndian, {
+            field1: u16,
+            field2: i64,
+        });
+        assert_eq!(Some(10), my_layout::SIZE);
+    }
+
+    #[test]
+    fn size_of_unsized_layout() {
+        define_layout!(my_layout, LittleEndian, {
+            field: u16,
+            tail: [u8],
+        });
+        assert_eq!(None, my_layout::SIZE);
     }
 }

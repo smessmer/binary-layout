@@ -95,6 +95,10 @@ impl<'a, E: Endianness, const OFFSET_: usize> FieldSliceAccess<'a>
         &mut storage[Self::OFFSET..]
     }
 }
+impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<[u8], E, OFFSET_> {
+    /// See [SizedField::SIZE]
+    const SIZE: Option<usize> = None;
+}
 
 /// Field type `[u8; N]`:
 /// This field represents a [fixed size byte array](crate#fixed-size-byte-arrays-u8-n).
@@ -151,7 +155,7 @@ impl<E: Endianness, const N: usize, const OFFSET_: usize> SizedField
     for PrimitiveField<[u8; N], E, OFFSET_>
 {
     /// See [SizedField::SIZE]
-    const SIZE: usize = N;
+    const SIZE: Option<usize> = Some(N);
 }
 
 #[cfg(test)]
@@ -187,7 +191,7 @@ mod tests {
         assert_eq!(&[10, 60], Field1::data(&storage));
         assert_eq!(&[60, 70, 80, 90, 100], Field2::data(&storage));
 
-        assert_eq!(2, PrimitiveField::<[u8; 2], LittleEndian, 5>::SIZE);
-        assert_eq!(5, PrimitiveField::<[u8; 5], BigEndian, 5>::SIZE);
+        assert_eq!(Some(2), PrimitiveField::<[u8; 2], LittleEndian, 5>::SIZE);
+        assert_eq!(Some(5), PrimitiveField::<[u8; 5], BigEndian, 5>::SIZE);
     }
 }

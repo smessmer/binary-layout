@@ -73,12 +73,9 @@ pub trait Field {
 }
 
 /// This trait offers access to the metadata of a sized field in a layout.
-/// Sized fields are all fields with a defined size. This is almost all fields.
-/// The only exception is an unsized array field that can be used to match
-/// tail data, i.e. any data at the end of the storage after all other fields
-/// were defined and until the storage ends.
 pub trait SizedField: Field {
     /// The size of the field in the layout.
+    /// This can be None if it is an open ended field like a byte slice
     ///
     /// # Example
     /// ```
@@ -88,11 +85,13 @@ pub trait SizedField: Field {
     ///   field1: u16,
     ///   field2: i32,
     ///   field3: u8,
+    ///   tail: [u8],
     /// });
     ///
-    /// assert_eq!(2, my_layout::field1::SIZE);
-    /// assert_eq!(4, my_layout::field2::SIZE);
-    /// assert_eq!(1, my_layout::field3::SIZE);
+    /// assert_eq!(Some(2), my_layout::field1::SIZE);
+    /// assert_eq!(Some(4), my_layout::field2::SIZE);
+    /// assert_eq!(Some(1), my_layout::field3::SIZE);
+    /// assert_eq!(None, my_layout::tail::SIZE);
     /// ```
-    const SIZE: usize;
+    const SIZE: Option<usize>;
 }

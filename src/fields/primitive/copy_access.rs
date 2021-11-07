@@ -123,7 +123,7 @@ macro_rules! int_field {
 
         impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<$type, E, OFFSET_> {
             /// See [SizedField::SIZE]
-            const SIZE: usize = core::mem::size_of::<$type>();
+            const SIZE: Option<usize> = Some(core::mem::size_of::<$type>());
         }
     };
 }
@@ -224,7 +224,7 @@ macro_rules! float_field {
 
         impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<$type, E, OFFSET_> {
             /// See [SizedField::SIZE]
-            const SIZE: usize = core::mem::size_of::<$type>();
+            const SIZE: Option<usize> = Some(core::mem::size_of::<$type>());
         }
     };
 }
@@ -303,7 +303,7 @@ impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<(),
 
 impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<(), E, OFFSET_> {
     /// See [SizedField::SIZE]
-    const SIZE: usize = core::mem::size_of::<()>();
+    const SIZE: Option<usize> = Some(core::mem::size_of::<()>());
 }
 
 #[cfg(test)]
@@ -332,8 +332,8 @@ mod tests {
             i8::from_le_bytes((&storage[20..21]).try_into().unwrap())
         );
 
-        assert_eq!(1, PrimitiveField::<i8, LittleEndian, 5>::SIZE);
-        assert_eq!(1, PrimitiveField::<i8, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(1), PrimitiveField::<i8, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(1), PrimitiveField::<i8, LittleEndian, 5>::SIZE);
     }
 
     #[test]
@@ -355,8 +355,8 @@ mod tests {
             i8::from_be_bytes((&storage[20..21]).try_into().unwrap())
         );
 
-        assert_eq!(1, PrimitiveField::<i8, BigEndian, 5>::SIZE);
-        assert_eq!(1, PrimitiveField::<i8, BigEndian, 5>::SIZE);
+        assert_eq!(Some(1), PrimitiveField::<i8, BigEndian, 5>::SIZE);
+        assert_eq!(Some(1), PrimitiveField::<i8, BigEndian, 5>::SIZE);
     }
 
     #[test]
@@ -381,8 +381,8 @@ mod tests {
         assert_eq!(500, Field1::read(&storage));
         assert_eq!(-2000, Field2::read(&storage));
 
-        assert_eq!(2, PrimitiveField::<i16, LittleEndian, 5>::SIZE);
-        assert_eq!(2, PrimitiveField::<i16, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(2), PrimitiveField::<i16, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(2), PrimitiveField::<i16, LittleEndian, 5>::SIZE);
     }
 
     #[test]
@@ -407,8 +407,8 @@ mod tests {
         assert_eq!(500, Field1::read(&storage));
         assert_eq!(-2000, Field2::read(&storage));
 
-        assert_eq!(2, PrimitiveField::<i16, BigEndian, 5>::SIZE);
-        assert_eq!(2, PrimitiveField::<i16, BigEndian, 5>::SIZE);
+        assert_eq!(Some(2), PrimitiveField::<i16, BigEndian, 5>::SIZE);
+        assert_eq!(Some(2), PrimitiveField::<i16, BigEndian, 5>::SIZE);
     }
 
     #[test]
@@ -433,8 +433,8 @@ mod tests {
         assert_eq!(10i32.pow(8), Field1::read(&storage));
         assert_eq!(-(10i32.pow(7)), Field2::read(&storage));
 
-        assert_eq!(4, PrimitiveField::<i32, LittleEndian, 5>::SIZE);
-        assert_eq!(4, PrimitiveField::<i32, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<i32, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<i32, LittleEndian, 5>::SIZE);
     }
 
     #[test]
@@ -459,8 +459,8 @@ mod tests {
         assert_eq!(10i32.pow(8), Field1::read(&storage));
         assert_eq!(-(10i32.pow(7)), Field2::read(&storage));
 
-        assert_eq!(4, PrimitiveField::<i32, BigEndian, 5>::SIZE);
-        assert_eq!(4, PrimitiveField::<i32, BigEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<i32, BigEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<i32, BigEndian, 5>::SIZE);
     }
 
     #[test]
@@ -485,8 +485,8 @@ mod tests {
         assert_eq!(10i64.pow(15), Field1::read(&storage));
         assert_eq!(-(10i64.pow(14)), Field2::read(&storage));
 
-        assert_eq!(8, PrimitiveField::<i64, LittleEndian, 5>::SIZE);
-        assert_eq!(8, PrimitiveField::<i64, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<i64, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<i64, LittleEndian, 5>::SIZE);
     }
 
     #[test]
@@ -511,8 +511,8 @@ mod tests {
         assert_eq!(10i64.pow(15), Field1::read(&storage));
         assert_eq!(-(10i64.pow(14)), Field2::read(&storage));
 
-        assert_eq!(8, PrimitiveField::<i64, BigEndian, 5>::SIZE);
-        assert_eq!(8, PrimitiveField::<i64, BigEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<i64, BigEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<i64, BigEndian, 5>::SIZE);
     }
 
     #[test]
@@ -537,8 +537,8 @@ mod tests {
         assert_eq!(10i128.pow(30), Field1::read(&storage));
         assert_eq!(-(10i128.pow(28)), Field2::read(&storage));
 
-        assert_eq!(16, PrimitiveField::<i128, LittleEndian, 5>::SIZE);
-        assert_eq!(16, PrimitiveField::<i128, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(16), PrimitiveField::<i128, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(16), PrimitiveField::<i128, LittleEndian, 5>::SIZE);
     }
 
     #[test]
@@ -563,8 +563,8 @@ mod tests {
         assert_eq!(10i128.pow(30), Field1::read(&storage));
         assert_eq!(-(10i128.pow(28)), Field2::read(&storage));
 
-        assert_eq!(16, PrimitiveField::<i128, BigEndian, 5>::SIZE);
-        assert_eq!(16, PrimitiveField::<i128, BigEndian, 5>::SIZE);
+        assert_eq!(Some(16), PrimitiveField::<i128, BigEndian, 5>::SIZE);
+        assert_eq!(Some(16), PrimitiveField::<i128, BigEndian, 5>::SIZE);
     }
 
     #[test]
@@ -586,8 +586,8 @@ mod tests {
             u8::from_le_bytes((&storage[20..21]).try_into().unwrap())
         );
 
-        assert_eq!(1, PrimitiveField::<u8, LittleEndian, 5>::SIZE);
-        assert_eq!(1, PrimitiveField::<u8, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(1), PrimitiveField::<u8, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(1), PrimitiveField::<u8, LittleEndian, 5>::SIZE);
     }
 
     #[test]
@@ -609,8 +609,8 @@ mod tests {
             u8::from_be_bytes((&storage[20..21]).try_into().unwrap())
         );
 
-        assert_eq!(1, PrimitiveField::<u8, BigEndian, 5>::SIZE);
-        assert_eq!(1, PrimitiveField::<u8, BigEndian, 5>::SIZE);
+        assert_eq!(Some(1), PrimitiveField::<u8, BigEndian, 5>::SIZE);
+        assert_eq!(Some(1), PrimitiveField::<u8, BigEndian, 5>::SIZE);
     }
 
     #[test]
@@ -635,8 +635,8 @@ mod tests {
         assert_eq!(500, Field1::read(&storage));
         assert_eq!(2000, Field2::read(&storage));
 
-        assert_eq!(2, PrimitiveField::<u16, LittleEndian, 5>::SIZE);
-        assert_eq!(2, PrimitiveField::<u16, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(2), PrimitiveField::<u16, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(2), PrimitiveField::<u16, LittleEndian, 5>::SIZE);
     }
 
     #[test]
@@ -661,8 +661,8 @@ mod tests {
         assert_eq!(500, Field1::read(&storage));
         assert_eq!(2000, Field2::read(&storage));
 
-        assert_eq!(2, PrimitiveField::<u16, BigEndian, 5>::SIZE);
-        assert_eq!(2, PrimitiveField::<u16, BigEndian, 5>::SIZE);
+        assert_eq!(Some(2), PrimitiveField::<u16, BigEndian, 5>::SIZE);
+        assert_eq!(Some(2), PrimitiveField::<u16, BigEndian, 5>::SIZE);
     }
 
     #[test]
@@ -687,8 +687,8 @@ mod tests {
         assert_eq!(10u32.pow(8), Field1::read(&storage));
         assert_eq!(10u32.pow(7), Field2::read(&storage));
 
-        assert_eq!(4, PrimitiveField::<u32, LittleEndian, 5>::SIZE);
-        assert_eq!(4, PrimitiveField::<u32, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<u32, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<u32, LittleEndian, 5>::SIZE);
     }
 
     #[test]
@@ -713,8 +713,8 @@ mod tests {
         assert_eq!(10u32.pow(8), Field1::read(&storage));
         assert_eq!(10u32.pow(7), Field2::read(&storage));
 
-        assert_eq!(4, PrimitiveField::<u32, BigEndian, 5>::SIZE);
-        assert_eq!(4, PrimitiveField::<u32, BigEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<u32, BigEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<u32, BigEndian, 5>::SIZE);
     }
 
     #[test]
@@ -739,8 +739,8 @@ mod tests {
         assert_eq!(10u64.pow(15), Field1::read(&storage));
         assert_eq!(10u64.pow(14), Field2::read(&storage));
 
-        assert_eq!(8, PrimitiveField::<u64, LittleEndian, 5>::SIZE);
-        assert_eq!(8, PrimitiveField::<u64, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<u64, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<u64, LittleEndian, 5>::SIZE);
     }
 
     #[test]
@@ -765,8 +765,8 @@ mod tests {
         assert_eq!(10u64.pow(15), Field1::read(&storage));
         assert_eq!(10u64.pow(14), Field2::read(&storage));
 
-        assert_eq!(8, PrimitiveField::<u64, BigEndian, 5>::SIZE);
-        assert_eq!(8, PrimitiveField::<u64, BigEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<u64, BigEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<u64, BigEndian, 5>::SIZE);
     }
 
     #[test]
@@ -791,8 +791,8 @@ mod tests {
         assert_eq!(10u128.pow(30), Field1::read(&storage));
         assert_eq!(10u128.pow(28), Field2::read(&storage));
 
-        assert_eq!(16, PrimitiveField::<u128, LittleEndian, 5>::SIZE);
-        assert_eq!(16, PrimitiveField::<u128, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(16), PrimitiveField::<u128, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(16), PrimitiveField::<u128, LittleEndian, 5>::SIZE);
     }
 
     #[test]
@@ -817,8 +817,8 @@ mod tests {
         assert_eq!(10u128.pow(30), Field1::read(&storage));
         assert_eq!(10u128.pow(28), Field2::read(&storage));
 
-        assert_eq!(16, PrimitiveField::<u128, BigEndian, 5>::SIZE);
-        assert_eq!(16, PrimitiveField::<u128, BigEndian, 5>::SIZE);
+        assert_eq!(Some(16), PrimitiveField::<u128, BigEndian, 5>::SIZE);
+        assert_eq!(Some(16), PrimitiveField::<u128, BigEndian, 5>::SIZE);
     }
 
     #[test]
@@ -843,8 +843,8 @@ mod tests {
         assert_eq!(10f32.powf(8.31), Field1::read(&storage));
         assert_eq!(-(10f32.powf(7.31)), Field2::read(&storage));
 
-        assert_eq!(4, PrimitiveField::<f32, LittleEndian, 5>::SIZE);
-        assert_eq!(4, PrimitiveField::<f32, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<f32, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<f32, LittleEndian, 5>::SIZE);
     }
 
     #[test]
@@ -869,8 +869,8 @@ mod tests {
         assert_eq!(10f32.powf(8.31), Field1::read(&storage));
         assert_eq!(-(10f32.powf(7.31)), Field2::read(&storage));
 
-        assert_eq!(4, PrimitiveField::<f32, BigEndian, 5>::SIZE);
-        assert_eq!(4, PrimitiveField::<f32, BigEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<f32, BigEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<f32, BigEndian, 5>::SIZE);
     }
 
     #[test]
@@ -895,8 +895,8 @@ mod tests {
         assert_eq!(10f64.powf(15.31), Field1::read(&storage));
         assert_eq!(-(10f64.powf(15.31)), Field2::read(&storage));
 
-        assert_eq!(8, PrimitiveField::<f64, LittleEndian, 5>::SIZE);
-        assert_eq!(8, PrimitiveField::<f64, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<f64, LittleEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<f64, LittleEndian, 5>::SIZE);
     }
 
     #[test]
@@ -921,8 +921,8 @@ mod tests {
         assert_eq!(10f64.powf(15.31), Field1::read(&storage));
         assert_eq!(-(10f64.powf(15.31)), Field2::read(&storage));
 
-        assert_eq!(8, PrimitiveField::<f64, BigEndian, 5>::SIZE);
-        assert_eq!(8, PrimitiveField::<f64, BigEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<f64, BigEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<f64, BigEndian, 5>::SIZE);
     }
 
     #[allow(clippy::unit_cmp)]
@@ -939,8 +939,8 @@ mod tests {
         assert_eq!((), Field1::read(&storage));
         assert_eq!((), Field2::read(&storage));
 
-        assert_eq!(0, PrimitiveField::<(), BigEndian, 5>::SIZE);
-        assert_eq!(0, PrimitiveField::<(), BigEndian, 20>::SIZE);
+        assert_eq!(Some(0), PrimitiveField::<(), BigEndian, 5>::SIZE);
+        assert_eq!(Some(0), PrimitiveField::<(), BigEndian, 20>::SIZE);
 
         // Zero-sized types do not mutate the storage, so it should remain
         // unchanged for all of time.
@@ -961,8 +961,8 @@ mod tests {
         assert_eq!((), Field1::read(&storage));
         assert_eq!((), Field2::read(&storage));
 
-        assert_eq!(0, PrimitiveField::<(), LittleEndian, 5>::SIZE);
-        assert_eq!(0, PrimitiveField::<(), LittleEndian, 20>::SIZE);
+        assert_eq!(Some(0), PrimitiveField::<(), LittleEndian, 5>::SIZE);
+        assert_eq!(Some(0), PrimitiveField::<(), LittleEndian, 20>::SIZE);
 
         // Zero-sized types do not mutate the storage, so it should remain
         // unchanged for all of time.

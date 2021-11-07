@@ -15,13 +15,13 @@ define_layout!(withslice, LittleEndian, {
 #[test]
 fn metadata() {
     assert_eq!(0, withslice::first::OFFSET);
-    assert_eq!(1, withslice::first::SIZE);
+    assert_eq!(Some(1), withslice::first::SIZE);
     assert_eq!(1, withslice::second::OFFSET);
-    assert_eq!(8, withslice::second::SIZE);
+    assert_eq!(Some(8), withslice::second::SIZE);
     assert_eq!(9, withslice::third::OFFSET);
-    assert_eq!(5, withslice::third::SIZE);
+    assert_eq!(Some(5), withslice::third::SIZE);
     assert_eq!(14, withslice::fourth::OFFSET);
-    assert_eq!(2, withslice::fourth::SIZE);
+    assert_eq!(Some(2), withslice::fourth::SIZE);
     assert_eq!(16, withslice::fifth::OFFSET);
 }
 

@@ -95,7 +95,7 @@ impl<U, T: LayoutAs<U>, F: Field> Field for WrappedField<U, T, F> {
 
 impl<U, T: LayoutAs<U>, F: SizedField> SizedField for WrappedField<U, T, F> {
     /// See [SizedField::SIZE]
-    const SIZE: usize = F::SIZE;
+    const SIZE: Option<usize> = F::SIZE;
 }
 
 impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
@@ -191,11 +191,11 @@ mod tests {
         );
 
         assert_eq!(
-            1,
+            Some(1),
             WrappedField::<i8, Wrapped<i8>, PrimitiveField::<i8, LittleEndian, 5>>::SIZE
         );
         assert_eq!(
-            1,
+            Some(1),
             WrappedField::<i8, Wrapped<i8>, PrimitiveField::<i8, LittleEndian, 5>>::SIZE
         );
     }
@@ -220,11 +220,11 @@ mod tests {
         );
 
         assert_eq!(
-            1,
+            Some(1),
             WrappedField::<i8, Wrapped<i8>, PrimitiveField::<i8, BigEndian, 5>>::SIZE
         );
         assert_eq!(
-            1,
+            Some(1),
             WrappedField::<i8, Wrapped<i8>, PrimitiveField::<i8, BigEndian, 5>>::SIZE
         );
     }
@@ -252,11 +252,11 @@ mod tests {
         assert_eq!(Wrapped(-2000), Field2::read(&storage));
 
         assert_eq!(
-            2,
+            Some(2),
             WrappedField::<i16, Wrapped<i16>, PrimitiveField::<i16, LittleEndian, 5>>::SIZE
         );
         assert_eq!(
-            2,
+            Some(2),
             WrappedField::<i16, Wrapped<i16>, PrimitiveField::<i16, LittleEndian, 5>>::SIZE
         );
     }
@@ -284,11 +284,11 @@ mod tests {
         assert_eq!(Wrapped(-2000), Field2::read(&storage));
 
         assert_eq!(
-            2,
+            Some(2),
             WrappedField::<i16, Wrapped<i16>, PrimitiveField::<i16, BigEndian, 5>>::SIZE
         );
         assert_eq!(
-            2,
+            Some(2),
             WrappedField::<i16, Wrapped<i16>, PrimitiveField::<i16, BigEndian, 5>>::SIZE
         );
     }
@@ -316,11 +316,11 @@ mod tests {
         assert_eq!(Wrapped(-(10i32.pow(7))), Field2::read(&storage));
 
         assert_eq!(
-            4,
+            Some(4),
             WrappedField::<i32, Wrapped<i32>, PrimitiveField::<i32, LittleEndian, 5>>::SIZE
         );
         assert_eq!(
-            4,
+            Some(4),
             WrappedField::<i32, Wrapped<i32>, PrimitiveField::<i32, LittleEndian, 5>>::SIZE
         );
     }
@@ -348,11 +348,11 @@ mod tests {
         assert_eq!(Wrapped(-(10i32.pow(7))), Field2::read(&storage));
 
         assert_eq!(
-            4,
+            Some(4),
             WrappedField::<i32, Wrapped<i32>, PrimitiveField::<i32, BigEndian, 5>>::SIZE
         );
         assert_eq!(
-            4,
+            Some(4),
             WrappedField::<i32, Wrapped<i32>, PrimitiveField::<i32, BigEndian, 5>>::SIZE
         );
     }
@@ -380,11 +380,11 @@ mod tests {
         assert_eq!(Wrapped(-(10i64.pow(14))), Field2::read(&storage));
 
         assert_eq!(
-            8,
+            Some(8),
             WrappedField::<i64, Wrapped<i64>, PrimitiveField::<i64, LittleEndian, 5>>::SIZE
         );
         assert_eq!(
-            8,
+            Some(8),
             WrappedField::<i64, Wrapped<i64>, PrimitiveField::<i64, LittleEndian, 5>>::SIZE
         );
     }
@@ -412,11 +412,11 @@ mod tests {
         assert_eq!(Wrapped(-(10i64.pow(14))), Field2::read(&storage));
 
         assert_eq!(
-            8,
+            Some(8),
             WrappedField::<i64, Wrapped<i64>, PrimitiveField::<i64, BigEndian, 5>>::SIZE
         );
         assert_eq!(
-            8,
+            Some(8),
             WrappedField::<i64, Wrapped<i64>, PrimitiveField::<i64, BigEndian, 5>>::SIZE
         );
     }
@@ -444,11 +444,11 @@ mod tests {
         assert_eq!(Wrapped(-(10i128.pow(28))), Field2::read(&storage));
 
         assert_eq!(
-            16,
+            Some(16),
             WrappedField::<i128, Wrapped<i128>, PrimitiveField::<i128, LittleEndian, 5>>::SIZE
         );
         assert_eq!(
-            16,
+            Some(16),
             WrappedField::<i128, Wrapped<i128>, PrimitiveField::<i128, LittleEndian, 5>>::SIZE
         );
     }
@@ -476,11 +476,11 @@ mod tests {
         assert_eq!(Wrapped(-(10i128.pow(28))), Field2::read(&storage));
 
         assert_eq!(
-            16,
+            Some(16),
             WrappedField::<i128, Wrapped<i128>, PrimitiveField::<i128, BigEndian, 5>>::SIZE
         );
         assert_eq!(
-            16,
+            Some(16),
             WrappedField::<i128, Wrapped<i128>, PrimitiveField::<i128, BigEndian, 5>>::SIZE
         );
     }
@@ -505,11 +505,11 @@ mod tests {
         );
 
         assert_eq!(
-            1,
+            Some(1),
             WrappedField::<u8, Wrapped<u8>, PrimitiveField::<u8, LittleEndian, 5>>::SIZE
         );
         assert_eq!(
-            1,
+            Some(1),
             WrappedField::<u8, Wrapped<u8>, PrimitiveField::<u8, LittleEndian, 5>>::SIZE
         );
     }
@@ -534,11 +534,11 @@ mod tests {
         );
 
         assert_eq!(
-            1,
+            Some(1),
             WrappedField::<u8, Wrapped<u8>, PrimitiveField::<u8, BigEndian, 5>>::SIZE
         );
         assert_eq!(
-            1,
+            Some(1),
             WrappedField::<u8, Wrapped<u8>, PrimitiveField::<u8, BigEndian, 5>>::SIZE
         );
     }
@@ -566,11 +566,11 @@ mod tests {
         assert_eq!(Wrapped(2000), Field2::read(&storage));
 
         assert_eq!(
-            2,
+            Some(2),
             WrappedField::<u16, Wrapped<u16>, PrimitiveField::<u16, LittleEndian, 5>>::SIZE
         );
         assert_eq!(
-            2,
+            Some(2),
             WrappedField::<u16, Wrapped<u16>, PrimitiveField::<u16, LittleEndian, 5>>::SIZE
         );
     }
@@ -598,11 +598,11 @@ mod tests {
         assert_eq!(Wrapped(2000), Field2::read(&storage));
 
         assert_eq!(
-            2,
+            Some(2),
             WrappedField::<u16, Wrapped<u16>, PrimitiveField::<u16, BigEndian, 5>>::SIZE
         );
         assert_eq!(
-            2,
+            Some(2),
             WrappedField::<u16, Wrapped<u16>, PrimitiveField::<u16, BigEndian, 5>>::SIZE
         );
     }
@@ -630,11 +630,11 @@ mod tests {
         assert_eq!(Wrapped(10u32.pow(7)), Field2::read(&storage));
 
         assert_eq!(
-            4,
+            Some(4),
             WrappedField::<u32, Wrapped<u32>, PrimitiveField::<u32, LittleEndian, 5>>::SIZE
         );
         assert_eq!(
-            4,
+            Some(4),
             WrappedField::<u32, Wrapped<u32>, PrimitiveField::<u32, LittleEndian, 5>>::SIZE
         );
     }
@@ -662,11 +662,11 @@ mod tests {
         assert_eq!(Wrapped(10u32.pow(7)), Field2::read(&storage));
 
         assert_eq!(
-            4,
+            Some(4),
             WrappedField::<u32, Wrapped<u32>, PrimitiveField::<u32, BigEndian, 5>>::SIZE
         );
         assert_eq!(
-            4,
+            Some(4),
             WrappedField::<u32, Wrapped<u32>, PrimitiveField::<u32, BigEndian, 5>>::SIZE
         );
     }
@@ -694,11 +694,11 @@ mod tests {
         assert_eq!(Wrapped(10u64.pow(14)), Field2::read(&storage));
 
         assert_eq!(
-            8,
+            Some(8),
             WrappedField::<u64, Wrapped<u64>, PrimitiveField::<u64, LittleEndian, 5>>::SIZE
         );
         assert_eq!(
-            8,
+            Some(8),
             WrappedField::<u64, Wrapped<u64>, PrimitiveField::<u64, LittleEndian, 5>>::SIZE
         );
     }
@@ -726,11 +726,11 @@ mod tests {
         assert_eq!(Wrapped(10u64.pow(14)), Field2::read(&storage));
 
         assert_eq!(
-            8,
+            Some(8),
             WrappedField::<u64, Wrapped<u64>, PrimitiveField::<u64, BigEndian, 5>>::SIZE
         );
         assert_eq!(
-            8,
+            Some(8),
             WrappedField::<u64, Wrapped<u64>, PrimitiveField::<u64, BigEndian, 5>>::SIZE
         );
     }
@@ -758,11 +758,11 @@ mod tests {
         assert_eq!(Wrapped(10u128.pow(28)), Field2::read(&storage));
 
         assert_eq!(
-            16,
+            Some(16),
             WrappedField::<u128, Wrapped<u128>, PrimitiveField::<u128, LittleEndian, 5>>::SIZE
         );
         assert_eq!(
-            16,
+            Some(16),
             WrappedField::<u128, Wrapped<u128>, PrimitiveField::<u128, LittleEndian, 5>>::SIZE
         );
     }
@@ -790,11 +790,11 @@ mod tests {
         assert_eq!(Wrapped(10u128.pow(28)), Field2::read(&storage));
 
         assert_eq!(
-            16,
+            Some(16),
             WrappedField::<u128, Wrapped<u128>, PrimitiveField::<u128, BigEndian, 5>>::SIZE
         );
         assert_eq!(
-            16,
+            Some(16),
             WrappedField::<u128, Wrapped<u128>, PrimitiveField::<u128, BigEndian, 5>>::SIZE
         );
     }
@@ -822,11 +822,11 @@ mod tests {
         assert_eq!(Wrapped(10f32.powf(7.31)), Field2::read(&storage));
 
         assert_eq!(
-            4,
+            Some(4),
             WrappedField::<f32, Wrapped<f32>, PrimitiveField::<f32, LittleEndian, 5>>::SIZE
         );
         assert_eq!(
-            4,
+            Some(4),
             WrappedField::<f32, Wrapped<f32>, PrimitiveField::<f32, LittleEndian, 5>>::SIZE
         );
     }
@@ -854,11 +854,11 @@ mod tests {
         assert_eq!(Wrapped(10f32.powf(7.31)), Field2::read(&storage));
 
         assert_eq!(
-            4,
+            Some(4),
             WrappedField::<f32, Wrapped<f32>, PrimitiveField::<f32, BigEndian, 5>>::SIZE
         );
         assert_eq!(
-            4,
+            Some(4),
             WrappedField::<f32, Wrapped<f32>, PrimitiveField::<f32, BigEndian, 5>>::SIZE
         );
     }
@@ -886,11 +886,11 @@ mod tests {
         assert_eq!(Wrapped(10f64.powf(14.31)), Field2::read(&storage));
 
         assert_eq!(
-            8,
+            Some(8),
             WrappedField::<f64, Wrapped<f64>, PrimitiveField::<f64, LittleEndian, 5>>::SIZE
         );
         assert_eq!(
-            8,
+            Some(8),
             WrappedField::<f64, Wrapped<f64>, PrimitiveField::<f64, LittleEndian, 5>>::SIZE
         );
     }
@@ -918,11 +918,11 @@ mod tests {
         assert_eq!(Wrapped(10f64.powf(14.31)), Field2::read(&storage));
 
         assert_eq!(
-            8,
+            Some(8),
             WrappedField::<f64, Wrapped<f64>, PrimitiveField::<f64, BigEndian, 5>>::SIZE
         );
         assert_eq!(
-            8,
+            Some(8),
             WrappedField::<f64, Wrapped<f64>, PrimitiveField::<f64, BigEndian, 5>>::SIZE
         );
     }

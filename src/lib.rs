@@ -166,3 +166,9 @@ pub mod prelude {
     };
     pub use crate::define_layout;
 }
+
+/// Internal things that need to be exported so our macros can use them. Don't use directly!
+#[doc(hidden)]
+pub mod internal {
+    pub use crate::macro_define_layout::{option_usize_add, unwrap_field_size};
+}
