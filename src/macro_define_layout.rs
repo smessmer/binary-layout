@@ -137,6 +137,46 @@ macro_rules! define_layout {
                 impl <S: AsRef<[u8]> + AsMut<[u8]>> View<S> {
                     $crate::define_layout!(@impl_view_asmut {$($field_name),*});
                 }
+
+                /// Use this as a marker type for using this layout as a nested field within another layout.
+                ///
+                /// # Example
+                /// ```
+                /// use binary_layout::prelude::*;
+                ///
+                /// define_layout!(icmp_header, BigEndian, {
+                ///   packet_type: u8,
+                ///   code: u8,
+                ///   checksum: u16,
+                ///   rest_of_header: [u8; 4],
+                /// });
+                /// define_layout!(icmp_packet, BigEndian, {
+                ///   header: icmp_header::NestedView,
+                ///   data_section: [u8], // open ended byte array, matches until the end of the packet
+                /// });
+                /// # fn main() {}
+                /// ```
+                pub struct NestedView;
+                impl <S: AsRef<[u8]>> $crate::internal::OwningNestedView<$crate::Data<S>> for NestedView where S: AsRef<[u8]> {
+                    type View = View<$crate::Data<S>>;
+
+                    #[inline(always)]
+                    fn into_view(storage: $crate::Data<S>) -> Self::View {
+                        Self::View {storage}
+                    }
+                }
+                impl <S: AsRef<[u8]>> $crate::internal::BorrowingNestedView<S> for NestedView {
+                    type View = View<S>;
+
+                    #[inline(always)]
+                    fn view(storage: S) -> Self::View {
+                        Self::View {storage: storage.into()}
+                    }
+                }
+
+                impl $crate::internal::NestedViewInfo for NestedView {
+                    const SIZE: Option<usize> = SIZE;
+                }
             }
         }
     };

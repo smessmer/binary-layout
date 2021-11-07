@@ -6,6 +6,7 @@ Backward compatibility breaking changes:
 - Move some exported names into the "internal" namespace to denote that they're not supposed to be used in user code
 
 Other changes:
+- Added support for nested layouts
 - Added the ::SIZE constant for returning the size of a whole layout.
 - Added support for f32 and f64
 - Added support for unit (`()`)

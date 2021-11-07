@@ -144,4 +144,23 @@ Say we wanted to have a `[u32; N]` field. The API couldn't just return a zero-co
 To make this cross-platform compatible, we'd have to wrap these slices into our own slice type that enforces the correct byte order and return that from the API.
 This complexity is why it wasn't implemented yet, but feel free to open a PR if you need this.
 
+## Nesting
+Layouts can be nested within each other by using the `NestedView` type created by the [define_layout!](https://docs.rs/binary-layout/latest/binary_layout/macro.define_layout.html) macro for one layout as a field type in another layout.
+
+Example:
+```rust
+use binary_layout::prelude::*;
+
+define_layout!(icmp_header, BigEndian, {
+  packet_type: u8,
+  code: u8,
+  checksum: u16,
+  rest_of_header: [u8; 4],
+});
+define_layout!(icmp_packet, BigEndian, {
+  header: icmp_header::NestedView,
+  data_section: [u8], // open ended byte array, matches until the end of the packet
+});
+```
+
 License: MIT OR Apache-2.0

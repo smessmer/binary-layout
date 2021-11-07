@@ -133,6 +133,26 @@
 //! Say we wanted to have a `[u32; N]` field. The API couldn't just return a zero-copy `&[u32; N]` to the caller because that would use the system byte order (i.e. endianness) which might be different from the byte order defined in the package layout.
 //! To make this cross-platform compatible, we'd have to wrap these slices into our own slice type that enforces the correct byte order and return that from the API.
 //! This complexity is why it wasn't implemented yet, but feel free to open a PR if you need this.
+//!
+//! # Nesting
+//! Layouts can be nested within each other by using the `NestedView` type created by the [define_layout!] macro for one layout as a field type in another layout.
+//!
+//! Example:
+//! ```
+//! use binary_layout::prelude::*;
+//!
+//! define_layout!(icmp_header, BigEndian, {
+//!   packet_type: u8,
+//!   code: u8,
+//!   checksum: u16,
+//!   rest_of_header: [u8; 4],
+//! });
+//! define_layout!(icmp_packet, BigEndian, {
+//!   header: icmp_header::NestedView,
+//!   data_section: [u8], // open ended byte array, matches until the end of the packet
+//! });
+//! # fn main() {}
+//! ```
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![forbid(unsafe_code)]
@@ -145,7 +165,7 @@ mod utils;
 
 pub mod example;
 
-pub use endianness::{BigEndian, LittleEndian};
+pub use endianness::{BigEndian, Endianness, LittleEndian};
 pub use fields::{
     primitive::{FieldCopyAccess, FieldSliceAccess, FieldView, PrimitiveField},
     wrapped::{LayoutAs, WrappedField},
@@ -167,7 +187,10 @@ pub mod prelude {
 /// Internal things that need to be exported so our macros can use them. Don't use directly!
 #[doc(hidden)]
 pub mod internal {
-    pub use crate::fields::{StorageIntoFieldView, StorageToFieldView};
+    pub use crate::fields::{
+        primitive::{BorrowingNestedView, NestedViewInfo, OwningNestedView},
+        StorageIntoFieldView, StorageToFieldView,
+    };
     pub use crate::macro_define_layout::{option_usize_add, unwrap_field_size};
     pub use doc_comment::doc_comment;
     pub use paste::paste;

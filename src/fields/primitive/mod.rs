@@ -3,10 +3,12 @@ use core::marker::PhantomData;
 use crate::endianness::Endianness;
 
 mod copy_access;
+mod nested_access;
 mod slice_access;
 mod view;
 
 pub use copy_access::FieldCopyAccess;
+pub use nested_access::{BorrowingNestedView, NestedViewInfo, OwningNestedView};
 pub use slice_access::FieldSliceAccess;
 pub use view::FieldView;
 
