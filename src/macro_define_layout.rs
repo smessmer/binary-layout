@@ -90,7 +90,7 @@ macro_rules! define_layout {
                 #[allow(unused_imports)]
                 use super::*;
 
-                $crate::define_layout!(_impl_fields $crate::$endianness, 0, {$($field_name : $field_type $(as $underlying_type)?),*});
+                $crate::define_layout!(@impl_fields $crate::$endianness, 0, {$($field_name : $field_type $(as $underlying_type)?),*});
 
                 $crate::doc_comment!{
                     concat!{"
@@ -127,51 +127,51 @@ macro_rules! define_layout {
                         self.storage
                     }
 
-                    $crate::define_layout!(_impl_view_into {$($field_name),*});
+                    $crate::define_layout!(@impl_view_into {$($field_name),*});
                 }
                 impl <S: AsRef<[u8]>> View<S> {
-                    $crate::define_layout!(_impl_view_asref {$($field_name),*});
+                    $crate::define_layout!(@impl_view_asref {$($field_name),*});
                 }
                 impl <S: AsMut<[u8]>> View<S> {
-                    $crate::define_layout!(_impl_view_asmut {$($field_name),*});
+                    $crate::define_layout!(@impl_view_asmut {$($field_name),*});
                 }
             }
         }
     };
 
-    (_impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {};
-    (_impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty as $underlying_type: ty $(, $name_tail: ident : $type_tail: ty $(as $underlying_tail: ty)?)*}) => {
+    (@impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {};
+    (@impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty as $underlying_type: ty $(, $name_tail: ident : $type_tail: ty $(as $underlying_tail: ty)?)*}) => {
         $crate::doc_comment!{
             concat!("Metadata and [Field](binary_layout::Field) API accessors for the `", stringify!($name), "` field"),
             #[allow(non_camel_case_types)]
             pub type $name = $crate::WrappedField::<$underlying_type, $type, $crate::PrimitiveField::<$underlying_type, $endianness, $offset_accumulator>>;
         }
-        $crate::define_layout!(_impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($name_tail : $type_tail $(as $underlying_tail)?),*});
+        $crate::define_layout!(@impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($name_tail : $type_tail $(as $underlying_tail)?),*});
     };
 
-    (_impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {};
-    (_impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty $(, $name_tail: ident : $type_tail: ty $(as $underlying_tail: ty)?)*}) => {
+    (@impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {};
+    (@impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty $(, $name_tail: ident : $type_tail: ty $(as $underlying_tail: ty)?)*}) => {
         $crate::doc_comment!{
             concat!("Metadata and [Field](binary_layout::Field) API accessors for the `", stringify!($name), "` field"),
             #[allow(non_camel_case_types)]
             pub type $name = $crate::PrimitiveField::<$type, $endianness, $offset_accumulator>;
         }
-        $crate::define_layout!(_impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($name_tail : $type_tail $(as $underlying_tail)?),*});
+        $crate::define_layout!(@impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($name_tail : $type_tail $(as $underlying_tail)?),*});
     };
 
-    (_impl_view_asref {}) => {};
-    (_impl_view_asref {$name: ident $(, $name_tail: ident)*}) => {
+    (@impl_view_asref {}) => {};
+    (@impl_view_asref {$name: ident $(, $name_tail: ident)*}) => {
         $crate::doc_comment!{
             concat!("Return a [FieldView](binary_layout::FieldView) with read access to the `", stringify!($name), "` field"),
             pub fn $name(&self) -> $crate::FieldView::<&[u8], $name> {
                 $crate::FieldView::new(self.storage.as_ref())
             }
         }
-        $crate::define_layout!(_impl_view_asref {$($name_tail),*});
+        $crate::define_layout!(@impl_view_asref {$($name_tail),*});
     };
 
-    (_impl_view_asmut {}) => {};
-    (_impl_view_asmut {$name: ident $(, $name_tail: ident)*}) => {
+    (@impl_view_asmut {}) => {};
+    (@impl_view_asmut {$name: ident $(, $name_tail: ident)*}) => {
         $crate::paste!{
             $crate::doc_comment!{
                 concat!("Return a [FieldView](binary_layout::FieldView) with write access to the `", stringify!($name), "` field"),
@@ -180,11 +180,11 @@ macro_rules! define_layout {
                 }
             }
         }
-        $crate::define_layout!(_impl_view_asmut {$($name_tail),*});
+        $crate::define_layout!(@impl_view_asmut {$($name_tail),*});
     };
 
-    (_impl_view_into {}) => {};
-    (_impl_view_into {$name: ident $(, $name_tail: ident)*}) => {
+    (@impl_view_into {}) => {};
+    (@impl_view_into {$name: ident $(, $name_tail: ident)*}) => {
         $crate::paste!{
             $crate::doc_comment!{
                 concat!("Destroy the [View] and return a field accessor to the `", stringify!($name), "` field owning the storage. This is mostly useful for [FieldView::extract](binary_layout::FieldView::extract)"),
@@ -193,7 +193,7 @@ macro_rules! define_layout {
                 }
             }
         }
-        $crate::define_layout!(_impl_view_into {$($name_tail),*});
+        $crate::define_layout!(@impl_view_into {$($name_tail),*});
     };
 }
 

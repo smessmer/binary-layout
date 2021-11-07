@@ -2,6 +2,7 @@
 ------
 - Added support for f32 and f64
 - Added support for unit (`()`)
+- Guard against users accidentally calling internal macros by marking them with '@'
 
 2.1.0
 ------
