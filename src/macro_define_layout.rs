@@ -207,7 +207,9 @@ pub const fn unwrap_field_size(opt: Option<usize>) -> usize {
         Some(x) => x,
         None => {
             #[allow(unconditional_panic)]
+            #[allow(clippy::no_effect)]
             ["Error: Fields without a static size (e.g. open-ended byte arrays) can only be used at the end of a layout"][10];
+            #[allow(clippy::empty_loop)]
             loop {}
         }
     }
