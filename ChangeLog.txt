@@ -1,7 +1,11 @@
-2.1.1 (unreleased)
+3.0.0 (unreleased)
 ------
+- Changed SizedField::SIZE to be an option and store None if the field is open ended. This change breaks backwards compatibility for code using the SIZE field.
+- Added the ::SIZE constant for returning the size of a whole layout.
 - Added support for f32 and f64
 - Added support for unit (`()`)
+- Guard against users accidentally calling internal macros by marking them with '@'
+- Fix some doc links
 
 2.1.0
 ------

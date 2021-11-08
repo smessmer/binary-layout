@@ -145,9 +145,9 @@ pub mod example;
 
 pub use endianness::{BigEndian, LittleEndian};
 pub use fields::{
-    primitive::PrimitiveField,
+    primitive::{FieldCopyAccess, FieldSliceAccess, PrimitiveField},
     wrapped::{LayoutAs, WrappedField},
-    Field, FieldCopyAccess, FieldSliceAccess, SizedField,
+    Field, SizedField,
 };
 pub use view::FieldView;
 
@@ -161,6 +161,14 @@ pub use paste::paste;
 /// use binary_layout::prelude::*;
 /// ```
 pub mod prelude {
-    pub use super::{Field, FieldCopyAccess, FieldSliceAccess, SizedField};
+    pub use super::{
+        BigEndian, Field, FieldCopyAccess, FieldSliceAccess, LittleEndian, SizedField,
+    };
     pub use crate::define_layout;
+}
+
+/// Internal things that need to be exported so our macros can use them. Don't use directly!
+#[doc(hidden)]
+pub mod internal {
+    pub use crate::macro_define_layout::{option_usize_add, unwrap_field_size};
 }

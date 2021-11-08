@@ -54,7 +54,7 @@
 ///   field2: u32,
 /// });
 /// assert_eq!(2, my_layout::field2::OFFSET);
-/// assert_eq!(4, my_layout::field2::SIZE);
+/// assert_eq!(Some(4), my_layout::field2::SIZE);
 /// ```
 ///
 /// ## struct View
@@ -90,7 +90,7 @@ macro_rules! define_layout {
                 #[allow(unused_imports)]
                 use super::*;
 
-                $crate::define_layout!(_impl_fields $crate::$endianness, 0, {$($field_name : $field_type $(as $underlying_type)?),*});
+                $crate::define_layout!(@impl_fields $crate::$endianness, Some(0), {$($field_name : $field_type $(as $underlying_type)?),*});
 
                 $crate::doc_comment!{
                     concat!{"
@@ -127,51 +127,53 @@ macro_rules! define_layout {
                         self.storage
                     }
 
-                    $crate::define_layout!(_impl_view_into {$($field_name),*});
+                    $crate::define_layout!(@impl_view_into {$($field_name),*});
                 }
                 impl <S: AsRef<[u8]>> View<S> {
-                    $crate::define_layout!(_impl_view_asref {$($field_name),*});
+                    $crate::define_layout!(@impl_view_asref {$($field_name),*});
                 }
                 impl <S: AsMut<[u8]>> View<S> {
-                    $crate::define_layout!(_impl_view_asmut {$($field_name),*});
+                    $crate::define_layout!(@impl_view_asmut {$($field_name),*});
                 }
             }
         }
     };
 
-    (_impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {};
-    (_impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty as $underlying_type: ty $(, $name_tail: ident : $type_tail: ty $(as $underlying_tail: ty)?)*}) => {
+    (@impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {
+        /// Total size of the layout in number of bytes.
+        /// This can be None if the layout ends with an open ended field like a byte slice.
+        pub const SIZE: Option<usize> = $offset_accumulator;
+    };
+    (@impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty as $underlying_type: ty $(, $($tail:tt)*)?}) => {
         $crate::doc_comment!{
             concat!("Metadata and [Field](binary_layout::Field) API accessors for the `", stringify!($name), "` field"),
             #[allow(non_camel_case_types)]
-            pub type $name = $crate::WrappedField::<$underlying_type, $type, $crate::PrimitiveField::<$underlying_type, $endianness, $offset_accumulator>>;
+            pub type $name = $crate::WrappedField::<$underlying_type, $type, $crate::PrimitiveField::<$underlying_type, $endianness, {$crate::internal::unwrap_field_size($offset_accumulator)}>>;
         }
-        $crate::define_layout!(_impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($name_tail : $type_tail $(as $underlying_tail)?),*});
+        $crate::define_layout!(@impl_fields $endianness, ($crate::internal::option_usize_add(<$name as $crate::Field>::OFFSET, <$name as $crate::SizedField>::SIZE)), {$($($tail)*)?});
     };
-
-    (_impl_fields $endianness: ty, $offset_accumulator: expr, {}) => {};
-    (_impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty $(, $name_tail: ident : $type_tail: ty $(as $underlying_tail: ty)?)*}) => {
+    (@impl_fields $endianness: ty, $offset_accumulator: expr, {$name: ident : $type: ty $(, $($tail:tt)*)?}) => {
         $crate::doc_comment!{
             concat!("Metadata and [Field](binary_layout::Field) API accessors for the `", stringify!($name), "` field"),
             #[allow(non_camel_case_types)]
-            pub type $name = $crate::PrimitiveField::<$type, $endianness, $offset_accumulator>;
+            pub type $name = $crate::PrimitiveField::<$type, $endianness, {$crate::internal::unwrap_field_size($offset_accumulator)}>;
         }
-        $crate::define_layout!(_impl_fields $endianness, {($offset_accumulator + <$name as $crate::SizedField>::SIZE)}, {$($name_tail : $type_tail $(as $underlying_tail)?),*});
+        $crate::define_layout!(@impl_fields $endianness, ($crate::internal::option_usize_add(<$name as $crate::Field>::OFFSET, <$name as $crate::SizedField>::SIZE)), {$($($tail)*)?});
     };
 
-    (_impl_view_asref {}) => {};
-    (_impl_view_asref {$name: ident $(, $name_tail: ident)*}) => {
+    (@impl_view_asref {}) => {};
+    (@impl_view_asref {$name: ident $(, $name_tail: ident)*}) => {
         $crate::doc_comment!{
             concat!("Return a [FieldView](binary_layout::FieldView) with read access to the `", stringify!($name), "` field"),
             pub fn $name(&self) -> $crate::FieldView::<&[u8], $name> {
                 $crate::FieldView::new(self.storage.as_ref())
             }
         }
-        $crate::define_layout!(_impl_view_asref {$($name_tail),*});
+        $crate::define_layout!(@impl_view_asref {$($name_tail),*});
     };
 
-    (_impl_view_asmut {}) => {};
-    (_impl_view_asmut {$name: ident $(, $name_tail: ident)*}) => {
+    (@impl_view_asmut {}) => {};
+    (@impl_view_asmut {$name: ident $(, $name_tail: ident)*}) => {
         $crate::paste!{
             $crate::doc_comment!{
                 concat!("Return a [FieldView](binary_layout::FieldView) with write access to the `", stringify!($name), "` field"),
@@ -180,11 +182,11 @@ macro_rules! define_layout {
                 }
             }
         }
-        $crate::define_layout!(_impl_view_asmut {$($name_tail),*});
+        $crate::define_layout!(@impl_view_asmut {$($name_tail),*});
     };
 
-    (_impl_view_into {}) => {};
-    (_impl_view_into {$name: ident $(, $name_tail: ident)*}) => {
+    (@impl_view_into {}) => {};
+    (@impl_view_into {$name: ident $(, $name_tail: ident)*}) => {
         $crate::paste!{
             $crate::doc_comment!{
                 concat!("Destroy the [View] and return a field accessor to the `", stringify!($name), "` field owning the storage. This is mostly useful for [FieldView::extract](binary_layout::FieldView::extract)"),
@@ -193,15 +195,38 @@ macro_rules! define_layout {
                 }
             }
         }
-        $crate::define_layout!(_impl_view_into {$($name_tail),*});
+        $crate::define_layout!(@impl_view_into {$($name_tail),*});
     };
+}
+
+// TODO This only exists because Option<usize>::unwrap() isn't const. Remove this once it is.
+/// Internal function, don't use!
+/// Unwraps an option<usize>
+pub const fn unwrap_field_size(opt: Option<usize>) -> usize {
+    match opt {
+        Some(x) => x,
+        None => {
+            #[allow(unconditional_panic)]
+            #[allow(clippy::no_effect)]
+            ["Error: Fields without a static size (e.g. open-ended byte arrays) can only be used at the end of a layout"][10];
+            #[allow(clippy::empty_loop)]
+            loop {}
+        }
+    }
+}
+
+/// Internal function, don't use!
+pub const fn option_usize_add(lhs: usize, rhs: Option<usize>) -> Option<usize> {
+    match (lhs, rhs) {
+        (lhs, Some(rhs)) => Some(lhs + rhs),
+        (_, None) => None,
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{Field, FieldCopyAccess, FieldSliceAccess, SizedField};
+    use crate::prelude::*;
 
-    use core::convert::TryInto;
     use rand::{rngs::StdRng, RngCore, SeedableRng};
 
     fn data_region(size: usize, seed: u64) -> Vec<u8> {
@@ -211,885 +236,30 @@ mod tests {
         res
     }
 
-    #[test]
-    fn test_layout_empty() {
-        define_layout!(empty, LittleEndian, {});
-    }
+    define_layout!(module_level_layout, LittleEndian, {
+        first: i8,
+        second: i64,
+        third: u16,
+    });
 
     #[test]
-    fn test_layout_with_unit() {
-        let mut storage: [u8; 1024] = [0; 1024];
-
-        define_layout!(unit_layout_1, LittleEndian, { field1: () });
-        let mut view = unit_layout_1::View::new(&mut storage[0..0]); // Zero length slice
-        view.field1_mut().write(()); // Shouldn't cause any issues.
-        assert_eq!(storage, [0u8; 1024]);
-        storage.fill(0u8);
-
-        define_layout!(unit_layout_2, LittleEndian, {
-            field1: (),
-            field2: ()
-        });
-        let mut view = unit_layout_2::View::new(&mut storage[0..0]); // Zero length slice
-        view.field1_mut().write(()); // Shouldn't cause any issues.
-        view.field2_mut().write(()); // Shouldn't cause any issues.
-        assert_eq!(storage, [0u8; 1024]);
-        storage.fill(0u8);
-
-        define_layout!(unit_layout_3, LittleEndian, {
-            field1: (),
-            field2: (),
-            field3: ()
-        });
-        let mut view = unit_layout_3::View::new(&mut storage[0..0]); // Zero length slice
-        view.field1_mut().write(()); // Shouldn't cause any issues.
-        view.field2_mut().write(()); // Shouldn't cause any issues.
-        view.field3_mut().write(()); // Shouldn't cause any issues.
-        assert_eq!(storage, [0u8; 1024]);
-        storage.fill(0u8);
-
-        define_layout!(unit_layout_4, LittleEndian, {
-            field1: u8,
-            field2: ()
-        });
-        let mut view = unit_layout_4::View::new(&mut storage[0..1]);
-        view.field1_mut().write(3u8); // Shouldn't cause any issues.
-        view.field2_mut().write(()); // Shouldn't cause any issues.
-        assert_eq!(storage[0], 3u8);
-        assert_eq!(storage[1..], [0u8; 1023]);
-        storage.fill(0u8);
-
-        define_layout!(unit_layout_5, LittleEndian, {
-            field1: (),
-            field2: u8
-        });
-        let mut view = unit_layout_5::View::new(&mut storage[0..1]);
-        view.field1_mut().write(()); // Shouldn't cause any issues.
-        view.field2_mut().write(5u8); // Shouldn't cause any issues.
-        assert_eq!(storage[0], 5u8);
-        assert_eq!(storage[1..], [0u8; 1023]);
-        storage.fill(0u8);
-
-        define_layout!(unit_layout_6, LittleEndian, {
-            field1: (),
-            field2: u8,
-            field3: ()
-        });
-        let mut view = unit_layout_6::View::new(&mut storage[0..1]);
-        view.field1_mut().write(()); // Shouldn't cause any issues.
-        view.field2_mut().write(37u8); // Shouldn't cause any issues.
-        view.field3_mut().write(()); // Shouldn't cause any issues.
-        assert_eq!(storage[0], 37u8);
-        assert_eq!(storage[1..], [0u8; 1023]);
-        storage.fill(0u8);
-
-        define_layout!(unit_layout_7, LittleEndian, {
-            field1: u8,
-            field2: (),
-            field3: u128
-        });
-        let mut view = unit_layout_7::View::new(&mut storage);
-        view.field1_mut().write(43u8); // Shouldn't cause any issues.
-        view.field2_mut().write(()); // Shouldn't cause any issues.
-        view.field3_mut().write(120u128); // Shouldn't cause any issues.
-        assert_eq!(storage[0], 43u8);
-        assert_eq!(storage[1..17], (120u128).to_le_bytes());
-        assert_eq!(storage[18..], [0u8; 1006]);
-        storage.fill(0u8);
-
-        define_layout!(unit_layout_8, BigEndian, { field1: () });
-        let mut view = unit_layout_8::View::new(&mut storage[0..0]); // Zero length slice
-        view.field1_mut().write(()); // Shouldn't cause any issues.
-        assert_eq!(storage, [0u8; 1024]);
-        storage.fill(0u8);
-
-        define_layout!(unit_layout_9, BigEndian, {
-            field1: (),
-            field2: ()
-        });
-        let mut view = unit_layout_9::View::new(&mut storage[0..0]); // Zero length slice
-        view.field1_mut().write(()); // Shouldn't cause any issues.
-        view.field2_mut().write(()); // Shouldn't cause any issues.
-        assert_eq!(storage, [0u8; 1024]);
-        storage.fill(0u8);
-
-        define_layout!(unit_layout_10, BigEndian, {
-            field1: (),
-            field2: (),
-            field3: ()
-        });
-        let mut view = unit_layout_10::View::new(&mut storage[0..0]); // Zero length slice
-        view.field1_mut().write(()); // Shouldn't cause any issues.
-        view.field2_mut().write(()); // Shouldn't cause any issues.
-        view.field3_mut().write(()); // Shouldn't cause any issues.
-        assert_eq!(storage, [0u8; 1024]);
-        storage.fill(0u8);
-
-        define_layout!(unit_layout_11, BigEndian, {
-            field1: u8,
-            field2: ()
-        });
-        let mut view = unit_layout_11::View::new(&mut storage[0..1]);
-        view.field1_mut().write(3u8); // Shouldn't cause any issues.
-        view.field2_mut().write(()); // Shouldn't cause any issues.
-        assert_eq!(storage[0], 3u8);
-        assert_eq!(storage[1..], [0u8; 1023]);
-        storage.fill(0u8);
-
-        define_layout!(unit_layout_12, BigEndian, {
-            field1: (),
-            field2: u8
-        });
-        let mut view = unit_layout_12::View::new(&mut storage[0..1]);
-        view.field1_mut().write(()); // Shouldn't cause any issues.
-        view.field2_mut().write(5u8); // Shouldn't cause any issues.
-        assert_eq!(storage[0], 5u8);
-        assert_eq!(storage[1..], [0u8; 1023]);
-        storage.fill(0u8);
-
-        define_layout!(unit_layout_13, BigEndian, {
-            field1: (),
-            field2: u8,
-            field3: ()
-        });
-        let mut view = unit_layout_13::View::new(&mut storage[0..1]);
-        view.field1_mut().write(()); // Shouldn't cause any issues.
-        view.field2_mut().write(37u8); // Shouldn't cause any issues.
-        view.field3_mut().write(()); // Shouldn't cause any issues.
-        assert_eq!(storage[0], 37u8);
-        assert_eq!(storage[1..], [0u8; 1023]);
-        storage.fill(0u8);
-
-        define_layout!(unit_layout_14, BigEndian, {
-            field1: u8,
-            field2: (),
-            field3: u128
-        });
-        let mut view = unit_layout_14::View::new(&mut storage);
-        view.field1_mut().write(43u8); // Shouldn't cause any issues.
-        view.field2_mut().write(()); // Shouldn't cause any issues.
-        view.field3_mut().write(120u128); // Shouldn't cause any issues.
-        assert_eq!(storage[0], 43u8);
-        assert_eq!(storage[1..17], (120u128).to_be_bytes());
-        assert_eq!(storage[18..], [0u8; 1006]);
-        storage.fill(0u8);
+    fn layouts_can_be_defined_at_module_level() {
+        let storage: [u8; 1024] = [0; 1024];
+        let view = module_level_layout::View::new(storage);
+        assert_eq!(0, view.third().read());
     }
 
-    mod sliceonly {
-        use super::*;
-        define_layout!(sliceonly, LittleEndian, { field: [u8] });
-
-        #[test]
-        fn metadata() {
-            assert_eq!(0, sliceonly::field::OFFSET);
-        }
-
-        #[test]
-        fn fields() {
-            let mut storage = data_region(1024, 5);
-
-            // Test initial data is read correctly
-            assert_eq!(&data_region(1024, 5), sliceonly::field::data(&storage));
-
-            // Test data can be written
-            sliceonly::field::data_mut(&mut storage).copy_from_slice(&data_region(1024, 6));
-
-            // Test reading will return changed data
-            assert_eq!(&data_region(1024, 6), sliceonly::field::data(&storage));
-        }
-
-        #[test]
-        fn view_readonly() {
-            let storage = data_region(1024, 5);
-            let view = sliceonly::View::new(&storage);
-
-            // Test initial data is read correctly
-            assert_eq!(&data_region(1024, 5), view.field().data());
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage();
-            assert_eq!(extracted_storage, &storage);
-        }
-
-        #[test]
-        fn view_readwrite() {
-            let mut storage = data_region(1024, 5);
-            let mut view = sliceonly::View::new(&mut storage);
-
-            // Test initial data is read correctly
-            assert_eq!(&data_region(1024, 5), view.field().data());
-
-            // Test data can be written
-            view.field_mut()
-                .data_mut()
-                .copy_from_slice(&data_region(1024, 6));
-
-            // Test reading will return changed data
-            assert_eq!(&data_region(1024, 6), view.field().data());
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage().clone();
-            assert_eq!(&storage, &extracted_storage);
-
-            // Test original storage is changed
-            assert_eq!(&data_region(1024, 6), &storage);
-        }
-
-        #[test]
-        fn view_vec_readonly() {
-            let view = sliceonly::View::new(data_region(1024, 5));
-
-            // Test initial data is read correctly
-            assert_eq!(&data_region(1024, 5), view.field().data());
-
-            // Test into_storage will return correct data
-            let storage = view.into_storage();
-            assert_eq!(&data_region(1024, 5), &storage);
-        }
-
-        #[test]
-        fn view_vec_readwrite() {
-            let mut view = sliceonly::View::new(data_region(1024, 5));
-
-            // Test initial data is read correctly
-            assert_eq!(&data_region(1024, 5), view.field().data());
-
-            // Test data can be written
-            view.field_mut()
-                .data_mut()
-                .copy_from_slice(&data_region(1024, 6));
-
-            // Test reading will return changed data
-            assert_eq!(&data_region(1024, 6), view.field().data());
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage();
-            assert_eq!(&data_region(1024, 6), &extracted_storage);
-        }
-    }
-
-    mod noslice {
-        use super::*;
-
-        define_layout!(noslice, LittleEndian, {
+    #[test]
+    fn layouts_can_be_defined_at_function_level() {
+        define_layout!(function_level_layout, LittleEndian, {
             first: i8,
             second: i64,
             third: u16,
         });
-        #[test]
-        fn metadata() {
-            assert_eq!(0, noslice::first::OFFSET);
-            assert_eq!(1, noslice::first::SIZE);
-            assert_eq!(1, noslice::second::OFFSET);
-            assert_eq!(8, noslice::second::SIZE);
-            assert_eq!(9, noslice::third::OFFSET);
-            assert_eq!(2, noslice::third::SIZE);
-        }
 
-        #[test]
-        fn fields() {
-            let mut storage = data_region(1024, 5);
-
-            // Test initial data is read correctly
-            assert_eq!(
-                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
-                noslice::first::read(&storage)
-            );
-            assert_eq!(
-                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
-                noslice::second::read(&storage)
-            );
-            assert_eq!(
-                u16::from_le_bytes((&data_region(1024, 5)[9..11]).try_into().unwrap()),
-                noslice::third::read(&storage)
-            );
-
-            // Test data can be written
-            noslice::first::write(&mut storage, 60);
-            noslice::second::write(&mut storage, -100_000_000_000);
-            noslice::third::write(&mut storage, 1_000);
-
-            // Test reading will return changed data
-            assert_eq!(60, noslice::first::read(&storage));
-            assert_eq!(-100_000_000_000, noslice::second::read(&storage));
-            assert_eq!(1_000, noslice::third::read(&storage));
-        }
-
-        #[test]
-        fn view_readonly() {
-            let storage = data_region(1024, 5);
-            let view = noslice::View::new(&storage);
-
-            // Test initial data is read correctly
-            assert_eq!(
-                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
-                view.first().read()
-            );
-            assert_eq!(
-                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
-                view.second().read()
-            );
-            assert_eq!(
-                u16::from_le_bytes((&data_region(1024, 5)[9..11]).try_into().unwrap()),
-                view.third().read()
-            );
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage();
-            assert_eq!(extracted_storage, &storage);
-        }
-
-        #[test]
-        fn view_readwrite() {
-            let mut storage = data_region(1024, 5);
-            let mut view = noslice::View::new(&mut storage);
-
-            // Test initial data is read correctly
-            assert_eq!(
-                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
-                view.first().read()
-            );
-            assert_eq!(
-                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
-                view.second().read()
-            );
-            assert_eq!(
-                u16::from_le_bytes((&data_region(1024, 5)[9..11]).try_into().unwrap()),
-                view.third().read()
-            );
-
-            // Test data can be written
-            view.first_mut().write(50);
-            view.second_mut().write(10i64.pow(15));
-            view.third_mut().write(1000);
-
-            // Test reading will return changed data
-            assert_eq!(50, view.first().read());
-            assert_eq!(10i64.pow(15), view.second().read());
-            assert_eq!(1000, view.third().read());
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage().clone();
-            assert_eq!(&storage, &extracted_storage);
-
-            // Test original storage is actually changed
-            assert_eq!(50, i8::from_le_bytes((&storage[0..1]).try_into().unwrap()));
-            assert_eq!(
-                10i64.pow(15),
-                i64::from_le_bytes((&storage[1..9]).try_into().unwrap())
-            );
-            assert_eq!(
-                1000,
-                u16::from_le_bytes((&storage[9..11]).try_into().unwrap())
-            );
-        }
-
-        #[test]
-        fn view_vec_readonly() {
-            let view = noslice::View::new(data_region(1024, 5));
-
-            // Test initial data is read correctly
-            assert_eq!(
-                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
-                view.first().read()
-            );
-            assert_eq!(
-                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
-                view.second().read()
-            );
-            assert_eq!(
-                u16::from_le_bytes((&data_region(1024, 5)[9..11]).try_into().unwrap()),
-                view.third().read()
-            );
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage();
-            assert_eq!(&data_region(1024, 5), &extracted_storage);
-        }
-
-        #[test]
-        fn view_vec_readwrite() {
-            let mut view = noslice::View::new(data_region(1024, 5));
-
-            // Test initial data is read correctly
-            assert_eq!(
-                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
-                view.first().read()
-            );
-            assert_eq!(
-                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
-                view.second().read()
-            );
-            assert_eq!(
-                u16::from_le_bytes((&data_region(1024, 5)[9..11]).try_into().unwrap()),
-                view.third().read()
-            );
-
-            // Test data can be written
-            view.first_mut().write(50);
-            view.second_mut().write(10i64.pow(15));
-            view.third_mut().write(1000);
-
-            // Test reading will return changed data
-            assert_eq!(50, view.first().read());
-            assert_eq!(10i64.pow(15), view.second().read());
-            assert_eq!(1000, view.third().read());
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage();
-            assert_eq!(
-                50,
-                i8::from_le_bytes((&extracted_storage[0..1]).try_into().unwrap())
-            );
-            assert_eq!(
-                10i64.pow(15),
-                i64::from_le_bytes((&extracted_storage[1..9]).try_into().unwrap())
-            );
-            assert_eq!(
-                1000,
-                u16::from_le_bytes((&extracted_storage[9..11]).try_into().unwrap())
-            );
-        }
-    }
-
-    mod withslice {
-        use super::*;
-        define_layout!(withslice, LittleEndian, {
-            first: i8,
-            second: i64,
-            third: [u8; 5],
-            fourth: u16,
-            fifth: [u8],
-        });
-
-        #[test]
-        fn metadata() {
-            assert_eq!(0, withslice::first::OFFSET);
-            assert_eq!(1, withslice::first::SIZE);
-            assert_eq!(1, withslice::second::OFFSET);
-            assert_eq!(8, withslice::second::SIZE);
-            assert_eq!(9, withslice::third::OFFSET);
-            assert_eq!(5, withslice::third::SIZE);
-            assert_eq!(14, withslice::fourth::OFFSET);
-            assert_eq!(2, withslice::fourth::SIZE);
-            assert_eq!(16, withslice::fifth::OFFSET);
-        }
-
-        #[test]
-        fn fields() {
-            let mut storage = data_region(1024, 5);
-
-            // Test initial data is read correctly
-            assert_eq!(5, withslice::third::data(&storage).len());
-            assert_eq!(5, withslice::third::data_mut(&mut storage).len());
-            assert_eq!(1024 - 16, withslice::fifth::data(&storage).len());
-            assert_eq!(1024 - 16, withslice::fifth::data_mut(&mut storage).len());
-
-            // Test data can be written
-            withslice::first::write(&mut storage, 60);
-            withslice::second::write(&mut storage, -100_000_000_000);
-            withslice::third::data_mut(&mut storage).copy_from_slice(&[10, 20, 30, 40, 50]);
-            withslice::fourth::write(&mut storage, 1_000);
-            withslice::fifth::data_mut(&mut storage).copy_from_slice(&data_region(1024 - 16, 6));
-
-            // Test reading will return changed data
-            assert_eq!(60, withslice::first::read(&storage));
-            assert_eq!(-100_000_000_000, withslice::second::read(&storage));
-            assert_eq!(&[10, 20, 30, 40, 50], withslice::third::data(&storage));
-            assert_eq!(1_000, withslice::fourth::read(&storage));
-            assert_eq!(&data_region(1024 - 16, 6), withslice::fifth::data(&storage));
-        }
-
-        #[test]
-        fn view_readonly() {
-            let storage = data_region(1024, 5);
-            let view = withslice::View::new(&storage);
-
-            // Test initial data is read correctly
-            assert_eq!(
-                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
-                view.first().read()
-            );
-            assert_eq!(
-                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
-                view.second().read()
-            );
-            assert_eq!(&data_region(1024, 5)[9..14], view.third().data(),);
-            assert_eq!(
-                u16::from_le_bytes((&data_region(1024, 5)[14..16]).try_into().unwrap()),
-                view.fourth().read()
-            );
-            assert_eq!(&data_region(1024, 5)[16..], view.fifth().data());
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage();
-            assert_eq!(&storage, extracted_storage);
-        }
-
-        #[test]
-        fn view_readwrite() {
-            let mut storage = data_region(1024, 5);
-            let mut view = withslice::View::new(&mut storage);
-
-            // Test initial data is read correctly
-            assert_eq!(
-                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
-                view.first().read()
-            );
-            assert_eq!(
-                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
-                view.second().read()
-            );
-            assert_eq!(&data_region(1024, 5)[9..14], view.third().data(),);
-            assert_eq!(
-                u16::from_le_bytes((&data_region(1024, 5)[14..16]).try_into().unwrap()),
-                view.fourth().read()
-            );
-            assert_eq!(&data_region(1024, 5)[16..], view.fifth().data());
-
-            // Test data can be written
-            view.first_mut().write(50);
-            view.second_mut().write(10i64.pow(15));
-            view.third_mut()
-                .data_mut()
-                .copy_from_slice(&[10, 20, 30, 40, 50]);
-            view.fourth_mut().write(1000);
-            view.fifth_mut()
-                .data_mut()
-                .copy_from_slice(&data_region(1024, 6)[16..]);
-
-            // Test reading will return changed data
-            assert_eq!(50, view.first().read());
-            assert_eq!(10i64.pow(15), view.second().read());
-            assert_eq!(&[10, 20, 30, 40, 50], view.third().data());
-            assert_eq!(1000, view.fourth().read());
-            assert_eq!(&data_region(1024, 6)[16..], view.fifth().data());
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage().clone();
-            assert_eq!(&storage, &extracted_storage);
-
-            // Test storage is actually changed
-            assert_eq!(50, i8::from_le_bytes((&storage[0..1]).try_into().unwrap()));
-            assert_eq!(
-                10i64.pow(15),
-                i64::from_le_bytes((&storage[1..9]).try_into().unwrap())
-            );
-            assert_eq!(&[10, 20, 30, 40, 50], &storage[9..14]);
-            assert_eq!(
-                1000,
-                u16::from_le_bytes((&storage[14..16]).try_into().unwrap())
-            );
-            assert_eq!(&data_region(1024, 6)[16..], &storage[16..]);
-        }
-
-        #[test]
-        fn view_vec_readonly() {
-            let view = withslice::View::new(data_region(1024, 5));
-
-            // Test initial data is read correctly
-            assert_eq!(
-                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
-                view.first().read()
-            );
-            assert_eq!(
-                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
-                view.second().read()
-            );
-            assert_eq!(&data_region(1024, 5)[9..14], view.third().data(),);
-            assert_eq!(
-                u16::from_le_bytes((&data_region(1024, 5)[14..16]).try_into().unwrap()),
-                view.fourth().read()
-            );
-            assert_eq!(&data_region(1024, 5)[16..], view.fifth().data());
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage();
-            assert_eq!(&data_region(1024, 5), &extracted_storage);
-        }
-
-        #[test]
-        fn view_vec_readwrite() {
-            let mut view = withslice::View::new(data_region(1024, 5));
-
-            // Test initial data is read correctly
-            assert_eq!(
-                i8::from_le_bytes((&data_region(1024, 5)[0..1]).try_into().unwrap()),
-                view.first().read()
-            );
-            assert_eq!(
-                i64::from_le_bytes((&data_region(1024, 5)[1..9]).try_into().unwrap()),
-                view.second().read()
-            );
-            assert_eq!(&data_region(1024, 5)[9..14], view.third().data(),);
-            assert_eq!(
-                u16::from_le_bytes((&data_region(1024, 5)[14..16]).try_into().unwrap()),
-                view.fourth().read()
-            );
-            assert_eq!(&data_region(1024, 5)[16..], view.fifth().data());
-
-            // Test data can be written
-            view.first_mut().write(50);
-            view.second_mut().write(10i64.pow(15));
-            view.third_mut()
-                .data_mut()
-                .copy_from_slice(&[10, 20, 30, 40, 50]);
-            view.fourth_mut().write(1000);
-            view.fifth_mut()
-                .data_mut()
-                .copy_from_slice(&data_region(1024, 6)[16..]);
-
-            // Test reading will return changed data
-            assert_eq!(50, view.first().read());
-            assert_eq!(10i64.pow(15), view.second().read());
-            assert_eq!(&[10, 20, 30, 40, 50], view.third().data());
-            assert_eq!(1000, view.fourth().read());
-            assert_eq!(&data_region(1024, 6)[16..], view.fifth().data());
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage();
-            assert_eq!(
-                50,
-                i8::from_le_bytes((&extracted_storage[0..1]).try_into().unwrap())
-            );
-            assert_eq!(
-                10i64.pow(15),
-                i64::from_le_bytes((&extracted_storage[1..9]).try_into().unwrap())
-            );
-            assert_eq!(&[10, 20, 30, 40, 50], &extracted_storage[9..14]);
-            assert_eq!(
-                1000,
-                u16::from_le_bytes((&extracted_storage[14..16]).try_into().unwrap())
-            );
-            assert_eq!(&data_region(1024, 6)[16..], &extracted_storage[16..]);
-        }
-    }
-
-    mod wrapped {
-        use super::*;
-        use crate::LayoutAs;
-
-        #[derive(Debug, PartialEq, Eq)]
-        pub struct Wrapped<T>(T);
-        impl<T> LayoutAs<T> for Wrapped<T> {
-            fn read(v: T) -> Wrapped<T> {
-                Wrapped(v)
-            }
-
-            fn write(v: Wrapped<T>) -> T {
-                v.0
-            }
-        }
-
-        define_layout!(noslice, LittleEndian, {
-            first: Wrapped<i8> as i8,
-            second: Wrapped<i64> as i64,
-            third: Wrapped<u16> as u16,
-        });
-        #[test]
-        fn metadata() {
-            assert_eq!(0, noslice::first::OFFSET);
-            assert_eq!(1, noslice::first::SIZE);
-            assert_eq!(1, noslice::second::OFFSET);
-            assert_eq!(8, noslice::second::SIZE);
-            assert_eq!(9, noslice::third::OFFSET);
-            assert_eq!(2, noslice::third::SIZE);
-        }
-
-        #[test]
-        fn fields() {
-            let mut storage = data_region(1024, 5);
-
-            // Test initial data is read correctly
-            assert_eq!(
-                Wrapped(i8::from_le_bytes(
-                    (&data_region(1024, 5)[0..1]).try_into().unwrap()
-                )),
-                noslice::first::read(&storage)
-            );
-            assert_eq!(
-                Wrapped(i64::from_le_bytes(
-                    (&data_region(1024, 5)[1..9]).try_into().unwrap()
-                )),
-                noslice::second::read(&storage)
-            );
-            assert_eq!(
-                Wrapped(u16::from_le_bytes(
-                    (&data_region(1024, 5)[9..11]).try_into().unwrap()
-                )),
-                noslice::third::read(&storage)
-            );
-
-            // Test data can be written
-            noslice::first::write(&mut storage, Wrapped(60));
-            noslice::second::write(&mut storage, Wrapped(-100_000_000_000));
-            noslice::third::write(&mut storage, Wrapped(1_000));
-
-            // Test reading will return changed data
-            assert_eq!(Wrapped(60), noslice::first::read(&storage));
-            assert_eq!(Wrapped(-100_000_000_000), noslice::second::read(&storage));
-            assert_eq!(Wrapped(1_000), noslice::third::read(&storage));
-        }
-
-        #[test]
-        fn view_readonly() {
-            let storage = data_region(1024, 5);
-            let view = noslice::View::new(&storage);
-
-            // Test initial data is read correctly
-            assert_eq!(
-                Wrapped(i8::from_le_bytes(
-                    (&data_region(1024, 5)[0..1]).try_into().unwrap()
-                )),
-                view.first().read()
-            );
-            assert_eq!(
-                Wrapped(i64::from_le_bytes(
-                    (&data_region(1024, 5)[1..9]).try_into().unwrap()
-                )),
-                view.second().read()
-            );
-            assert_eq!(
-                Wrapped(u16::from_le_bytes(
-                    (&data_region(1024, 5)[9..11]).try_into().unwrap()
-                )),
-                view.third().read()
-            );
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage();
-            assert_eq!(extracted_storage, &storage);
-        }
-
-        #[test]
-        fn view_readwrite() {
-            let mut storage = data_region(1024, 5);
-            let mut view = noslice::View::new(&mut storage);
-
-            // Test initial data is read correctly
-            assert_eq!(
-                Wrapped(i8::from_le_bytes(
-                    (&data_region(1024, 5)[0..1]).try_into().unwrap()
-                )),
-                view.first().read()
-            );
-            assert_eq!(
-                Wrapped(i64::from_le_bytes(
-                    (&data_region(1024, 5)[1..9]).try_into().unwrap()
-                )),
-                view.second().read()
-            );
-            assert_eq!(
-                Wrapped(u16::from_le_bytes(
-                    (&data_region(1024, 5)[9..11]).try_into().unwrap()
-                )),
-                view.third().read()
-            );
-
-            // Test data can be written
-            view.first_mut().write(Wrapped(50));
-            view.second_mut().write(Wrapped(10i64.pow(15)));
-            view.third_mut().write(Wrapped(1000));
-
-            // Test reading will return changed data
-            assert_eq!(Wrapped(50), view.first().read());
-            assert_eq!(Wrapped(10i64.pow(15)), view.second().read());
-            assert_eq!(Wrapped(1000), view.third().read());
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage().clone();
-            assert_eq!(&storage, &extracted_storage);
-
-            // Test original storage is actually changed
-            assert_eq!(50, i8::from_le_bytes((&storage[0..1]).try_into().unwrap()));
-            assert_eq!(
-                10i64.pow(15),
-                i64::from_le_bytes((&storage[1..9]).try_into().unwrap())
-            );
-            assert_eq!(
-                1000,
-                u16::from_le_bytes((&storage[9..11]).try_into().unwrap())
-            );
-        }
-
-        #[test]
-        fn view_vec_readonly() {
-            let view = noslice::View::new(data_region(1024, 5));
-
-            // Test initial data is read correctly
-            assert_eq!(
-                Wrapped(i8::from_le_bytes(
-                    (&data_region(1024, 5)[0..1]).try_into().unwrap()
-                )),
-                view.first().read()
-            );
-            assert_eq!(
-                Wrapped(i64::from_le_bytes(
-                    (&data_region(1024, 5)[1..9]).try_into().unwrap()
-                )),
-                view.second().read()
-            );
-            assert_eq!(
-                Wrapped(u16::from_le_bytes(
-                    (&data_region(1024, 5)[9..11]).try_into().unwrap()
-                )),
-                view.third().read()
-            );
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage();
-            assert_eq!(&data_region(1024, 5), &extracted_storage);
-        }
-
-        #[test]
-        fn view_vec_readwrite() {
-            let mut view = noslice::View::new(data_region(1024, 5));
-
-            // Test initial data is read correctly
-            assert_eq!(
-                Wrapped(i8::from_le_bytes(
-                    (&data_region(1024, 5)[0..1]).try_into().unwrap()
-                )),
-                view.first().read()
-            );
-            assert_eq!(
-                Wrapped(i64::from_le_bytes(
-                    (&data_region(1024, 5)[1..9]).try_into().unwrap()
-                )),
-                view.second().read()
-            );
-            assert_eq!(
-                Wrapped(u16::from_le_bytes(
-                    (&data_region(1024, 5)[9..11]).try_into().unwrap()
-                )),
-                view.third().read()
-            );
-
-            // Test data can be written
-            view.first_mut().write(Wrapped(50));
-            view.second_mut().write(Wrapped(10i64.pow(15)));
-            view.third_mut().write(Wrapped(1000));
-
-            // Test reading will return changed data
-            assert_eq!(Wrapped(50), view.first().read());
-            assert_eq!(Wrapped(10i64.pow(15)), view.second().read());
-            assert_eq!(Wrapped(1000), view.third().read());
-
-            // Test into_storage will return correct data
-            let extracted_storage = view.into_storage();
-            assert_eq!(
-                50,
-                i8::from_le_bytes((&extracted_storage[0..1]).try_into().unwrap())
-            );
-            assert_eq!(
-                10i64.pow(15),
-                i64::from_le_bytes((&extracted_storage[1..9]).try_into().unwrap())
-            );
-            assert_eq!(
-                1000,
-                u16::from_le_bytes((&extracted_storage[9..11]).try_into().unwrap())
-            );
-        }
+        let storage: [u8; 1024] = [0; 1024];
+        let view = function_level_layout::View::new(storage);
+        assert_eq!(0, view.third().read());
     }
 
     #[test]
@@ -1109,150 +279,6 @@ mod tests {
     }
 
     #[test]
-    fn given_immutableview_when_extractingimmutableref() {
-        define_layout!(layout, LittleEndian, {
-            field: u8,
-            tail: [u8],
-        });
-
-        let storage = data_region(1024, 0);
-        let extracted: &[u8] = {
-            let view = layout::View::new(&storage);
-            view.into_tail().extract()
-            // here, the view dies but the extracted reference lives on
-        };
-
-        assert_eq!(&data_region(1024, 0)[1..], extracted);
-    }
-
-    #[test]
-    fn given_immutableview_with_reftovec_when_extractingimmutableref() {
-        define_layout!(layout, LittleEndian, {
-            field: u8,
-            tail: [u8],
-        });
-
-        let storage = data_region(1024, 0);
-        let extracted: &[u8] = {
-            let view: layout::View<&Vec<u8>> = layout::View::new(&storage);
-            view.into_tail().extract()
-            // here, the view dies but the extracted reference lives on
-        };
-
-        assert_eq!(&data_region(1024, 0)[1..], extracted);
-    }
-
-    #[test]
-    fn given_mutableview_when_extractingimmutableref() {
-        define_layout!(layout, LittleEndian, {
-            field: u8,
-            tail: [u8],
-        });
-
-        let mut storage = data_region(1024, 0);
-        let extracted: &[u8] = {
-            let view: layout::View<&mut [u8]> = layout::View::new(&mut storage);
-            view.into_tail().extract()
-        };
-
-        assert_eq!(&data_region(1024, 0)[1..], extracted);
-    }
-
-    #[test]
-    fn given_mutableview_with_reftovec_when_extractingimmutableref() {
-        define_layout!(layout, LittleEndian, {
-            field: u8,
-            tail: [u8],
-        });
-
-        let mut storage = data_region(1024, 0);
-        let extracted: &[u8] = {
-            let view: layout::View<&mut Vec<u8>> = layout::View::new(&mut storage);
-            view.into_tail().extract()
-        };
-
-        assert_eq!(&data_region(1024, 0)[1..], extracted);
-    }
-
-    #[test]
-    fn given_mutableview_when_extractingmutableref() {
-        define_layout!(layout, LittleEndian, {
-            field: u8,
-            tail: [u8],
-        });
-
-        let mut storage = data_region(1024, 0);
-        let extracted: &mut [u8] = {
-            let view: layout::View<&mut [u8]> = layout::View::new(&mut storage);
-            view.into_tail().extract_mut()
-        };
-
-        assert_eq!(&data_region(1024, 0)[1..], extracted);
-    }
-
-    #[test]
-    fn given_mutableview_with_reftovec_when_extractingmutableref() {
-        define_layout!(layout, LittleEndian, {
-            field: u8,
-            tail: [u8],
-        });
-
-        let mut storage = data_region(1024, 0);
-        let extracted: &mut [u8] = {
-            let view: layout::View<&mut Vec<u8>> = layout::View::new(&mut storage);
-            view.into_tail().extract_mut()
-        };
-
-        assert_eq!(&data_region(1024, 0)[1..], extracted);
-    }
-
-    #[test]
-    fn test_little_endian() {
-        define_layout!(my_layout, LittleEndian, {
-            field1: u16,
-            field2: i64,
-        });
-
-        let mut storage = data_region(1024, 0);
-        let mut view = my_layout::View::new(&mut storage);
-        view.field1_mut().write(1000);
-        assert_eq!(1000, view.field1().read());
-        view.field2_mut().write(10i64.pow(15));
-        assert_eq!(10i64.pow(15), view.field2().read());
-        assert_eq!(
-            1000,
-            u16::from_le_bytes((&storage[0..2]).try_into().unwrap())
-        );
-        assert_eq!(
-            10i64.pow(15),
-            i64::from_le_bytes((&storage[2..10]).try_into().unwrap())
-        );
-    }
-
-    #[test]
-    fn test_big_endian() {
-        define_layout!(my_layout, BigEndian, {
-            field1: u16,
-            field2: i64,
-        });
-
-        let mut storage = data_region(1024, 0);
-        let mut view = my_layout::View::new(&mut storage);
-        view.field1_mut().write(1000);
-        assert_eq!(1000, view.field1().read());
-        view.field2_mut().write(10i64.pow(15));
-        assert_eq!(10i64.pow(15), view.field2().read());
-        assert_eq!(
-            1000,
-            u16::from_be_bytes((&storage[0..2]).try_into().unwrap())
-        );
-        assert_eq!(
-            10i64.pow(15),
-            i64::from_be_bytes((&storage[2..10]).try_into().unwrap())
-        );
-    }
-
-    #[test]
     fn there_can_be_multiple_views_if_readonly() {
         define_layout!(my_layout, BigEndian, {
             field1: u16,
@@ -1264,5 +290,23 @@ mod tests {
         let view2 = my_layout::View::new(&storage);
         view1.field1().read();
         view2.field1().read();
+    }
+
+    #[test]
+    fn size_of_sized_layout() {
+        define_layout!(my_layout, LittleEndian, {
+            field1: u16,
+            field2: i64,
+        });
+        assert_eq!(Some(10), my_layout::SIZE);
+    }
+
+    #[test]
+    fn size_of_unsized_layout() {
+        define_layout!(my_layout, LittleEndian, {
+            field: u16,
+            tail: [u8],
+        });
+        assert_eq!(None, my_layout::SIZE);
     }
 }
