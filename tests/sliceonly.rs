@@ -8,6 +8,7 @@ define_layout!(sliceonly, LittleEndian, { field: [u8] });
 #[test]
 fn metadata() {
     assert_eq!(0, sliceonly::field::OFFSET);
+    assert_eq!(None, sliceonly::field::SIZE);
 }
 
 #[test]

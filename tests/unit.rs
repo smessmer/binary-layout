@@ -1,6 +1,27 @@
 use binary_layout::prelude::*;
 
 #[test]
+fn metadata() {
+    define_layout!(unit_layout_1, LittleEndian, { field1: () });
+
+    assert_eq!(0, unit_layout_1::field1::OFFSET);
+    assert_eq!(Some(0), unit_layout_1::field1::SIZE);
+
+    define_layout!(unit_layout_2, LittleEndian, {
+        field1: u8,
+        field2: (),
+        field3: u128
+    });
+
+    assert_eq!(0, unit_layout_2::field1::OFFSET);
+    assert_eq!(Some(1), unit_layout_2::field1::SIZE);
+    assert_eq!(1, unit_layout_2::field2::OFFSET);
+    assert_eq!(Some(0), unit_layout_2::field2::SIZE);
+    assert_eq!(1, unit_layout_2::field3::OFFSET);
+    assert_eq!(Some(16), unit_layout_2::field3::SIZE);
+}
+
+#[test]
 fn test_layout_with_unit() {
     let mut storage: [u8; 1024] = [0; 1024];
 

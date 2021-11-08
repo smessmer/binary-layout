@@ -23,6 +23,7 @@ fn metadata() {
     assert_eq!(14, withslice::fourth::OFFSET);
     assert_eq!(Some(2), withslice::fourth::SIZE);
     assert_eq!(16, withslice::fifth::OFFSET);
+    assert_eq!(None, withslice::fifth::SIZE);
 }
 
 #[test]
