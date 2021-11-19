@@ -18,7 +18,7 @@ use super::{Field, FieldCopyAccess, FieldSliceAccess};
 ///   field_one: u16,
 ///   another_field: [u8; 16],
 ///   something_else: u32,
-///   tail_data: [u8],
+///   tail: [u8],
 /// });
 ///
 /// fn func(storage_data: &mut [u8]) {
@@ -33,11 +33,11 @@ use super::{Field, FieldCopyAccess, FieldSliceAccess};
 ///   // equivalent: data_slice[18..22].copy_from_slice(&10u32.to_le_bytes());
 ///
 ///   // access a data region
-///   let tail_data: &[u8] = view.tail_data().data();
-///   // equivalent: let tail_data: &[u8] = &data_slice[22..];
+///   let tail: &[u8] = view.tail().data();
+///   // equivalent: let tail: &[u8] = &data_slice[22..];
 ///
 ///   // and modify it
-///   view.tail_data_mut().data_mut()[..5].copy_from_slice(&[1, 2, 3, 4, 5]);
+///   view.tail_mut().data_mut()[..5].copy_from_slice(&[1, 2, 3, 4, 5]);
 ///   // equivalent: data_slice[18..22].copy_from_slice(&[1, 2, 3, 4, 5]);
 /// }
 /// ```
@@ -112,12 +112,12 @@ impl<'a, S: 'a + AsRef<[u8]>, F: FieldSliceAccess<'a>> FieldView<S, F> {
     ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
-    ///   tail_data: [u8],
+    ///   tail: [u8],
     /// });
     ///
     ///  fn func(storage_data: &[u8]) {
     ///      let view = my_layout::View::new(storage_data);
-    ///      let tail_data: &[u8] = view.tail_data().data();
+    ///      let tail: &[u8] = view.tail().data();
     ///  }
     ///  ```
     pub fn data(&'a self) -> F::SliceType {
@@ -142,55 +142,20 @@ impl<
     ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   another_field: u64,
-    ///   tail_data: [u8],
+    ///   tail: [u8],
     /// });
     ///
     /// fn func(storage_data: &[u8]) -> &[u8] {
     ///   let view = my_layout::View::new(storage_data);
-    ///   let tail_data: &[u8] = view.into_tail_data().extract();
-    ///   // Now we return tail_data. Note that the view object doesn't survive
-    ///   // this function but we can still return the `tail_data` reference.
+    ///   let tail: &[u8] = view.into_tail().into_data();
+    ///   // Now we return tail. Note that the view object doesn't survive
+    ///   // this function but we can still return the `tail` reference.
     ///   // This wouldn't be possible with `FieldView::data`.
-    ///   tail_data
+    ///   tail
     /// }
     /// ```
-    pub fn extract(self) -> &'a [u8] {
+    pub fn into_data(self) -> &'a [u8] {
         F::data(self.storage.as_ref())
-    }
-}
-impl<
-        'a,
-        S: ?Sized + AsRef<[u8]>,
-        F: FieldSliceAccess<'a, SliceType = &'a [u8], MutSliceType = &'a mut [u8]>,
-    > FieldView<&'a mut S, F>
-{
-    /// Similar to [FieldView::data], but this also extracts the lifetime. The reference returned by [FieldView::data] can only life as long as the [FieldView] object lives.
-    /// The reference returned by this function can live for as long as the original `packed_data` reference that as put into the [FieldView] lives.
-    /// However, you can only call this if you let the [FieldView] die, it takes the `self` parameter by value.
-    /// Also note that this function can only be called when the [FieldView] was constructed with either a `&[u8]` or a `&mut [u8]` as underlying storage for the `storage_data`.
-    /// If the [FieldView] was constructed based on `Vec<u8>` storage, then this function semantically would have to return an owning subvector, but such a thing doesn't exist in Rust.
-    ///
-    /// # Example:
-    /// ```
-    /// use binary_layout::prelude::*;
-    ///
-    /// define_layout!(my_layout, LittleEndian, {
-    ///   another_field: u64,
-    ///   tail_data: [u8],
-    /// });
-    ///
-    /// fn func(storage_data: &[u8]) -> &[u8] {
-    ///   let view = my_layout::View::new(storage_data);
-    ///   let tail_data: &[u8] = view.into_tail_data().extract();
-    ///   // Now we return tail_data. Note that the view object doesn't survive
-    ///   // this function but we can still return the `tail_data` reference.
-    ///   // This wouldn't be possible with `FieldView::data`.
-    ///   tail_data
-    /// }
-    /// ```
-    pub fn extract(self) -> &'a [u8] {
-        let s: &'a S = self.storage;
-        F::data(s.as_ref())
     }
 }
 impl<'a, S: 'a + AsMut<[u8]>, F: FieldSliceAccess<'a>> FieldView<S, F> {
@@ -203,12 +168,12 @@ impl<'a, S: 'a + AsMut<[u8]>, F: FieldSliceAccess<'a>> FieldView<S, F> {
     ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
-    ///   tail_data: [u8],
+    ///   tail: [u8],
     /// });
     ///
     /// fn func(storage_data: &mut [u8]) {
     ///   let mut view = my_layout::View::new(storage_data);
-    ///   let tail_data: &mut [u8] = view.tail_data_mut().data_mut();
+    ///   let tail: &mut [u8] = view.tail_mut().data_mut();
     /// }
     /// ```
     pub fn data_mut(&'a mut self) -> F::MutSliceType {
@@ -233,19 +198,19 @@ impl<
     ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   another_field: u64,
-    ///   tail_data: [u8],
+    ///   tail: [u8],
     /// });
     ///
     /// fn func(storage_data: &[u8]) -> &[u8] {
     ///   let view = my_layout::View::new(storage_data);
-    ///   let tail_data: &[u8] = view.into_tail_data().extract();
-    ///   // Now we return tail_data. Note that the view object doesn't survive
-    ///   // this function but we can still return the `tail_data` reference.
+    ///   let tail: &[u8] = view.into_tail().into_data();
+    ///   // Now we return tail. Note that the view object doesn't survive
+    ///   // this function but we can still return the `tail` reference.
     ///   // This wouldn't be possible with `FieldView::data`.
-    ///   tail_data
+    ///   tail
     /// }
     /// ```
-    pub fn extract_mut(self) -> &'a mut [u8] {
+    pub fn into_data(self) -> &'a mut [u8] {
         F::data_mut(self.storage.as_mut())
     }
 }
