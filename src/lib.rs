@@ -145,14 +145,11 @@ pub mod example;
 
 pub use endianness::{BigEndian, LittleEndian};
 pub use fields::{
-    primitive::{FieldCopyAccess, FieldSliceAccess, PrimitiveField},
-    wrapped::{LayoutAs, WrappedField},
+    primitive::{FieldCopyAccess, FieldSliceAccess},
+    wrapped::LayoutAs,
     Field,
 };
 pub use view::FieldView;
-
-pub use doc_comment::doc_comment;
-pub use paste::paste;
 
 /// Import this to get everything into scope that you need for defining and using layouts.
 ///
@@ -170,5 +167,11 @@ pub mod prelude {
 /// Internal things that need to be exported so our macros can use them. Don't use directly!
 #[doc(hidden)]
 pub mod internal {
+    pub use crate::fields::{
+        primitive::PrimitiveField,
+        wrapped::WrappedField,
+    };
     pub use crate::macro_define_layout::{option_usize_add, unwrap_field_size};
+    pub use doc_comment::doc_comment;
+    pub use paste::paste;
 }

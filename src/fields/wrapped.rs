@@ -154,7 +154,10 @@ impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
 mod tests {
     #![allow(clippy::float_cmp)]
     use crate::prelude::*;
-    use crate::{LayoutAs, PrimitiveField, WrappedField};
+    use crate::{
+        internal::{PrimitiveField, WrappedField},
+        LayoutAs,
+    };
     use core::convert::TryInto;
 
     #[derive(Debug, PartialEq, Eq)]

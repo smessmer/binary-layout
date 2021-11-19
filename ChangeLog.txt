@@ -3,6 +3,7 @@
 Backward compatibility breaking changes:
 - Removed SizedField::SIZE and added Field::SIZE as an Option<usize> (None if the field is open ended). This change breaks backwards compatibility for code using the SIZE field.
 - Rename FieldView::extract/extract_mut to FieldView::into_data
+- Move some exported names into the "internal" namespace to denote that they're not supposed to be used in user code
 
 Other changes:
 - Added the ::SIZE constant for returning the size of a whole layout.

@@ -14,7 +14,7 @@ pub mod wrapped;
 ///
 /// By itself, [Field] only offers the things common to all fields, but there
 /// are additional traits for fields that fulfill certain properties:
-/// - [SizedField] for fields that have a defined size (most types except for open ended byte arrays)
+/// - [NestedFieldAccess](crate::FieldNestedAccess) for fields that represent another layout nested into the current layout.
 /// - [FieldCopyAccess](crate::FieldCopyAccess) for fields that read/write data by copying it to/from the storage. This includes primitive types like [i8] or [u16].
 ///   This trait offers [read](crate::FieldCopyAccess::read) and [write](crate::FieldCopyAccess::write) to read or write such fields.
 /// - [FieldSliceAccess](crate::FieldSliceAccess) for fields that read/write data by creating sub-slices over the storage. This includes, for example, byte arrays
