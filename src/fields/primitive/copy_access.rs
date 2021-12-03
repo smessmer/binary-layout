@@ -1,6 +1,8 @@
+use super::super::{Field, StorageIntoFieldView, StorageToFieldView};
+use super::view::FieldView;
 use super::PrimitiveField;
 use crate::endianness::{EndianKind, Endianness};
-use crate::Field;
+use crate::utils::data::Data;
 
 /// This trait is implemented for fields with "copy access",
 /// i.e. fields that read/write data by copying it from/to the
@@ -52,8 +54,48 @@ pub trait FieldCopyAccess: Field {
     fn write(storage: &mut [u8], v: Self::HighLevelType);
 }
 
+macro_rules! impl_field_traits {
+    ($type: ty) => {
+        impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<$type, E, OFFSET_> {
+            /// See [Field::Endian]
+            type Endian = E;
+            /// See [Field::OFFSET]
+            const OFFSET: usize = OFFSET_;
+            /// See [SizedField::SIZE]
+            const SIZE: Option<usize> = Some(core::mem::size_of::<$type>());
+        }
+
+        impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a [u8]>
+            for PrimitiveField<$type, E, OFFSET_>
+        {
+            type View = FieldView<&'a [u8], Self>;
+            fn view(storage: &'a [u8]) -> Self::View {
+                Self::View::new(storage)
+            }
+        }
+
+        impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a mut [u8]>
+            for PrimitiveField<$type, E, OFFSET_>
+        {
+            type View = FieldView<&'a mut [u8], Self>;
+            fn view(storage: &'a mut [u8]) -> Self::View {
+                Self::View::new(storage)
+            }
+        }
+
+        impl<'a, S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> StorageIntoFieldView<S>
+            for PrimitiveField<$type, E, OFFSET_>
+        {
+            type View = FieldView<Data<S>, Self>;
+            fn into_view(storage: Data<S>) -> Self::View {
+                Self::View::new(storage)
+            }
+        }
+    };
+}
+
 macro_rules! int_field {
-    ($type:ident) => {
+    ($type:ty) => {
         impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<$type, E, OFFSET_> {
             /// See [FieldCopyAccess::HighLevelType]
             type HighLevelType = $type;
@@ -84,8 +126,8 @@ macro_rules! int_field {
                         &storage.as_ref()[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
                     );
                     match E::KIND {
-                        EndianKind::Big => $type::from_be_bytes(value),
-                        EndianKind::Little => $type::from_le_bytes(value),
+                        EndianKind::Big => <$type>::from_be_bytes(value),
+                        EndianKind::Little => <$type>::from_le_bytes(value),
                     }
                 }
             }
@@ -121,14 +163,7 @@ macro_rules! int_field {
             }
         }
 
-        impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<$type, E, OFFSET_> {
-            /// See [Field::Endian]
-            type Endian = E;
-            /// See [Field::OFFSET]
-            const OFFSET: usize = OFFSET_;
-            /// See [SizedField::SIZE]
-            const SIZE: Option<usize> = Some(core::mem::size_of::<$type>());
-        }
+        impl_field_traits!($type);
     };
 }
 
@@ -144,7 +179,7 @@ int_field!(u64);
 int_field!(u128);
 
 macro_rules! float_field {
-    ($type:ident) => {
+    ($type:ty) => {
         impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<$type, E, OFFSET_> {
             /// See [FieldCopyAccess::HighLevelType]
             type HighLevelType = $type;
@@ -182,8 +217,8 @@ macro_rules! float_field {
                         &storage.as_ref()[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
                     );
                     match E::KIND {
-                        EndianKind::Big => $type::from_be_bytes(value),
-                        EndianKind::Little => $type::from_le_bytes(value),
+                        EndianKind::Big => <$type>::from_be_bytes(value),
+                        EndianKind::Little => <$type>::from_le_bytes(value),
                     }
                 }
             }
@@ -226,14 +261,7 @@ macro_rules! float_field {
             }
         }
 
-        impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<$type, E, OFFSET_> {
-            /// See [Field::Endian]
-            type Endian = E;
-            /// See [Field::OFFSET]
-            const OFFSET: usize = OFFSET_;
-            /// See [SizedField::SIZE]
-            const SIZE: Option<usize> = Some(core::mem::size_of::<$type>());
-        }
+        impl_field_traits!($type);
     };
 }
 
@@ -309,14 +337,7 @@ impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<(),
     }
 }
 
-impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<(), E, OFFSET_> {
-    /// See [Field::Endian]
-    type Endian = E;
-    /// See [Field::OFFSET]
-    const OFFSET: usize = OFFSET_;
-    /// See [SizedField::SIZE]
-    const SIZE: Option<usize> = Some(core::mem::size_of::<()>());
-}
+impl_field_traits!(());
 
 #[cfg(test)]
 mod tests {

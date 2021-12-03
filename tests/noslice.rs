@@ -70,7 +70,7 @@ fn view_readonly() {
 
     // Test into_storage will return correct data
     let extracted_storage = view.into_storage();
-    assert_eq!(extracted_storage, &storage);
+    assert_eq!(&*extracted_storage, storage);
 }
 
 #[test]
@@ -103,7 +103,7 @@ fn view_readwrite() {
     assert_eq!(1000, view.third().read());
 
     // Test into_storage will return correct data
-    let extracted_storage = view.into_storage().clone();
+    let extracted_storage = view.into_storage().to_vec();
     assert_eq!(&storage, &extracted_storage);
 
     // Test original storage is actually changed
@@ -138,7 +138,7 @@ fn view_vec_readonly() {
 
     // Test into_storage will return correct data
     let extracted_storage = view.into_storage();
-    assert_eq!(&data_region(1024, 5), &extracted_storage);
+    assert_eq!(&data_region(1024, 5), &*extracted_storage);
 }
 
 #[test]

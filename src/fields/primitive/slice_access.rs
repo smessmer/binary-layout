@@ -1,8 +1,9 @@
 use std::convert::TryFrom;
 
+use super::super::{Field, StorageIntoFieldView, StorageToFieldView};
 use super::PrimitiveField;
 use crate::endianness::Endianness;
-use crate::Field;
+use crate::utils::data::Data;
 
 /// This trait is implemented for fields with "slice access",
 /// i.e. fields that are read/write directly without a copy
@@ -103,6 +104,33 @@ impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<[u8], E, OFFS
     /// See [SizedField::SIZE]
     const SIZE: Option<usize> = None;
 }
+impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a [u8]>
+    for PrimitiveField<[u8], E, OFFSET_>
+{
+    type View = &'a [u8];
+    fn view(storage: &'a [u8]) -> Self::View {
+        &storage[Self::OFFSET..]
+    }
+}
+
+impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a mut [u8]>
+    for PrimitiveField<[u8], E, OFFSET_>
+{
+    type View = &'a mut [u8];
+    fn view(storage: &'a mut [u8]) -> Self::View {
+        &mut storage[Self::OFFSET..]
+    }
+}
+
+impl<'a, S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> StorageIntoFieldView<S>
+    for PrimitiveField<[u8], E, OFFSET_>
+{
+    type View = Data<S>;
+
+    fn into_view(storage: Data<S>) -> Self::View {
+        storage.into_subregion(Self::OFFSET..)
+    }
+}
 
 /// Field type `[u8; N]`:
 /// This field represents a [fixed size byte array](crate#fixed-size-byte-arrays-u8-n).
@@ -164,6 +192,33 @@ impl<E: Endianness, const N: usize, const OFFSET_: usize> Field
     const OFFSET: usize = OFFSET_;
     /// See [SizedField::SIZE]
     const SIZE: Option<usize> = Some(N);
+}
+impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> StorageToFieldView<&'a [u8]>
+    for PrimitiveField<[u8; N], E, OFFSET_>
+{
+    type View = &'a [u8];
+    fn view(storage: &'a [u8]) -> Self::View {
+        &storage[Self::OFFSET..(Self::OFFSET + N)]
+    }
+}
+
+impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> StorageToFieldView<&'a mut [u8]>
+    for PrimitiveField<[u8; N], E, OFFSET_>
+{
+    type View = &'a mut [u8];
+    fn view(storage: &'a mut [u8]) -> Self::View {
+        &mut storage[Self::OFFSET..(Self::OFFSET + N)]
+    }
+}
+
+impl<'a, S: AsRef<[u8]>, E: Endianness, const N: usize, const OFFSET_: usize>
+    StorageIntoFieldView<S> for PrimitiveField<[u8; N], E, OFFSET_>
+{
+    type View = Data<S>;
+
+    fn into_view(storage: Data<S>) -> Self::View {
+        storage.into_subregion(Self::OFFSET..(Self::OFFSET + N))
+    }
 }
 
 #[cfg(test)]

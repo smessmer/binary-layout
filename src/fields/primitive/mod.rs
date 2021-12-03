@@ -4,9 +4,11 @@ use crate::endianness::Endianness;
 
 mod copy_access;
 mod slice_access;
+mod view;
 
 pub use copy_access::FieldCopyAccess;
 pub use slice_access::FieldSliceAccess;
+pub use view::FieldView;
 
 /// A [PrimitiveField] is a [Field] that directly represents a primitive type like [u8], [i16], ...
 /// See [Field] for more info on this API.

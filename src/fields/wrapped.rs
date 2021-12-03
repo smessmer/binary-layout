@@ -1,6 +1,10 @@
 use core::marker::PhantomData;
 
-use super::{primitive::FieldCopyAccess, Field};
+use super::{
+    primitive::{FieldCopyAccess, FieldView},
+    Field, StorageIntoFieldView, StorageToFieldView,
+};
+use crate::utils::data::Data;
 
 /// Implementing the [LayoutAs] trait for a custom type allows that custom type to be used
 /// as the type of a layout field. Note that the value of this type is copied each time it
@@ -93,6 +97,46 @@ impl<U, T: LayoutAs<U>, F: Field> Field for WrappedField<U, T, F> {
     const OFFSET: usize = F::OFFSET;
     /// See [SizedField::SIZE]
     const SIZE: Option<usize> = F::SIZE;
+}
+
+impl<
+        'a,
+        U,
+        T: LayoutAs<U>,
+        F: FieldCopyAccess<HighLevelType = U> + StorageToFieldView<&'a [u8]>,
+    > StorageToFieldView<&'a [u8]> for WrappedField<U, T, F>
+{
+    type View = FieldView<&'a [u8], Self>;
+    fn view(storage: &'a [u8]) -> Self::View {
+        Self::View::new(storage)
+    }
+}
+
+impl<
+        'a,
+        U,
+        T: LayoutAs<U>,
+        F: FieldCopyAccess<HighLevelType = U> + StorageToFieldView<&'a mut [u8]>,
+    > StorageToFieldView<&'a mut [u8]> for WrappedField<U, T, F>
+{
+    type View = FieldView<&'a mut [u8], Self>;
+    fn view(storage: &'a mut [u8]) -> Self::View {
+        Self::View::new(storage)
+    }
+}
+
+impl<
+        U,
+        S: AsRef<[u8]>,
+        T: LayoutAs<U>,
+        F: FieldCopyAccess<HighLevelType = U> + StorageIntoFieldView<S>,
+    > StorageIntoFieldView<S> for WrappedField<U, T, F>
+{
+    type View = FieldView<Data<S>, Self>;
+
+    fn into_view(storage: Data<S>) -> Self::View {
+        Self::View::new(storage)
+    }
 }
 
 impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess

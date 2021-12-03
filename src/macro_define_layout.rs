@@ -106,10 +106,10 @@ macro_rules! define_layout {
                     ```
                     "},
                     pub struct View<S> {
-                        storage: S,
+                        storage: $crate::Data<S>,
                     }
                 }
-                impl <S> View<S> {
+                impl <S: AsRef<[u8]>> View<S> {
                     /// You can create views over a storage by calling [View::new].
                     ///
                     /// `S` is the type of underlying storage. It can be
@@ -117,13 +117,13 @@ macro_rules! define_layout {
                     /// - Mutable borrowed storage: `&mut [u8]`
                     /// - Owning storage: impl `AsRef<u8>` (for example: `Vec<u8>`)
                     pub fn new(storage: S) -> Self {
-                        Self {storage}
+                        Self {storage: storage.into()}
                     }
 
                     /// This destroys the view and returns the underlying storage back to you.
-                    /// This is useful if you created an owning view (e.g. vased on `Vec<u8>`)
+                    /// This is useful if you created an owning view (e.g. based on `Vec<u8>`)
                     /// and now need the underlying `Vec<u8>` back.
-                    pub fn into_storage(self) -> S {
+                    pub fn into_storage(self) -> $crate::Data<S> {
                         self.storage
                     }
 
@@ -165,8 +165,8 @@ macro_rules! define_layout {
     (@impl_view_asref {$name: ident $(, $name_tail: ident)*}) => {
         $crate::internal::doc_comment!{
             concat!("Return a [FieldView](crate::FieldView) with read access to the `", stringify!($name), "` field"),
-            pub fn $name(&self) -> $crate::FieldView::<&[u8], $name> {
-                $crate::FieldView::new(self.storage.as_ref())
+            pub fn $name(&self) -> <$name as $crate::internal::StorageToFieldView<&[u8]>>::View {
+                <$name as $crate::internal::StorageToFieldView<&[u8]>>::view(self.storage.as_ref())
             }
         }
         $crate::define_layout!(@impl_view_asref {$($name_tail),*});
@@ -177,8 +177,8 @@ macro_rules! define_layout {
         $crate::internal::paste!{
             $crate::internal::doc_comment!{
                 concat!("Return a [FieldView](crate::FieldView) with write access to the `", stringify!($name), "` field"),
-                pub fn [<$name _mut>](&mut self) -> $crate::FieldView::<&mut [u8], $name> {
-                    $crate::FieldView::new(self.storage.as_mut())
+                pub fn [<$name _mut>](&mut self) -> <$name as $crate::internal::StorageToFieldView<&mut [u8]>>::View {
+                    <$name as $crate::internal::StorageToFieldView<&mut [u8]>>::view(self.storage.as_mut())
                 }
             }
         }
@@ -190,8 +190,8 @@ macro_rules! define_layout {
         $crate::internal::paste!{
             $crate::internal::doc_comment!{
                 concat!("Destroy the [View] and return a field accessor to the `", stringify!($name), "` field owning the storage. This is mostly useful for [FieldView::extract](crate::FieldView::extract)"),
-                pub fn [<into_ $name>](self) -> $crate::FieldView::<S, $name> {
-                    $crate::FieldView::new(self.storage)
+                pub fn [<into_ $name>](self) -> <$name as $crate::internal::StorageIntoFieldView<S>>::View {
+                    <$name as $crate::internal::StorageIntoFieldView<S>>::into_view(self.storage)
                 }
             }
         }

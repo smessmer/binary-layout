@@ -1,4 +1,5 @@
 use super::endianness::Endianness;
+use crate::utils::data::Data;
 
 pub mod primitive;
 pub mod wrapped;
@@ -91,4 +92,19 @@ pub trait Field {
     /// assert_eq!(None, my_layout::tail::SIZE);
     /// ```
     const SIZE: Option<usize>;
+}
+
+#[doc(hidden)]
+pub trait StorageIntoFieldView<S>
+where
+    S: AsRef<[u8]>,
+{
+    type View;
+    fn into_view(storage: Data<S>) -> Self::View;
+}
+
+#[doc(hidden)]
+pub trait StorageToFieldView<S> {
+    type View;
+    fn view(storage: S) -> Self::View;
 }

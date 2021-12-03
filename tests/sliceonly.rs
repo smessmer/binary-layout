@@ -31,11 +31,11 @@ fn view_readonly() {
     let view = sliceonly::View::new(&storage);
 
     // Test initial data is read correctly
-    assert_eq!(&data_region(1024, 5), view.field().data());
+    assert_eq!(&data_region(1024, 5), view.field());
 
     // Test into_storage will return correct data
     let extracted_storage = view.into_storage();
-    assert_eq!(extracted_storage, &storage);
+    assert_eq!(&*extracted_storage, &storage);
 }
 
 #[test]
@@ -44,18 +44,16 @@ fn view_readwrite() {
     let mut view = sliceonly::View::new(&mut storage);
 
     // Test initial data is read correctly
-    assert_eq!(&data_region(1024, 5), view.field().data());
+    assert_eq!(&data_region(1024, 5), view.field());
 
     // Test data can be written
-    view.field_mut()
-        .data_mut()
-        .copy_from_slice(&data_region(1024, 6));
+    view.field_mut().copy_from_slice(&data_region(1024, 6));
 
     // Test reading will return changed data
-    assert_eq!(&data_region(1024, 6), view.field().data());
+    assert_eq!(&data_region(1024, 6), view.field());
 
     // Test into_storage will return correct data
-    let extracted_storage = view.into_storage().clone();
+    let extracted_storage = view.into_storage().to_vec();
     assert_eq!(&storage, &extracted_storage);
 
     // Test original storage is changed
@@ -67,11 +65,11 @@ fn view_vec_readonly() {
     let view = sliceonly::View::new(data_region(1024, 5));
 
     // Test initial data is read correctly
-    assert_eq!(&data_region(1024, 5), view.field().data());
+    assert_eq!(&data_region(1024, 5), view.field());
 
     // Test into_storage will return correct data
     let storage = view.into_storage();
-    assert_eq!(&data_region(1024, 5), &storage);
+    assert_eq!(&data_region(1024, 5), &*storage);
 }
 
 #[test]
@@ -79,17 +77,15 @@ fn view_vec_readwrite() {
     let mut view = sliceonly::View::new(data_region(1024, 5));
 
     // Test initial data is read correctly
-    assert_eq!(&data_region(1024, 5), view.field().data());
+    assert_eq!(&data_region(1024, 5), view.field());
 
     // Test data can be written
-    view.field_mut()
-        .data_mut()
-        .copy_from_slice(&data_region(1024, 6));
+    view.field_mut().copy_from_slice(&data_region(1024, 6));
 
     // Test reading will return changed data
-    assert_eq!(&data_region(1024, 6), view.field().data());
+    assert_eq!(&data_region(1024, 6), view.field());
 
     // Test into_storage will return correct data
     let extracted_storage = view.into_storage();
-    assert_eq!(&data_region(1024, 6), &extracted_storage);
+    assert_eq!(&data_region(1024, 6), &*extracted_storage);
 }

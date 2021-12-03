@@ -31,11 +31,11 @@
 //!   // equivalent: packet_data[2..4].copy_from_slice(&10u16.to_be_bytes());
 //!
 //!   // access an open ended byte array
-//!   let data_section: &[u8] = view.data_section().data();
+//!   let data_section: &[u8] = view.data_section();
 //!   // equivalent: let data_section: &[u8] = &packet_data[8..];
 //!
 //!   // and modify it
-//!   view.data_section_mut().data_mut()[..5].copy_from_slice(&[1, 2, 3, 4, 5]);
+//!   view.data_section_mut()[..5].copy_from_slice(&[1, 2, 3, 4, 5]);
 //!   // equivalent: packet_data[8..13].copy_from_slice(&[1, 2, 3, 4, 5]);
 //! }
 //! ```
@@ -139,17 +139,17 @@
 mod endianness;
 mod fields;
 mod macro_define_layout;
-mod view;
+mod utils;
 
 pub mod example;
 
 pub use endianness::{BigEndian, LittleEndian};
 pub use fields::{
-    primitive::{FieldCopyAccess, FieldSliceAccess},
+    primitive::{FieldCopyAccess, FieldSliceAccess, FieldView},
     wrapped::LayoutAs,
     Field,
 };
-pub use view::FieldView;
+pub use utils::data::Data;
 
 /// Import this to get everything into scope that you need for defining and using layouts.
 ///
@@ -158,9 +158,7 @@ pub use view::FieldView;
 /// use binary_layout::prelude::*;
 /// ```
 pub mod prelude {
-    pub use super::{
-        BigEndian, Field, FieldCopyAccess, FieldSliceAccess, LittleEndian,
-    };
+    pub use super::{BigEndian, Field, FieldCopyAccess, FieldSliceAccess, LittleEndian};
     pub use crate::define_layout;
 }
 
@@ -168,8 +166,7 @@ pub mod prelude {
 #[doc(hidden)]
 pub mod internal {
     pub use crate::fields::{
-        primitive::PrimitiveField,
-        wrapped::WrappedField,
+        primitive::PrimitiveField, wrapped::WrappedField, StorageIntoFieldView, StorageToFieldView,
     };
     pub use crate::macro_define_layout::{option_usize_add, unwrap_field_size};
     pub use doc_comment::doc_comment;
