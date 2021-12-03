@@ -302,6 +302,7 @@ mod tests {
     #[test]
     fn given_fullrangedata_when_tryingtogrowstartbeyondend_then_returnszerolengthrange() {
         let data: Data<_> = data_region(1024, 0).into();
+        #[allow(clippy::reversed_empty_ranges)]
         let data = data.into_subregion(5000..400);
         assert_eq!(0, data.len());
     }
