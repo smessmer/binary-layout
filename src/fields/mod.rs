@@ -70,10 +70,7 @@ pub trait Field {
     /// assert_eq!(6, my_layout::field3::OFFSET);
     /// ```
     const OFFSET: usize;
-}
 
-/// This trait offers access to the metadata of a sized field in a layout.
-pub trait SizedField: Field {
     /// The size of the field in the layout.
     /// This can be None if it is an open ended field like a byte slice
     ///

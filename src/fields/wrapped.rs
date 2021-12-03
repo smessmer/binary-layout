@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use super::{primitive::FieldCopyAccess, Field, SizedField};
+use super::{primitive::FieldCopyAccess, Field};
 
 /// Implementing the [LayoutAs] trait for a custom type allows that custom type to be used
 /// as the type of a layout field. Note that the value of this type is copied each time it
@@ -91,9 +91,6 @@ impl<U, T: LayoutAs<U>, F: Field> Field for WrappedField<U, T, F> {
     type Endian = F::Endian;
     /// See [Field::OFFSET]
     const OFFSET: usize = F::OFFSET;
-}
-
-impl<U, T: LayoutAs<U>, F: SizedField> SizedField for WrappedField<U, T, F> {
     /// See [SizedField::SIZE]
     const SIZE: Option<usize> = F::SIZE;
 }

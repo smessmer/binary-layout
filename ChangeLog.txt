@@ -1,7 +1,7 @@
 3.0.0 (unreleased)
 ------
 Backward compatibility breaking changes:
-- Changed SizedField::SIZE to be an option and store None if the field is open ended. This change breaks backwards compatibility for code using the SIZE field.
+- Removed SizedField::SIZE and added Field::SIZE as an Option<usize> (None if the field is open ended). This change breaks backwards compatibility for code using the SIZE field.
 - Rename FieldView::extract/extract_mut to FieldView::into_data
 
 Other changes:

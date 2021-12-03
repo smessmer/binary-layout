@@ -1,6 +1,6 @@
 use super::PrimitiveField;
 use crate::endianness::{EndianKind, Endianness};
-use crate::{Field, SizedField};
+use crate::Field;
 
 /// This trait is implemented for fields with "copy access",
 /// i.e. fields that read/write data by copying it from/to the
@@ -121,7 +121,11 @@ macro_rules! int_field {
             }
         }
 
-        impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<$type, E, OFFSET_> {
+        impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<$type, E, OFFSET_> {
+            /// See [Field::Endian]
+            type Endian = E;
+            /// See [Field::OFFSET]
+            const OFFSET: usize = OFFSET_;
             /// See [SizedField::SIZE]
             const SIZE: Option<usize> = Some(core::mem::size_of::<$type>());
         }
@@ -222,7 +226,11 @@ macro_rules! float_field {
             }
         }
 
-        impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<$type, E, OFFSET_> {
+        impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<$type, E, OFFSET_> {
+            /// See [Field::Endian]
+            type Endian = E;
+            /// See [Field::OFFSET]
+            const OFFSET: usize = OFFSET_;
             /// See [SizedField::SIZE]
             const SIZE: Option<usize> = Some(core::mem::size_of::<$type>());
         }
@@ -301,7 +309,11 @@ impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<(),
     }
 }
 
-impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<(), E, OFFSET_> {
+impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<(), E, OFFSET_> {
+    /// See [Field::Endian]
+    type Endian = E;
+    /// See [Field::OFFSET]
+    const OFFSET: usize = OFFSET_;
     /// See [SizedField::SIZE]
     const SIZE: Option<usize> = Some(core::mem::size_of::<()>());
 }

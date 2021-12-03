@@ -147,7 +147,7 @@ pub use endianness::{BigEndian, LittleEndian};
 pub use fields::{
     primitive::{FieldCopyAccess, FieldSliceAccess, PrimitiveField},
     wrapped::{LayoutAs, WrappedField},
-    Field, SizedField,
+    Field,
 };
 pub use view::FieldView;
 
@@ -162,7 +162,7 @@ pub use paste::paste;
 /// ```
 pub mod prelude {
     pub use super::{
-        BigEndian, Field, FieldCopyAccess, FieldSliceAccess, LittleEndian, SizedField,
+        BigEndian, Field, FieldCopyAccess, FieldSliceAccess, LittleEndian,
     };
     pub use crate::define_layout;
 }

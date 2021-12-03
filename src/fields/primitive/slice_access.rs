@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 
 use super::PrimitiveField;
 use crate::endianness::Endianness;
-use crate::{Field, SizedField};
+use crate::Field;
 
 /// This trait is implemented for fields with "slice access",
 /// i.e. fields that are read/write directly without a copy
@@ -95,7 +95,11 @@ impl<'a, E: Endianness, const OFFSET_: usize> FieldSliceAccess<'a>
         &mut storage[Self::OFFSET..]
     }
 }
-impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<[u8], E, OFFSET_> {
+impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<[u8], E, OFFSET_> {
+    /// See [Field::Endian]
+    type Endian = E;
+    /// See [Field::OFFSET]
+    const OFFSET: usize = OFFSET_;
     /// See [SizedField::SIZE]
     const SIZE: Option<usize> = None;
 }
@@ -151,9 +155,13 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'
         <&mut [u8; N]>::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
 }
-impl<E: Endianness, const N: usize, const OFFSET_: usize> SizedField
+impl<E: Endianness, const N: usize, const OFFSET_: usize> Field
     for PrimitiveField<[u8; N], E, OFFSET_>
 {
+    /// See [Field::Endian]
+    type Endian = E;
+    /// See [Field::OFFSET]
+    const OFFSET: usize = OFFSET_;
     /// See [SizedField::SIZE]
     const SIZE: Option<usize> = Some(N);
 }

@@ -2,8 +2,6 @@ use core::marker::PhantomData;
 
 use crate::endianness::Endianness;
 
-use super::Field;
-
 mod copy_access;
 mod slice_access;
 
@@ -45,11 +43,4 @@ pub use slice_access::FieldSliceAccess;
 pub struct PrimitiveField<T: ?Sized, E: Endianness, const OFFSET_: usize> {
     _p1: PhantomData<T>,
     _p2: PhantomData<E>,
-}
-
-impl<T: ?Sized, E: Endianness, const OFFSET_: usize> Field for PrimitiveField<T, E, OFFSET_> {
-    /// See [Field::Endian]
-    type Endian = E;
-    /// See [Field::OFFSET]
-    const OFFSET: usize = OFFSET_;
 }
