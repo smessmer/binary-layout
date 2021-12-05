@@ -6,6 +6,8 @@
 //! Note that the data does not go through serialization/deserialization or a parsing step.
 //! All accessors access the underlying package data directly.
 //!
+//! This crate is `#[no_std]` compatible.
+//!
 //! # Example
 //! ```
 //! use binary_layout::prelude::*;
