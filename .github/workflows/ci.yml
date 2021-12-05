@@ -213,8 +213,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: cargo install cargo-deadlinks
-    - run: cargo deadlinks
+    - run: RUSTDOCFLAGS="-Dwarnings" cargo doc
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
