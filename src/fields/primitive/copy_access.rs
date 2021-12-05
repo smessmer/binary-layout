@@ -61,7 +61,7 @@ macro_rules! impl_field_traits {
             type Endian = E;
             /// See [Field::OFFSET]
             const OFFSET: usize = OFFSET_;
-            /// See [SizedField::SIZE]
+            /// See [Field::SIZE]
             const SIZE: Option<usize> = Some(core::mem::size_of::<$type>());
         }
 

@@ -10,8 +10,8 @@ pub use copy_access::FieldCopyAccess;
 pub use slice_access::FieldSliceAccess;
 pub use view::FieldView;
 
-/// A [PrimitiveField] is a [Field] that directly represents a primitive type like [u8], [i16], ...
-/// See [Field] for more info on this API.
+/// A [PrimitiveField] is a [Field](crate::Field) that directly represents a primitive type like [u8], [i16], ...
+/// See [Field](crate::Field) for more info on this API.
 ///
 /// # Example:
 /// ```

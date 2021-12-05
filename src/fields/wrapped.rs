@@ -95,7 +95,7 @@ impl<U, T: LayoutAs<U>, F: Field> Field for WrappedField<U, T, F> {
     type Endian = F::Endian;
     /// See [Field::OFFSET]
     const OFFSET: usize = F::OFFSET;
-    /// See [SizedField::SIZE]
+    /// See [Field::SIZE]
     const SIZE: Option<usize> = F::SIZE;
 }
 

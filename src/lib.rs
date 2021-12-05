@@ -99,12 +99,12 @@
 //! For these fields, the [trait@Field] API offers [FieldCopyAccess::read], [FieldCopyAccess::write] and the [struct@FieldView] API offers [FieldView::read] and [FieldView::write].
 //!
 //! ### Fixed size byte arrays: `[u8; N]`.
-//! For these fields, the [trait@Field] API offers [FieldSliceAccess::data], [FieldSliceAccess::data_mut], and the [struct@FieldView] API offers [FieldView::data] and [FieldView::data_mut].
+//! For these fields, the [trait@Field] API offers [FieldSliceAccess::data], [FieldSliceAccess::data_mut], and the [struct@FieldView] API returns a slice.
 //!
 //! ### Open ended byte arrays: `[u8]`.
 //! This field type can only occur as the last field of a layout and will mach the remaining data until the end of the storage.
 //! This field has a dynamic size, depending on how large the package data is.
-//! For these fields, the [trait@Field] API offers [FieldSliceAccess::data], [FieldSliceAccess::data_mut] and the [struct@FieldView] API offers [FieldView::data], [FieldView::data_mut] and [FieldView::extract].
+//! For these fields, the [trait@Field] API offers [FieldSliceAccess::data], [FieldSliceAccess::data_mut] and the [struct@FieldView] API returns a slice.
 //!
 //! ### Custom field types
 //! You can define your own custom types as long as they implement the [trait@LayoutAs] trait to define how to convert them from/to a primitive type.
@@ -135,6 +135,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
+#![deny(rustdoc::broken_intra_doc_links)]
+#![deny(rustdoc::private_intra_doc_links)]
+#![deny(rustdoc::invalid_codeblock_attributes)]
+#![deny(rustdoc::invalid_rust_codeblocks)]
+#![deny(rustdoc::bare_urls)]
 
 mod endianness;
 mod fields;
@@ -145,8 +150,8 @@ pub mod example;
 
 pub use endianness::{BigEndian, LittleEndian};
 pub use fields::{
-    primitive::{FieldCopyAccess, FieldSliceAccess, FieldView},
-    wrapped::LayoutAs,
+    primitive::{FieldCopyAccess, FieldSliceAccess, FieldView, PrimitiveField},
+    wrapped::{LayoutAs, WrappedField},
     Field,
 };
 pub use utils::data::Data;
@@ -165,9 +170,7 @@ pub mod prelude {
 /// Internal things that need to be exported so our macros can use them. Don't use directly!
 #[doc(hidden)]
 pub mod internal {
-    pub use crate::fields::{
-        primitive::PrimitiveField, wrapped::WrappedField, StorageIntoFieldView, StorageToFieldView,
-    };
+    pub use crate::fields::{StorageIntoFieldView, StorageToFieldView};
     pub use crate::macro_define_layout::{option_usize_add, unwrap_field_size};
     pub use doc_comment::doc_comment;
     pub use paste::paste;

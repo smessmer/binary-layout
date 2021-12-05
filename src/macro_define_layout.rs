@@ -38,7 +38,7 @@
 ///
 /// This macro will define a module for you with several members:
 /// - For each field, there will be a struct containing
-///   - metadata like [OFFSET](crate::Field::OFFSET) and [SIZE](crate::SizedField::SIZE) as rust `const`s
+///   - metadata like [OFFSET](crate::Field::OFFSET) and [SIZE](crate::Field::SIZE) as rust `const`s
 ///   - data accessors for the [Field](crate::Field) API
 /// - The module will also contain a `View` struct that offers the [FieldView](crate::FieldView) API.
 ///
@@ -72,7 +72,7 @@
 /// and it will offer the following accessors for each field
 /// - `${field_name}()`: Read access. This returns a [FieldView](crate::FieldView) instance with read access.
 /// - `${field_name}_mut()`: Read access. This returns a [FieldView](crate::FieldView) instance with write access.
-/// - `into_${field_name}`: Extract access. This destroys the `View` and returns a [FieldView](crate::FieldView) instance owning the storage. Mostly useful for [FieldView::extract](crate::FieldView::extract).
+/// - `into_${field_name}`: Extract access. This destroys the `View` and returns a [FieldView](crate::FieldView) instance owning the storage. Mostly useful for slice fields when you want to return an owning slice.
 #[macro_export]
 macro_rules! define_layout {
     ($name: ident, $endianness: ident, {$($field_name: ident : $field_type: ty $(as $underlying_type: ty)?),* $(,)?}) => {
@@ -150,7 +150,7 @@ macro_rules! define_layout {
         $crate::internal::doc_comment!{
             concat!("Metadata and [Field](crate::Field) API accessors for the `", stringify!($name), "` field"),
             #[allow(non_camel_case_types)]
-            pub type $name = $crate::internal::WrappedField::<$underlying_type, $type, $crate::internal::PrimitiveField::<$underlying_type, $endianness, {$crate::internal::unwrap_field_size($offset_accumulator)}>>;
+            pub type $name = $crate::internal::WrappedField::<$underlying_type, $type, $crate::PrimitiveField::<$underlying_type, $endianness, {$crate::internal::unwrap_field_size($offset_accumulator)}>>;
         }
         $crate::define_layout!(@impl_fields $endianness, ($crate::internal::option_usize_add(<$name as $crate::Field>::OFFSET, <$name as $crate::Field>::SIZE)), {$($($tail)*)?});
     };
@@ -158,7 +158,7 @@ macro_rules! define_layout {
         $crate::internal::doc_comment!{
             concat!("Metadata and [Field](crate::Field) API accessors for the `", stringify!($name), "` field"),
             #[allow(non_camel_case_types)]
-            pub type $name = $crate::internal::PrimitiveField::<$type, $endianness, {$crate::internal::unwrap_field_size($offset_accumulator)}>;
+            pub type $name = $crate::PrimitiveField::<$type, $endianness, {$crate::internal::unwrap_field_size($offset_accumulator)}>;
         }
         $crate::define_layout!(@impl_fields $endianness, ($crate::internal::option_usize_add(<$name as $crate::Field>::OFFSET, <$name as $crate::Field>::SIZE)), {$($($tail)*)?});
     };

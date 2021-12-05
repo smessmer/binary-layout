@@ -103,7 +103,7 @@ impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<[u8], E, OFFS
     type Endian = E;
     /// See [Field::OFFSET]
     const OFFSET: usize = OFFSET_;
-    /// See [SizedField::SIZE]
+    /// See [Field::SIZE]
     const SIZE: Option<usize> = None;
 }
 impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a [u8]>
@@ -199,7 +199,7 @@ impl<E: Endianness, const N: usize, const OFFSET_: usize> Field
     type Endian = E;
     /// See [Field::OFFSET]
     const OFFSET: usize = OFFSET_;
-    /// See [SizedField::SIZE]
+    /// See [Field::SIZE]
     const SIZE: Option<usize> = Some(N);
 }
 impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> StorageToFieldView<&'a [u8]>
@@ -238,8 +238,8 @@ impl<'a, S: AsRef<[u8]>, E: Endianness, const N: usize, const OFFSET_: usize>
 #[cfg(test)]
 mod tests {
     #![allow(clippy::float_cmp)]
-    use crate::internal::PrimitiveField;
     use crate::prelude::*;
+    use crate::PrimitiveField;
 
     #[test]
     fn test_slice() {
