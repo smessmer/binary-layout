@@ -41,11 +41,11 @@ fn func(packet_data: &mut [u8]) {
   // equivalent: packet_data[2..4].copy_from_slice(&10u16.to_be_bytes());
 
   // access an open ended byte array
-  let data_section: &[u8] = view.data_section().data();
+  let data_section: &[u8] = view.data_section();
   // equivalent: let data_section: &[u8] = &packet_data[8..];
 
   // and modify it
-  view.data_section_mut().data_mut()[..5].copy_from_slice(&[1, 2, 3, 4, 5]);
+  view.data_section_mut()[..5].copy_from_slice(&[1, 2, 3, 4, 5]);
   // equivalent: packet_data[8..13].copy_from_slice(&[1, 2, 3, 4, 5]);
 }
 ```
