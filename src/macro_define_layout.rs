@@ -116,6 +116,7 @@ macro_rules! define_layout {
                     /// - Immutable borrowed storage: `&[u8]`
                     /// - Mutable borrowed storage: `&mut [u8]`
                     /// - Owning storage: impl `AsRef<u8>` (for example: `Vec<u8>`)
+                    #[inline]
                     pub fn new(storage: S) -> Self {
                         Self {storage: storage.into()}
                     }
@@ -123,6 +124,7 @@ macro_rules! define_layout {
                     /// This destroys the view and returns the underlying storage back to you.
                     /// This is useful if you created an owning view (e.g. based on `Vec<u8>`)
                     /// and now need the underlying `Vec<u8>` back.
+                    #[inline]
                     pub fn into_storage(self) -> $crate::Data<S> {
                         self.storage
                     }
@@ -165,6 +167,7 @@ macro_rules! define_layout {
     (@impl_view_asref {$name: ident $(, $name_tail: ident)*}) => {
         $crate::internal::doc_comment!{
             concat!("Return a [FieldView](crate::FieldView) with read access to the `", stringify!($name), "` field"),
+            #[inline]
             pub fn $name(&self) -> <$name as $crate::internal::StorageToFieldView<&[u8]>>::View {
                 <$name as $crate::internal::StorageToFieldView<&[u8]>>::view(self.storage.as_ref())
             }
@@ -177,6 +180,7 @@ macro_rules! define_layout {
         $crate::internal::paste!{
             $crate::internal::doc_comment!{
                 concat!("Return a [FieldView](crate::FieldView) with write access to the `", stringify!($name), "` field"),
+                #[inline]
                 pub fn [<$name _mut>](&mut self) -> <$name as $crate::internal::StorageToFieldView<&mut [u8]>>::View {
                     <$name as $crate::internal::StorageToFieldView<&mut [u8]>>::view(self.storage.as_mut())
                 }
@@ -190,6 +194,7 @@ macro_rules! define_layout {
         $crate::internal::paste!{
             $crate::internal::doc_comment!{
                 concat!("Destroy the [View] and return a field accessor to the `", stringify!($name), "` field owning the storage. This is mostly useful for [FieldView::extract](crate::FieldView::extract)"),
+                #[inline]
                 pub fn [<into_ $name>](self) -> <$name as $crate::internal::StorageIntoFieldView<S>>::View {
                     <$name as $crate::internal::StorageIntoFieldView<S>>::into_view(self.storage)
                 }
