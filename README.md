@@ -65,7 +65,7 @@ Anything that needs inplace zero-copy access to structured binary data.
 - Data layout is defined in one central place, call sites can't accidentally use wrong field offsets.
 - Convenient and simple macro DSL to define layouts.
 - Define a fixed endianness in the layout, ensuring cross platform compatibility.
-- Fully written in safe Rust, no [std::mem::transmute] or similar shenanigans.
+- Fully written in safe Rust, no [std::mem::transmute](https://doc.rust-lang.org/std/mem/fn.transmute.html) or similar shenanigans.
 - Const generics make sure that all offset calculations happen at compile time and will not have a runtime overhead.
 - Comprehensive test coverage.
 
