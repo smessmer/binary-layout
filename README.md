@@ -16,6 +16,8 @@ It's similar to transmuting to/from a `#[repr(packed)]` struct, but [much safer]
 Note that the data does not go through serialization/deserialization or a parsing step.
 All accessors access the underlying package data directly.
 
+This crate is `#[no_std]` compatible.
+
 ## Example
 ```rust
 use binary_layout::prelude::*;
