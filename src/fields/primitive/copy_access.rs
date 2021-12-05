@@ -356,8 +356,8 @@ impl_field_traits!(());
 #[cfg(test)]
 mod tests {
     #![allow(clippy::float_cmp)]
-    use crate::internal::PrimitiveField;
     use crate::prelude::*;
+    use crate::PrimitiveField;
     use core::convert::TryInto;
 
     #[test]

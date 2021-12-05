@@ -150,7 +150,7 @@ macro_rules! define_layout {
         $crate::internal::doc_comment!{
             concat!("Metadata and [Field](crate::Field) API accessors for the `", stringify!($name), "` field"),
             #[allow(non_camel_case_types)]
-            pub type $name = $crate::internal::WrappedField::<$underlying_type, $type, $crate::PrimitiveField::<$underlying_type, $endianness, {$crate::internal::unwrap_field_size($offset_accumulator)}>>;
+            pub type $name = $crate::WrappedField::<$underlying_type, $type, $crate::PrimitiveField::<$underlying_type, $endianness, {$crate::internal::unwrap_field_size($offset_accumulator)}>>;
         }
         $crate::define_layout!(@impl_fields $endianness, ($crate::internal::option_usize_add(<$name as $crate::Field>::OFFSET, <$name as $crate::Field>::SIZE)), {$($($tail)*)?});
     };
