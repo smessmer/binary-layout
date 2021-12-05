@@ -107,6 +107,8 @@ impl<
     > StorageToFieldView<&'a [u8]> for WrappedField<U, T, F>
 {
     type View = FieldView<&'a [u8], Self>;
+
+    #[inline(always)]
     fn view(storage: &'a [u8]) -> Self::View {
         Self::View::new(storage)
     }
@@ -120,6 +122,8 @@ impl<
     > StorageToFieldView<&'a mut [u8]> for WrappedField<U, T, F>
 {
     type View = FieldView<&'a mut [u8], Self>;
+
+    #[inline(always)]
     fn view(storage: &'a mut [u8]) -> Self::View {
         Self::View::new(storage)
     }
@@ -134,6 +138,7 @@ impl<
 {
     type View = FieldView<Data<S>, Self>;
 
+    #[inline(always)]
     fn into_view(storage: Data<S>) -> Self::View {
         Self::View::new(storage)
     }
@@ -179,6 +184,7 @@ impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
     /// #   func(&mut storage);
     /// # }
     /// ```
+    #[inline(always)]
     fn read(storage: &[u8]) -> Self::HighLevelType {
         let v = F::read(storage);
         <T as LayoutAs<U>>::read(v)
@@ -188,6 +194,7 @@ impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
     ///
     /// # Example:
     /// See [FieldCopyAccess::read] for an example
+    #[inline(always)]
     fn write(storage: &mut [u8], v: Self::HighLevelType) {
         let v = <T as LayoutAs<U>>::write(v);
         F::write(storage, v)

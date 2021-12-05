@@ -11,6 +11,7 @@ Other changes:
 - Added support for unit (`()`)
 - Guard against users accidentally calling internal macros by marking them with '@'
 - Fix some doc links
+- Add inline annotations for better performance
 
 2.1.0
 ------

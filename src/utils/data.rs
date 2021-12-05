@@ -23,11 +23,13 @@ pub struct Data<S> {
 
 impl<S> Data<S> {
     /// Return the length of the [Data] instance (or if it is a subregion, length of the subregion)
+    #[inline(always)]
     pub fn len(&self) -> usize {
         self.region.len()
     }
 
     /// Returns true if the [Data] instance contains data and false if it has a zero length.
+    #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.region.is_empty()
     }
@@ -40,6 +42,7 @@ impl<S> Data<S> {
     /// Note, however, that this is implemented by keeping all of the original data in memory and just
     /// changing the behavior of the accessors. The memory will only be freed once the subregion instance
     /// gets dropped.
+    #[inline]
     pub fn into_subregion(self, range: impl RangeBounds<usize> + Debug) -> Self {
         let start_bound_diff = match range.start_bound() {
             Bound::Unbounded => 0,
@@ -81,6 +84,7 @@ where
     S: AsRef<[u8]>,
 {
     /// Create a new [Data] object from a given `Vec<[u8]>` allocation.
+    #[inline(always)]
     fn from(data: S) -> Data<S> {
         let len = data.as_ref().len();
         Self {
@@ -94,6 +98,7 @@ impl<S> AsRef<[u8]> for Data<S>
 where
     S: AsRef<[u8]>,
 {
+    #[inline(always)]
     fn as_ref(&self) -> &[u8] {
         &self.storage.as_ref()[self.region.clone()]
     }
@@ -103,6 +108,7 @@ impl<S> AsMut<[u8]> for Data<S>
 where
     S: AsMut<[u8]>,
 {
+    #[inline(always)]
     fn as_mut(&mut self) -> &mut [u8] {
         &mut self.storage.as_mut()[self.region.clone()]
     }
@@ -114,6 +120,8 @@ where
     S: AsRef<[u8]>,
 {
     type Target = [u8];
+
+    #[inline(always)]
     fn deref(&self) -> &[u8] {
         self.as_ref()
     }
@@ -124,6 +132,7 @@ impl<S> DerefMut for Data<S>
 where
     S: AsRef<[u8]> + AsMut<[u8]>,
 {
+    #[inline(always)]
     fn deref_mut(&mut self) -> &mut [u8] {
         self.as_mut()
     }

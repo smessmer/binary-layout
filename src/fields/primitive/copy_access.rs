@@ -69,6 +69,8 @@ macro_rules! impl_field_traits {
             for PrimitiveField<$type, E, OFFSET_>
         {
             type View = FieldView<&'a [u8], Self>;
+
+            #[inline(always)]
             fn view(storage: &'a [u8]) -> Self::View {
                 Self::View::new(storage)
             }
@@ -78,6 +80,8 @@ macro_rules! impl_field_traits {
             for PrimitiveField<$type, E, OFFSET_>
         {
             type View = FieldView<&'a mut [u8], Self>;
+
+            #[inline(always)]
             fn view(storage: &'a mut [u8]) -> Self::View {
                 Self::View::new(storage)
             }
@@ -87,6 +91,8 @@ macro_rules! impl_field_traits {
             for PrimitiveField<$type, E, OFFSET_>
         {
             type View = FieldView<Data<S>, Self>;
+
+            #[inline(always)]
             fn into_view(storage: Data<S>) -> Self::View {
                 Self::View::new(storage)
             }
@@ -120,10 +126,12 @@ macro_rules! int_field {
                 }
                 ```
                 "},
+                #[inline(always)]
                 fn read(storage: &[u8]) -> $type {
+                    // TODO Don't initialize memory
                     let mut value = [0; core::mem::size_of::<$type>()];
                     value.copy_from_slice(
-                        &storage.as_ref()[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
+                        &storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
                     );
                     match E::KIND {
                         EndianKind::Big => <$type>::from_be_bytes(value),
@@ -152,12 +160,13 @@ macro_rules! int_field {
                 }
                 ```
                 "},
+                #[inline(always)]
                 fn write(storage: &mut [u8], value: $type) {
                     let value_as_bytes = match E::KIND {
                         EndianKind::Big => value.to_be_bytes(),
                         EndianKind::Little => value.to_le_bytes(),
                     };
-                    storage.as_mut()[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
+                    storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
                         .copy_from_slice(&value_as_bytes);
                 }
             }
@@ -211,10 +220,12 @@ macro_rules! float_field {
                 documentation for [", stringify!($type), "::from_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.from_bits) which
                 explains the situation.
                 "},
+                #[inline(always)]
                 fn read(storage: &[u8]) -> $type {
+                    // TODO Don't initialize memory
                     let mut value = [0; core::mem::size_of::<$type>()];
                     value.copy_from_slice(
-                        &storage.as_ref()[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
+                        &storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
                     );
                     match E::KIND {
                         EndianKind::Big => <$type>::from_be_bytes(value),
@@ -250,12 +261,13 @@ macro_rules! float_field {
                 documentation for [", stringify!($type), "::to_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.to_bits) which
                 explains the situation.
                 "},
+                #[inline(always)]
                 fn write(storage: &mut [u8], value: $type) {
                     let value_as_bytes = match E::KIND {
                         EndianKind::Big => value.to_be_bytes(),
                         EndianKind::Little => value.to_le_bytes(),
                     };
-                    storage.as_mut()[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
+                    storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
                         .copy_from_slice(&value_as_bytes);
                 }
             }
@@ -297,6 +309,7 @@ impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<(),
                 do. This implementation exists solely to make writing derive
                 macros simpler.
                 "},
+        #[inline(always)]
         #[allow(clippy::unused_unit)] // I don't want to remove this as it's part of the trait.
         fn read(_storage: &[u8]) -> () {
             ()
@@ -330,6 +343,7 @@ impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<(),
                 do. This implementation exists solely to make writing derive
                 macros simpler.
                 "},
+        #[inline(always)]
         #[allow(clippy::unused_unit)] // I don't want to remove this as it's part of the trait.
         fn write(_storage: &mut [u8], _value: ()) {
             ()
