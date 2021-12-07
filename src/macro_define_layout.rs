@@ -196,7 +196,6 @@ macro_rules! define_layout {
                 concat!("Destroy the [View] and return a field accessor to the `", stringify!($name), "` field owning the storage. This is mostly useful for [FieldView::extract](crate::FieldView::extract)"),
                 #[inline]
                 pub fn [<into_ $name>](self) -> <$name as $crate::internal::StorageIntoFieldView<S>>::View {
-                    // TODO Change into_view to take AsRef and avoid .into() ?
                     <$name as $crate::internal::StorageIntoFieldView<S>>::into_view(self.storage.into())
                 }
             }
