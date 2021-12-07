@@ -2,7 +2,6 @@ use super::super::{Field, StorageIntoFieldView, StorageToFieldView};
 use super::view::FieldView;
 use super::PrimitiveField;
 use crate::endianness::{EndianKind, Endianness};
-use crate::utils::data::Data;
 
 /// This trait is implemented for fields with "copy access",
 /// i.e. fields that read/write data by copying it from/to the
@@ -90,11 +89,11 @@ macro_rules! impl_field_traits {
         impl<'a, S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> StorageIntoFieldView<S>
             for PrimitiveField<$type, E, OFFSET_>
         {
-            type View = FieldView<Data<S>, Self>;
+            type View = FieldView<S, Self>;
 
             #[inline(always)]
             fn into_view(storage: S) -> Self::View {
-                Self::View::new(storage.into())
+                Self::View::new(storage)
             }
         }
     };

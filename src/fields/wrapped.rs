@@ -4,7 +4,6 @@ use super::{
     primitive::{FieldCopyAccess, FieldView},
     Field, StorageIntoFieldView, StorageToFieldView,
 };
-use crate::utils::data::Data;
 
 /// Implementing the [LayoutAs] trait for a custom type allows that custom type to be used
 /// as the type of a layout field. Note that the value of this type is copied each time it
@@ -136,11 +135,11 @@ impl<
         F: FieldCopyAccess<HighLevelType = U> + StorageIntoFieldView<S>,
     > StorageIntoFieldView<S> for WrappedField<U, T, F>
 {
-    type View = FieldView<Data<S>, Self>;
+    type View = FieldView<S, Self>;
 
     #[inline(always)]
     fn into_view(storage: S) -> Self::View {
-        Self::View::new(storage.into())
+        Self::View::new(storage)
     }
 }
 
