@@ -105,8 +105,8 @@ macro_rules! define_layout {
                     });
                     ```
                     "},
-                    pub struct View<S> {
-                        storage: $crate::Data<S>,
+                    pub struct View<S: AsRef<[u8]>> {
+                        storage: S,
                     }
                 }
                 impl <S: AsRef<[u8]>> View<S> {
@@ -118,14 +118,14 @@ macro_rules! define_layout {
                     /// - Owning storage: impl `AsRef<u8>` (for example: `Vec<u8>`)
                     #[inline]
                     pub fn new(storage: S) -> Self {
-                        Self {storage: storage.into()}
+                        Self {storage: storage}
                     }
 
                     /// This destroys the view and returns the underlying storage back to you.
                     /// This is useful if you created an owning view (e.g. based on `Vec<u8>`)
                     /// and now need the underlying `Vec<u8>` back.
                     #[inline]
-                    pub fn into_storage(self) -> $crate::Data<S> {
+                    pub fn into_storage(self) -> S {
                         self.storage
                     }
 
@@ -134,7 +134,7 @@ macro_rules! define_layout {
                 impl <S: AsRef<[u8]>> View<S> {
                     $crate::define_layout!(@impl_view_asref {$($field_name),*});
                 }
-                impl <S: AsMut<[u8]>> View<S> {
+                impl <S: AsRef<[u8]> + AsMut<[u8]>> View<S> {
                     $crate::define_layout!(@impl_view_asmut {$($field_name),*});
                 }
             }
@@ -196,7 +196,8 @@ macro_rules! define_layout {
                 concat!("Destroy the [View] and return a field accessor to the `", stringify!($name), "` field owning the storage. This is mostly useful for [FieldView::extract](crate::FieldView::extract)"),
                 #[inline]
                 pub fn [<into_ $name>](self) -> <$name as $crate::internal::StorageIntoFieldView<S>>::View {
-                    <$name as $crate::internal::StorageIntoFieldView<S>>::into_view(self.storage)
+                    // TODO Change into_view to take AsRef and avoid .into() ?
+                    <$name as $crate::internal::StorageIntoFieldView<S>>::into_view(self.storage.into())
                 }
             }
         }

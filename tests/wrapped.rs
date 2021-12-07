@@ -92,8 +92,8 @@ fn view_readonly() {
     );
 
     // Test into_storage will return correct data
-    let extracted_storage = view.into_storage();
-    assert_eq!(&*extracted_storage, storage);
+    let extracted_storage: &Vec<u8> = view.into_storage();
+    assert_eq!(*extracted_storage, storage);
 }
 
 #[test]
@@ -172,7 +172,7 @@ fn view_vec_readonly() {
     );
 
     // Test into_storage will return correct data
-    let extracted_storage = view.into_storage();
+    let extracted_storage: Vec<u8> = view.into_storage();
     assert_eq!(&data_region(1024, 5), &*extracted_storage);
 }
 
