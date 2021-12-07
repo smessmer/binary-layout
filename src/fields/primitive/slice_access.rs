@@ -134,8 +134,8 @@ impl<'a, S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> StorageIntoFieldVi
     type View = Data<S>;
 
     #[inline(always)]
-    fn into_view(storage: Data<S>) -> Self::View {
-        storage.into_subregion(Self::OFFSET..)
+    fn into_view(storage: S) -> Self::View {
+        Data::from(storage).into_subregion(Self::OFFSET..)
     }
 }
 
@@ -230,8 +230,8 @@ impl<'a, S: AsRef<[u8]>, E: Endianness, const N: usize, const OFFSET_: usize>
     type View = Data<S>;
 
     #[inline(always)]
-    fn into_view(storage: Data<S>) -> Self::View {
-        storage.into_subregion(Self::OFFSET..(Self::OFFSET + N))
+    fn into_view(storage: S) -> Self::View {
+        Data::from(storage).into_subregion(Self::OFFSET..(Self::OFFSET + N))
     }
 }
 

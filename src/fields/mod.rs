@@ -1,5 +1,4 @@
 use super::endianness::Endianness;
-use crate::utils::data::Data;
 
 pub mod primitive;
 pub mod wrapped;
@@ -99,7 +98,7 @@ where
     S: AsRef<[u8]>,
 {
     type View;
-    fn into_view(storage: Data<S>) -> Self::View;
+    fn into_view(storage: S) -> Self::View;
 }
 
 #[doc(hidden)]

@@ -139,8 +139,8 @@ impl<
     type View = FieldView<Data<S>, Self>;
 
     #[inline(always)]
-    fn into_view(storage: Data<S>) -> Self::View {
-        Self::View::new(storage)
+    fn into_view(storage: S) -> Self::View {
+        Self::View::new(storage.into())
     }
 }
 
