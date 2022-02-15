@@ -1,11 +1,18 @@
-3.0.0 (unreleased)
+3.0.0
 ------
-- Changed SizedField::SIZE to be an option and store None if the field is open ended. This change breaks backwards compatibility for code using the SIZE field.
+Backward compatibility breaking changes:
+- Simplify slice API in views: `layout.field_mut()` instead of `layout.field_mut().data_mut()`
+- Removed SizedField::SIZE and added Field::SIZE as an Option<usize> (None if the field is open ended). This change breaks backwards compatibility for code using the SIZE field.
+- Move some exported names into the "internal" namespace to denote that they're not supposed to be used in user code
+
+Other changes:
+- Added support for nested layouts
 - Added the ::SIZE constant for returning the size of a whole layout.
 - Added support for f32 and f64
 - Added support for unit (`()`)
 - Guard against users accidentally calling internal macros by marking them with '@'
 - Fix some doc links
+- Add inline annotations for better performance
 
 2.1.0
 ------

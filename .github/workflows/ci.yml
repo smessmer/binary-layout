@@ -208,6 +208,12 @@ jobs:
     - run: ./gen_readme.sh
     # Fail job if gen_readme.sh introduced changes. If this fails, then we need to run gen_readme.sh locally and add it to the commit.
     - run: git diff --exit-code
+  dead_doc_links:
+    name: Find dead doc links
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: RUSTDOCFLAGS="-Dwarnings" cargo doc
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest

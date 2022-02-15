@@ -1,6 +1,9 @@
 use core::marker::PhantomData;
 
-use super::{primitive::FieldCopyAccess, Field, SizedField};
+use super::{
+    primitive::{FieldCopyAccess, FieldView},
+    Field, StorageIntoFieldView, StorageToFieldView,
+};
 
 /// Implementing the [LayoutAs] trait for a custom type allows that custom type to be used
 /// as the type of a layout field. Note that the value of this type is copied each time it
@@ -91,11 +94,53 @@ impl<U, T: LayoutAs<U>, F: Field> Field for WrappedField<U, T, F> {
     type Endian = F::Endian;
     /// See [Field::OFFSET]
     const OFFSET: usize = F::OFFSET;
+    /// See [Field::SIZE]
+    const SIZE: Option<usize> = F::SIZE;
 }
 
-impl<U, T: LayoutAs<U>, F: SizedField> SizedField for WrappedField<U, T, F> {
-    /// See [SizedField::SIZE]
-    const SIZE: Option<usize> = F::SIZE;
+impl<
+        'a,
+        U,
+        T: LayoutAs<U>,
+        F: FieldCopyAccess<HighLevelType = U> + StorageToFieldView<&'a [u8]>,
+    > StorageToFieldView<&'a [u8]> for WrappedField<U, T, F>
+{
+    type View = FieldView<&'a [u8], Self>;
+
+    #[inline(always)]
+    fn view(storage: &'a [u8]) -> Self::View {
+        Self::View::new(storage)
+    }
+}
+
+impl<
+        'a,
+        U,
+        T: LayoutAs<U>,
+        F: FieldCopyAccess<HighLevelType = U> + StorageToFieldView<&'a mut [u8]>,
+    > StorageToFieldView<&'a mut [u8]> for WrappedField<U, T, F>
+{
+    type View = FieldView<&'a mut [u8], Self>;
+
+    #[inline(always)]
+    fn view(storage: &'a mut [u8]) -> Self::View {
+        Self::View::new(storage)
+    }
+}
+
+impl<
+        U,
+        S: AsRef<[u8]>,
+        T: LayoutAs<U>,
+        F: FieldCopyAccess<HighLevelType = U> + StorageIntoFieldView<S>,
+    > StorageIntoFieldView<S> for WrappedField<U, T, F>
+{
+    type View = FieldView<S, Self>;
+
+    #[inline(always)]
+    fn into_view(storage: S) -> Self::View {
+        Self::View::new(storage)
+    }
 }
 
 impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
@@ -138,6 +183,7 @@ impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
     /// #   func(&mut storage);
     /// # }
     /// ```
+    #[inline(always)]
     fn read(storage: &[u8]) -> Self::HighLevelType {
         let v = F::read(storage);
         <T as LayoutAs<U>>::read(v)
@@ -147,6 +193,7 @@ impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
     ///
     /// # Example:
     /// See [FieldCopyAccess::read] for an example
+    #[inline(always)]
     fn write(storage: &mut [u8], v: Self::HighLevelType) {
         let v = <T as LayoutAs<U>>::write(v);
         F::write(storage, v)

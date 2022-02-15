@@ -2,16 +2,18 @@ use core::marker::PhantomData;
 
 use crate::endianness::Endianness;
 
-use super::Field;
-
 mod copy_access;
+mod nested_access;
 mod slice_access;
+mod view;
 
 pub use copy_access::FieldCopyAccess;
+pub use nested_access::{BorrowingNestedView, NestedViewInfo, OwningNestedView};
 pub use slice_access::FieldSliceAccess;
+pub use view::FieldView;
 
-/// A [PrimitiveField] is a [Field] that directly represents a primitive type like [u8], [i16], ...
-/// See [Field] for more info on this API.
+/// A [PrimitiveField] is a [Field](crate::Field) that directly represents a primitive type like [u8], [i16], ...
+/// See [Field](crate::Field) for more info on this API.
 ///
 /// # Example:
 /// ```
@@ -45,11 +47,4 @@ pub use slice_access::FieldSliceAccess;
 pub struct PrimitiveField<T: ?Sized, E: Endianness, const OFFSET_: usize> {
     _p1: PhantomData<T>,
     _p2: PhantomData<E>,
-}
-
-impl<T: ?Sized, E: Endianness, const OFFSET_: usize> Field for PrimitiveField<T, E, OFFSET_> {
-    /// See [Field::Endian]
-    type Endian = E;
-    /// See [Field::OFFSET]
-    const OFFSET: usize = OFFSET_;
 }

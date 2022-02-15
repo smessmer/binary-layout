@@ -6,6 +6,8 @@
 //! Note that the data does not go through serialization/deserialization or a parsing step.
 //! All accessors access the underlying package data directly.
 //!
+//! This crate is `#[no_std]` compatible.
+//!
 //! # Example
 //! ```
 //! use binary_layout::prelude::*;
@@ -31,11 +33,11 @@
 //!   // equivalent: packet_data[2..4].copy_from_slice(&10u16.to_be_bytes());
 //!
 //!   // access an open ended byte array
-//!   let data_section: &[u8] = view.data_section().data();
+//!   let data_section: &[u8] = view.data_section();
 //!   // equivalent: let data_section: &[u8] = &packet_data[8..];
 //!
 //!   // and modify it
-//!   view.data_section_mut().data_mut()[..5].copy_from_slice(&[1, 2, 3, 4, 5]);
+//!   view.data_section_mut()[..5].copy_from_slice(&[1, 2, 3, 4, 5]);
 //!   // equivalent: packet_data[8..13].copy_from_slice(&[1, 2, 3, 4, 5]);
 //! }
 //! ```
@@ -53,7 +55,7 @@
 //! - Data layout is defined in one central place, call sites can't accidentally use wrong field offsets.
 //! - Convenient and simple macro DSL to define layouts.
 //! - Define a fixed endianness in the layout, ensuring cross platform compatibility.
-//! - Fully written in safe Rust, no [std::mem::transmute] or similar shenanigans.
+//! - Fully written in safe Rust, no [std::mem::transmute](https://doc.rust-lang.org/std/mem/fn.transmute.html) or similar shenanigans.
 //! - Const generics make sure that all offset calculations happen at compile time and will not have a runtime overhead.
 //! - Comprehensive test coverage.
 //!
@@ -99,12 +101,12 @@
 //! For these fields, the [trait@Field] API offers [FieldCopyAccess::read], [FieldCopyAccess::write] and the [struct@FieldView] API offers [FieldView::read] and [FieldView::write].
 //!
 //! ### Fixed size byte arrays: `[u8; N]`.
-//! For these fields, the [trait@Field] API offers [FieldSliceAccess::data], [FieldSliceAccess::data_mut], and the [struct@FieldView] API offers [FieldView::data] and [FieldView::data_mut].
+//! For these fields, the [trait@Field] API offers [FieldSliceAccess::data], [FieldSliceAccess::data_mut], and the [struct@FieldView] API returns a slice.
 //!
 //! ### Open ended byte arrays: `[u8]`.
 //! This field type can only occur as the last field of a layout and will mach the remaining data until the end of the storage.
 //! This field has a dynamic size, depending on how large the package data is.
-//! For these fields, the [trait@Field] API offers [FieldSliceAccess::data], [FieldSliceAccess::data_mut] and the [struct@FieldView] API offers [FieldView::data], [FieldView::data_mut] and [FieldView::extract].
+//! For these fields, the [trait@Field] API offers [FieldSliceAccess::data], [FieldSliceAccess::data_mut] and the [struct@FieldView] API returns a slice.
 //!
 //! ### Custom field types
 //! You can define your own custom types as long as they implement the [trait@LayoutAs] trait to define how to convert them from/to a primitive type.
@@ -131,6 +133,27 @@
 //! Say we wanted to have a `[u32; N]` field. The API couldn't just return a zero-copy `&[u32; N]` to the caller because that would use the system byte order (i.e. endianness) which might be different from the byte order defined in the package layout.
 //! To make this cross-platform compatible, we'd have to wrap these slices into our own slice type that enforces the correct byte order and return that from the API.
 //! This complexity is why it wasn't implemented yet, but feel free to open a PR if you need this.
+//!
+//! # Nesting
+//! Layouts can be nested within each other by using the `NestedView` type created by the [define_layout!] macro for one layout as a field type in another layout.
+//!
+//! Example:
+//! ```
+//! use binary_layout::prelude::*;
+//!
+//! define_layout!(icmp_header, BigEndian, {
+//!   packet_type: u8,
+//!   code: u8,
+//!   checksum: u16,
+//!   rest_of_header: [u8; 4],
+//! });
+//! define_layout!(icmp_packet, BigEndian, {
+//!   header: icmp_header::NestedView,
+//!   data_section: [u8], // open ended byte array, matches until the end of the packet
+//! });
+//! # fn main() {}
+//! ```
+//! See also the more complete example under `tests/nested.rs` in this repository.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![forbid(unsafe_code)]
@@ -139,20 +162,17 @@
 mod endianness;
 mod fields;
 mod macro_define_layout;
-mod view;
+mod utils;
 
 pub mod example;
 
-pub use endianness::{BigEndian, LittleEndian};
+pub use endianness::{BigEndian, Endianness, LittleEndian};
 pub use fields::{
-    primitive::{FieldCopyAccess, FieldSliceAccess, PrimitiveField},
+    primitive::{FieldCopyAccess, FieldSliceAccess, FieldView, PrimitiveField},
     wrapped::{LayoutAs, WrappedField},
-    Field, SizedField,
+    Field,
 };
-pub use view::FieldView;
-
-pub use doc_comment::doc_comment;
-pub use paste::paste;
+pub use utils::data::Data;
 
 /// Import this to get everything into scope that you need for defining and using layouts.
 ///
@@ -161,14 +181,18 @@ pub use paste::paste;
 /// use binary_layout::prelude::*;
 /// ```
 pub mod prelude {
-    pub use super::{
-        BigEndian, Field, FieldCopyAccess, FieldSliceAccess, LittleEndian, SizedField,
-    };
+    pub use super::{BigEndian, Field, FieldCopyAccess, FieldSliceAccess, LittleEndian};
     pub use crate::define_layout;
 }
 
 /// Internal things that need to be exported so our macros can use them. Don't use directly!
 #[doc(hidden)]
 pub mod internal {
+    pub use crate::fields::{
+        primitive::{BorrowingNestedView, NestedViewInfo, OwningNestedView},
+        StorageIntoFieldView, StorageToFieldView,
+    };
     pub use crate::macro_define_layout::{option_usize_add, unwrap_field_size};
+    pub use doc_comment::doc_comment;
+    pub use paste::paste;
 }

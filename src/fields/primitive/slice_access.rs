@@ -1,8 +1,9 @@
 use std::convert::TryFrom;
 
+use super::super::{Field, StorageIntoFieldView, StorageToFieldView};
 use super::PrimitiveField;
 use crate::endianness::Endianness;
-use crate::{Field, SizedField};
+use crate::utils::data::Data;
 
 /// This trait is implemented for fields with "slice access",
 /// i.e. fields that are read/write directly without a copy
@@ -72,6 +73,7 @@ impl<'a, E: Endianness, const OFFSET_: usize> FieldSliceAccess<'a>
     ///     let tail_data: &[u8] = my_layout::tail_data::data(storage_data);
     /// }
     /// ```
+    #[inline(always)]
     fn data(storage: &'a [u8]) -> &'a [u8] {
         &storage[Self::OFFSET..]
     }
@@ -91,13 +93,50 @@ impl<'a, E: Endianness, const OFFSET_: usize> FieldSliceAccess<'a>
     ///     let tail_data: &mut [u8] = my_layout::tail_data::data_mut(storage_data);
     /// }
     /// ```
+    #[inline(always)]
     fn data_mut(storage: &'a mut [u8]) -> &'a mut [u8] {
         &mut storage[Self::OFFSET..]
     }
 }
-impl<E: Endianness, const OFFSET_: usize> SizedField for PrimitiveField<[u8], E, OFFSET_> {
-    /// See [SizedField::SIZE]
+impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<[u8], E, OFFSET_> {
+    /// See [Field::Endian]
+    type Endian = E;
+    /// See [Field::OFFSET]
+    const OFFSET: usize = OFFSET_;
+    /// See [Field::SIZE]
     const SIZE: Option<usize> = None;
+}
+impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a [u8]>
+    for PrimitiveField<[u8], E, OFFSET_>
+{
+    type View = &'a [u8];
+
+    #[inline(always)]
+    fn view(storage: &'a [u8]) -> Self::View {
+        &storage[Self::OFFSET..]
+    }
+}
+
+impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a mut [u8]>
+    for PrimitiveField<[u8], E, OFFSET_>
+{
+    type View = &'a mut [u8];
+
+    #[inline(always)]
+    fn view(storage: &'a mut [u8]) -> Self::View {
+        &mut storage[Self::OFFSET..]
+    }
+}
+
+impl<'a, S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> StorageIntoFieldView<S>
+    for PrimitiveField<[u8], E, OFFSET_>
+{
+    type View = Data<S>;
+
+    #[inline(always)]
+    fn into_view(storage: S) -> Self::View {
+        Data::from(storage).into_subregion(Self::OFFSET..)
+    }
 }
 
 /// Field type `[u8; N]`:
@@ -126,6 +165,7 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'
     ///     let some_field: &[u8; 5] = my_layout::some_field::data(storage_data);
     /// }
     /// ```
+    #[inline(always)]
     fn data(storage: &'a [u8]) -> &'a [u8; N] {
         <&[u8; N]>::try_from(&storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
@@ -147,15 +187,52 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'
     ///     let some_field: &mut [u8; 5] = my_layout::some_field::data_mut(storage_data);
     /// }
     /// ```
+    #[inline(always)]
     fn data_mut(storage: &'a mut [u8]) -> &'a mut [u8; N] {
         <&mut [u8; N]>::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
 }
-impl<E: Endianness, const N: usize, const OFFSET_: usize> SizedField
+impl<E: Endianness, const N: usize, const OFFSET_: usize> Field
     for PrimitiveField<[u8; N], E, OFFSET_>
 {
-    /// See [SizedField::SIZE]
+    /// See [Field::Endian]
+    type Endian = E;
+    /// See [Field::OFFSET]
+    const OFFSET: usize = OFFSET_;
+    /// See [Field::SIZE]
     const SIZE: Option<usize> = Some(N);
+}
+impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> StorageToFieldView<&'a [u8]>
+    for PrimitiveField<[u8; N], E, OFFSET_>
+{
+    type View = &'a [u8];
+
+    #[inline(always)]
+    fn view(storage: &'a [u8]) -> Self::View {
+        &storage[Self::OFFSET..(Self::OFFSET + N)]
+    }
+}
+
+impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> StorageToFieldView<&'a mut [u8]>
+    for PrimitiveField<[u8; N], E, OFFSET_>
+{
+    type View = &'a mut [u8];
+
+    #[inline(always)]
+    fn view(storage: &'a mut [u8]) -> Self::View {
+        &mut storage[Self::OFFSET..(Self::OFFSET + N)]
+    }
+}
+
+impl<'a, S: AsRef<[u8]>, E: Endianness, const N: usize, const OFFSET_: usize>
+    StorageIntoFieldView<S> for PrimitiveField<[u8; N], E, OFFSET_>
+{
+    type View = Data<S>;
+
+    #[inline(always)]
+    fn into_view(storage: S) -> Self::View {
+        Data::from(storage).into_subregion(Self::OFFSET..(Self::OFFSET + N))
+    }
 }
 
 #[cfg(test)]

@@ -6,6 +6,7 @@ pub enum EndianKind {
 
 /// This marker trait represents the endianness used in a layout for accessing primitive integer fields.
 pub trait Endianness {
+    /// Accessor to the endianness as a const value
     const KIND: EndianKind;
 }
 

@@ -16,6 +16,8 @@ It's similar to transmuting to/from a `#[repr(packed)]` struct, but [much safer]
 Note that the data does not go through serialization/deserialization or a parsing step.
 All accessors access the underlying package data directly.
 
+This crate is `#[no_std]` compatible.
+
 ## Example
 ```rust
 use binary_layout::prelude::*;
@@ -41,11 +43,11 @@ fn func(packet_data: &mut [u8]) {
   // equivalent: packet_data[2..4].copy_from_slice(&10u16.to_be_bytes());
 
   // access an open ended byte array
-  let data_section: &[u8] = view.data_section().data();
+  let data_section: &[u8] = view.data_section();
   // equivalent: let data_section: &[u8] = &packet_data[8..];
 
   // and modify it
-  view.data_section_mut().data_mut()[..5].copy_from_slice(&[1, 2, 3, 4, 5]);
+  view.data_section_mut()[..5].copy_from_slice(&[1, 2, 3, 4, 5]);
   // equivalent: packet_data[8..13].copy_from_slice(&[1, 2, 3, 4, 5]);
 }
 ```
@@ -63,7 +65,7 @@ Anything that needs inplace zero-copy access to structured binary data.
 - Data layout is defined in one central place, call sites can't accidentally use wrong field offsets.
 - Convenient and simple macro DSL to define layouts.
 - Define a fixed endianness in the layout, ensuring cross platform compatibility.
-- Fully written in safe Rust, no [std::mem::transmute] or similar shenanigans.
+- Fully written in safe Rust, no [std::mem::transmute](https://doc.rust-lang.org/std/mem/fn.transmute.html) or similar shenanigans.
 - Const generics make sure that all offset calculations happen at compile time and will not have a runtime overhead.
 - Comprehensive test coverage.
 
@@ -109,12 +111,12 @@ ZSTs neither read nor write to the underlying storage, but the appropriate trait
 For these fields, the [Field](https://docs.rs/binary-layout/latest/binary_layout/trait.Field.html) API offers [FieldCopyAccess::read](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldCopyAccess.html#tymethod.read), [FieldCopyAccess::write](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldCopyAccess.html#tymethod.write) and the [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API offers [FieldView::read](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.read) and [FieldView::write](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.write).
 
 #### Fixed size byte arrays: `[u8; N]`.
-For these fields, the [Field](https://docs.rs/binary-layout/latest/binary_layout/trait.Field.html) API offers [FieldSliceAccess::data](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldSliceAccess.html#tymethod.data), [FieldSliceAccess::data_mut](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldSliceAccess.html#tymethod.data_mut), and the [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API offers [FieldView::data](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.data) and [FieldView::data_mut](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.data_mut).
+For these fields, the [Field](https://docs.rs/binary-layout/latest/binary_layout/trait.Field.html) API offers [FieldSliceAccess::data](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldSliceAccess.html#tymethod.data), [FieldSliceAccess::data_mut](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldSliceAccess.html#tymethod.data_mut), and the [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API returns a slice.
 
 #### Open ended byte arrays: `[u8]`.
 This field type can only occur as the last field of a layout and will mach the remaining data until the end of the storage.
 This field has a dynamic size, depending on how large the package data is.
-For these fields, the [Field](https://docs.rs/binary-layout/latest/binary_layout/trait.Field.html) API offers [FieldSliceAccess::data](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldSliceAccess.html#tymethod.data), [FieldSliceAccess::data_mut](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldSliceAccess.html#tymethod.data_mut) and the [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API offers [FieldView::data](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.data), [FieldView::data_mut](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.data_mut) and [FieldView::extract](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html#method.extract).
+For these fields, the [Field](https://docs.rs/binary-layout/latest/binary_layout/trait.Field.html) API offers [FieldSliceAccess::data](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldSliceAccess.html#tymethod.data), [FieldSliceAccess::data_mut](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldSliceAccess.html#tymethod.data_mut) and the [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API returns a slice.
 
 #### Custom field types
 You can define your own custom types as long as they implement the [LayoutAs](https://docs.rs/binary-layout/latest/binary_layout/trait.LayoutAs.html) trait to define how to convert them from/to a primitive type.
@@ -141,5 +143,25 @@ This is why strings aren't supported yet.
 Say we wanted to have a `[u32; N]` field. The API couldn't just return a zero-copy `&[u32; N]` to the caller because that would use the system byte order (i.e. endianness) which might be different from the byte order defined in the package layout.
 To make this cross-platform compatible, we'd have to wrap these slices into our own slice type that enforces the correct byte order and return that from the API.
 This complexity is why it wasn't implemented yet, but feel free to open a PR if you need this.
+
+## Nesting
+Layouts can be nested within each other by using the `NestedView` type created by the [define_layout!](https://docs.rs/binary-layout/latest/binary_layout/macro.define_layout.html) macro for one layout as a field type in another layout.
+
+Example:
+```rust
+use binary_layout::prelude::*;
+
+define_layout!(icmp_header, BigEndian, {
+  packet_type: u8,
+  code: u8,
+  checksum: u16,
+  rest_of_header: [u8; 4],
+});
+define_layout!(icmp_packet, BigEndian, {
+  header: icmp_header::NestedView,
+  data_section: [u8], // open ended byte array, matches until the end of the packet
+});
+```
+See also the more complete example under `tests/nested.rs` in this repository.
 
 License: MIT OR Apache-2.0
