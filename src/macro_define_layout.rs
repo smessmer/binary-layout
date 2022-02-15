@@ -118,7 +118,7 @@ macro_rules! define_layout {
                     /// - Owning storage: impl `AsRef<u8>` (for example: `Vec<u8>`)
                     #[inline]
                     pub fn new(storage: S) -> Self {
-                        Self {storage: storage}
+                        Self {storage}
                     }
 
                     /// This destroys the view and returns the underlying storage back to you.
