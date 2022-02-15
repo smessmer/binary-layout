@@ -162,5 +162,6 @@ define_layout!(icmp_packet, BigEndian, {
   data_section: [u8], // open ended byte array, matches until the end of the packet
 });
 ```
+See also the more complete example under `tests/nested.rs` in this repository.
 
 License: MIT OR Apache-2.0

@@ -153,6 +153,7 @@
 //! });
 //! # fn main() {}
 //! ```
+//! See also the more complete example under `tests/nested.rs` in this repository.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![forbid(unsafe_code)]
