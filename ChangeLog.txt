@@ -1,4 +1,4 @@
-3.0.0 (unreleased)
+3.0.0
 ------
 Backward compatibility breaking changes:
 - Simplify slice API in views: `layout.field_mut()` instead of `layout.field_mut().data_mut()`
