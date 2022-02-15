@@ -153,7 +153,39 @@
 //! });
 //! # fn main() {}
 //! ```
-//! See also the more complete example under `tests/nested.rs` in this repository.
+//!
+//! Nested layouts do not need to have the same endianess.  The following, which
+//! is copied from the complete example at `tests/nested.rs` in this repository,
+//! shows how you can mix different endian layouts together:
+//!
+//! ```rust
+//! use binary_layout::prelude::*;
+//! use std::convert::TryInto;
+//!
+//! define_layout!(deep_nesting, LittleEndian, {
+//!     field1: u16,
+//! });
+//! define_layout!(header, BigEndian, {
+//!     field1: i16,
+//! });
+//! define_layout!(middle, BigEndian, {
+//!     deep: deep_nesting::NestedView,
+//!     field1: u16,
+//! });
+//! define_layout!(footer, BigEndian, {
+//!     field1: u32,
+//!     deep: deep_nesting::NestedView,
+//!     tail: [u8],
+//! });
+//! define_layout!(whole, LittleEndian, {
+//!     head: header::NestedView,
+//!     field1: u64,
+//!     mid: middle::NestedView,
+//!     field2: u128,
+//!     foot: footer::NestedView,
+//! });
+//! # fn main() {}
+//! ```
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![forbid(unsafe_code)]
