@@ -1,5 +1,6 @@
 use binary_layout::{prelude::*, LayoutAs};
-use std::convert::TryInto;
+use core::any::{Any, TypeId};
+use core::convert::TryInto;
 
 mod common;
 use common::data_region;
@@ -21,6 +22,7 @@ define_layout!(noslice, LittleEndian, {
     second: Wrapped<i64> as i64,
     third: Wrapped<u16> as u16,
 });
+
 #[test]
 fn metadata() {
     assert_eq!(0, noslice::first::OFFSET);
@@ -29,6 +31,29 @@ fn metadata() {
     assert_eq!(Some(8), noslice::second::SIZE);
     assert_eq!(9, noslice::third::OFFSET);
     assert_eq!(Some(2), noslice::third::SIZE);
+}
+
+#[test]
+fn types() {
+    let storage = data_region(1024, 5);
+    let view = noslice::View::new(&storage);
+
+    assert_eq!(
+        TypeId::of::<Wrapped<i8>>(),
+        noslice::first::read(&storage).type_id()
+    );
+    assert_eq!(
+        TypeId::of::<Wrapped<i64>>(),
+        noslice::second::read(&storage).type_id()
+    );
+    assert_eq!(
+        TypeId::of::<Wrapped<u16>>(),
+        noslice::third::read(&storage).type_id()
+    );
+
+    assert_eq!(TypeId::of::<Wrapped<i8>>(), view.first().read().type_id());
+    assert_eq!(TypeId::of::<Wrapped<i64>>(), view.second().read().type_id());
+    assert_eq!(TypeId::of::<Wrapped<u16>>(), view.third().read().type_id());
 }
 
 #[test]

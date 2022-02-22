@@ -1,4 +1,5 @@
 use binary_layout::prelude::*;
+use core::any::{Any, TypeId};
 use std::convert::TryInto;
 
 mod common;
@@ -24,6 +25,39 @@ fn metadata() {
     assert_eq!(Some(2), withslice::fourth::SIZE);
     assert_eq!(16, withslice::fifth::OFFSET);
     assert_eq!(None, withslice::fifth::SIZE);
+}
+
+#[test]
+fn types() {
+    let storage = data_region(1024, 5);
+    let view = withslice::View::new(&storage);
+
+    assert_eq!(
+        TypeId::of::<i8>(),
+        withslice::first::read(&storage).type_id()
+    );
+    assert_eq!(
+        TypeId::of::<i64>(),
+        withslice::second::read(&storage).type_id()
+    );
+    assert_eq!(
+        TypeId::of::<[u8; 5]>(),
+        withslice::third::data(&storage).type_id()
+    );
+    assert_eq!(
+        TypeId::of::<u16>(),
+        withslice::fourth::read(&storage).type_id()
+    );
+    assert_eq!(
+        TypeId::of::<[u8]>(),
+        withslice::fifth::data(&storage).type_id()
+    );
+
+    assert_eq!(TypeId::of::<i8>(), view.first().read().type_id());
+    assert_eq!(TypeId::of::<i64>(), view.second().read().type_id());
+    assert_eq!(TypeId::of::<[u8; 5]>(), view.third().type_id());
+    assert_eq!(TypeId::of::<u16>(), view.fourth().read().type_id());
+    assert_eq!(TypeId::of::<[u8]>(), view.fifth().type_id());
 }
 
 #[test]

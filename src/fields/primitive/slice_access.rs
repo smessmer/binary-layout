@@ -167,6 +167,7 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'
     /// ```
     #[inline(always)]
     fn data(storage: &'a [u8]) -> &'a [u8; N] {
+        // TODO Can this be done without try_from? https://stackoverflow.com/questions/71216771/create-array-reference-to-sub-slice
         <&[u8; N]>::try_from(&storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
 
@@ -189,6 +190,7 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'
     /// ```
     #[inline(always)]
     fn data_mut(storage: &'a mut [u8]) -> &'a mut [u8; N] {
+        // TODO Can this be done without try_from? https://stackoverflow.com/questions/71216771/create-array-reference-to-sub-slice
         <&mut [u8; N]>::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
 }
@@ -205,22 +207,22 @@ impl<E: Endianness, const N: usize, const OFFSET_: usize> Field
 impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> StorageToFieldView<&'a [u8]>
     for PrimitiveField<[u8; N], E, OFFSET_>
 {
-    type View = &'a [u8];
+    type View = &'a [u8; N];
 
     #[inline(always)]
     fn view(storage: &'a [u8]) -> Self::View {
-        &storage[Self::OFFSET..(Self::OFFSET + N)]
+        Self::View::try_from(&storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
 }
 
 impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> StorageToFieldView<&'a mut [u8]>
     for PrimitiveField<[u8; N], E, OFFSET_>
 {
-    type View = &'a mut [u8];
+    type View = &'a mut [u8; N];
 
     #[inline(always)]
     fn view(storage: &'a mut [u8]) -> Self::View {
-        &mut storage[Self::OFFSET..(Self::OFFSET + N)]
+        Self::View::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
 }
 
@@ -253,6 +255,10 @@ mod tests {
 
         assert_eq!(&[10, 20, 60, 70, 80], &Field1::data(&storage)[..5]);
         assert_eq!(&[60, 70, 80, 90, 100], &Field2::data(&storage)[..5]);
+
+        // Check types are correct
+        let _a: &[u8] = Field1::data(&mut storage);
+        let _b: &mut [u8] = Field1::data_mut(&mut storage);
     }
 
     #[test]
@@ -270,5 +276,9 @@ mod tests {
 
         assert_eq!(Some(2), PrimitiveField::<[u8; 2], LittleEndian, 5>::SIZE);
         assert_eq!(Some(5), PrimitiveField::<[u8; 5], BigEndian, 5>::SIZE);
+
+        // Check types are correct
+        let _a: &[u8; 2] = Field1::data(&mut storage);
+        let _b: &mut [u8; 2] = Field1::data_mut(&mut storage);
     }
 }
