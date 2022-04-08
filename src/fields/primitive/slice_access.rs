@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 
 use super::super::{Field, StorageIntoFieldView, StorageToFieldView};
 use super::PrimitiveField;
