@@ -1,5 +1,5 @@
-use std::fmt::Debug;
-use std::ops::{Bound, Deref, DerefMut, Range, RangeBounds};
+use core::fmt::Debug;
+use core::ops::{Bound, Deref, DerefMut, Range, RangeBounds};
 
 /// An instance of data owns a block of data. It implements `AsRef<[u8]>` and `AsMut<[u8]>` to allow
 /// borrowing that data, and it has a [Data::into_subregion] function that cuts away bytes at either
