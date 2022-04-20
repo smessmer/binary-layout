@@ -257,7 +257,7 @@ mod tests {
         assert_eq!(&[60, 70, 80, 90, 100], &Field2::data(&storage)[..5]);
 
         // Check types are correct
-        let _a: &[u8] = Field1::data(&mut storage);
+        let _a: &[u8] = Field1::data(&storage);
         let _b: &mut [u8] = Field1::data_mut(&mut storage);
     }
 
@@ -278,7 +278,7 @@ mod tests {
         assert_eq!(Some(5), PrimitiveField::<[u8; 5], BigEndian, 5>::SIZE);
 
         // Check types are correct
-        let _a: &[u8; 2] = Field1::data(&mut storage);
+        let _a: &[u8; 2] = Field1::data(&storage);
         let _b: &mut [u8; 2] = Field1::data_mut(&mut storage);
     }
 }
