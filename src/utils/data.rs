@@ -138,6 +138,68 @@ where
     }
 }
 
+impl<'a> Data<&'a [u8]> {
+    /// Transform the [Data] object into a slice for the data pointed to.
+    /// This also extracts the lifetime and can be useful to get an object
+    /// whose lifetime isn't bound to the view or any local object anymore,
+    /// but instead bound to the original storage of the View.
+    ///
+    /// Example:
+    /// ---------------
+    /// ```
+    /// use binary_layout::define_layout;
+    ///
+    /// define_layout!(my_layout, LittleEndian, {
+    ///   field: u16,
+    ///   data: [u8],
+    /// });
+    ///
+    /// fn func(input: &[u8]) -> &[u8] {
+    ///   let view = my_layout::View::new(input);
+    ///   // Returning `view.data_mut()` doesn't work because its lifetime is bound to the local `view` object.
+    ///   // But we can return the following
+    ///   view.into_data().into_slice()
+    /// }
+    ///
+    /// let data = vec![0; 1024];
+    /// assert_eq!(0, func(&data)[0]);
+    /// ```
+    pub fn into_slice(self) -> &'a [u8] {
+        &self.storage.as_ref()[self.region]
+    }
+}
+
+impl<'a> Data<&'a mut [u8]> {
+    /// Transform the [Data] object into a slice for the data pointed to.
+    /// This also extracts the lifetime and can be useful to get an object
+    /// whose lifetime isn't bound to the view or any local object anymore,
+    /// but instead bound to the original storage of the View.
+    ///
+    /// Example:
+    /// ---------------
+    /// ```
+    /// use binary_layout::define_layout;
+    ///
+    /// define_layout!(my_layout, LittleEndian, {
+    ///   field: u16,
+    ///   data: [u8],
+    /// });
+    ///
+    /// fn func(input: &mut [u8]) -> &mut [u8] {
+    ///   let view = my_layout::View::new(input);
+    ///   // Returning `view.data_mut()` doesn't work because its lifetime is bound to the local `view` object.
+    ///   // But we can return the following
+    ///   view.into_data().into_slice()
+    /// }
+    ///
+    /// let mut data = vec![0; 1024];
+    /// func(&mut data)[0] = 5;
+    /// ```
+    pub fn into_slice(self) -> &'a mut [u8] {
+        &mut self.storage.as_mut()[self.region]
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

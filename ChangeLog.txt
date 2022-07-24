@@ -2,6 +2,7 @@
 ------
 - Fixed-size array fields (i.e. `[u8; N]`) now return `&[u8; N]` instead of `&[u8]` when accessed
 - Fix no_std compatibility
+- Add Data::into_slice()
 
 3.0.0
 ------
