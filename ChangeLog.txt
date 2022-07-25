@@ -1,3 +1,7 @@
+3.1.1
+------
+- Fixed clippy warnings
+
 3.1.0
 ------
 - Fixed-size array fields (i.e. `[u8; N]`) now return `&[u8; N]` instead of `&[u8]` when accessed
