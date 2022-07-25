@@ -128,7 +128,7 @@ impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a mut [u8]>
     }
 }
 
-impl<'a, S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> StorageIntoFieldView<S>
+impl<S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> StorageIntoFieldView<S>
     for PrimitiveField<[u8], E, OFFSET_>
 {
     type View = Data<S>;
@@ -226,8 +226,8 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> StorageToFieldView
     }
 }
 
-impl<'a, S: AsRef<[u8]>, E: Endianness, const N: usize, const OFFSET_: usize>
-    StorageIntoFieldView<S> for PrimitiveField<[u8; N], E, OFFSET_>
+impl<S: AsRef<[u8]>, E: Endianness, const N: usize, const OFFSET_: usize> StorageIntoFieldView<S>
+    for PrimitiveField<[u8; N], E, OFFSET_>
 {
     type View = Data<S>;
 

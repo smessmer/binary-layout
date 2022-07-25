@@ -165,7 +165,7 @@ impl<'a> Data<&'a [u8]> {
     /// assert_eq!(0, func(&data)[0]);
     /// ```
     pub fn into_slice(self) -> &'a [u8] {
-        &self.storage.as_ref()[self.region]
+        &self.storage[self.region]
     }
 }
 
@@ -196,7 +196,7 @@ impl<'a> Data<&'a mut [u8]> {
     /// func(&mut data)[0] = 5;
     /// ```
     pub fn into_slice(self) -> &'a mut [u8] {
-        &mut self.storage.as_mut()[self.region]
+        &mut self.storage[self.region]
     }
 }
 

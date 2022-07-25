@@ -86,7 +86,7 @@ macro_rules! impl_field_traits {
             }
         }
 
-        impl<'a, S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> StorageIntoFieldView<S>
+        impl<S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> StorageIntoFieldView<S>
             for PrimitiveField<$type, E, OFFSET_>
         {
             type View = FieldView<S, Self>;
