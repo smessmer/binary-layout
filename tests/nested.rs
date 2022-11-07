@@ -81,12 +81,12 @@ fn view_readonly() {
 
     // Test into_storage will return correct data
     let extracted_storage = view.into_storage();
-    assert_eq!(&storage, &*extracted_storage);
+    assert_eq!(&storage, extracted_storage);
 
     // Test into_storage on subfield will return correct data
     let view = whole::View::new(&storage);
     let extracted_storage = view.foot().into_storage();
-    assert_eq!(&storage[30..], &*extracted_storage);
+    assert_eq!(&storage[30..], extracted_storage);
 }
 
 #[test]
@@ -155,7 +155,7 @@ fn view_readwrite() {
     let view = whole::View::new(&storage);
     let foot = view.foot();
     let extracted_storage = foot.into_storage();
-    assert_eq!(&storage[30..], &*extracted_storage);
+    assert_eq!(&storage[30..], extracted_storage);
 
     // Test storage is actually changed
     assert_eq!(
