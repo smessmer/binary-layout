@@ -2,7 +2,7 @@
 
 use crate::prelude::*;
 
-// See https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol for ICMP package layout
+// See https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol for ICMP packet layout
 define_layout!(icmp_packet, BigEndian, {
   packet_type: u8,
   code: u8,

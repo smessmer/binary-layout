@@ -4,7 +4,7 @@
 //! It's similar to transmuting to/from a `#[repr(packed)]` struct, but [much safer](#why-not-reprpacked).
 //!
 //! Note that the data does not go through serialization/deserialization or a parsing step.
-//! All accessors access the underlying package data directly.
+//! All accessors access the underlying packet data directly.
 //!
 //! This crate is `#[no_std]` compatible.
 //!
@@ -12,7 +12,7 @@
 //! ```
 //! use binary_layout::prelude::*;
 //!
-//! // See https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol for ICMP package layout
+//! // See https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol for ICMP packet layout
 //! define_layout!(icmp_packet, BigEndian, {
 //!   packet_type: u8,
 //!   code: u8,
@@ -69,7 +69,7 @@
 //! ## When not to use this library?
 //! - You need dynamic data structures, e.g. a list that can change size. This library only supports static data layouts (with the exception of open ended byte arrays at the end of a layout).
 //! - Not all of your layout fits into the memory and you need to process streams of data.
-//!   Note that this crate can still be helpful if you have smaller layouted packages as part of a larger stream, as long as any one layouted packet fits into memory.
+//!   Note that this crate can still be helpful if you have smaller layouted packets as part of a larger stream, as long as any one layouted packet fits into memory.
 //!
 //! ## Alternatives
 //! To the best of my knowledge, there is no other library offering inplace, zero-copy and type-safe access to structured binary data.
@@ -105,7 +105,7 @@
 //!
 //! ### Open ended byte arrays: `[u8]`.
 //! This field type can only occur as the last field of a layout and will mach the remaining data until the end of the storage.
-//! This field has a dynamic size, depending on how large the package data is.
+//! This field has a dynamic size, depending on how large the packet data is.
 //! For these fields, the [trait@Field] API offers [FieldSliceAccess::data], [FieldSliceAccess::data_mut] and the [struct@FieldView] API returns a slice.
 //!
 //! ### Custom field types
@@ -120,7 +120,7 @@
 //! This crate relies on a static layout, it cannot support data types with dynamic length.
 //! In theory, types with dynamic length could be supported if they either
 //! - are the last field of a layout, an already implemented example of this are open ended byte arrays.
-//! - or they may be in the middle of the package but have a maximal size defined and will always reserve storage for their maximal size, even if smaller.
+//! - or they may be in the middle of the packet but have a maximal size defined and will always reserve storage for their maximal size, even if smaller.
 //!   This way, the fields after it would still have a constant offset.
 //!
 //! Both of these, however, would be some effort to implement and it is unclear if that will ever happen (unless somebody opens a PR for it).
@@ -130,7 +130,7 @@
 //! This is why strings aren't supported yet.
 //!
 //! ### Fixed-size arrays other than `[u8; N]`
-//! Say we wanted to have a `[u32; N]` field. The API couldn't just return a zero-copy `&[u32; N]` to the caller because that would use the system byte order (i.e. endianness) which might be different from the byte order defined in the package layout.
+//! Say we wanted to have a `[u32; N]` field. The API couldn't just return a zero-copy `&[u32; N]` to the caller because that would use the system byte order (i.e. endianness) which might be different from the byte order defined in the packet layout.
 //! To make this cross-platform compatible, we'd have to wrap these slices into our own slice type that enforces the correct byte order and return that from the API.
 //! This complexity is why it wasn't implemented yet, but feel free to open a PR if you need this.
 //!
