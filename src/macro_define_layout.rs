@@ -18,7 +18,7 @@
 ///
 /// ## Field names
 /// Field names can be any valid Rust identifiers, but it is recommended to avoid names that contain `storage`, `into_` or `_mut`.
-/// This is because the [define_layout!] macro creates a [View class with several accessors](#struct-view) for each field that contain those identifier parts.
+/// This is because the [define_layout!](crate::define_layout!) macro creates a [View class with several accessors](#struct-view) for each field that contain those identifier parts.
 ///
 /// ## Example
 /// ```
