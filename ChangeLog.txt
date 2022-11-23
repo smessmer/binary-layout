@@ -1,3 +1,8 @@
+3.1.3
+------
+- Specify MSRV in Cargo.toml
+- Improve CI setup
+
 3.1.2
 ------
 - Fixed clippy warnings
