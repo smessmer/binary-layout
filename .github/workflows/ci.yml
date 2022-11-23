@@ -27,6 +27,7 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
+          toolchain: ${{ matrix.toolchain }}
           use-cross: true
           command: ${{ matrix.command }}
           args: ${{ matrix.profile }} ${{ matrix.features }} --target armv5te-unknown-linux-gnueabi
@@ -47,6 +48,7 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
       - uses: actions-rs/cargo@v1
         with:
+          toolchain: ${{ matrix.toolchain }}
           command: ${{ matrix.command }}
           args: ${{ matrix.profile }} ${{ matrix.features }}
   clippy_check:
