@@ -24,10 +24,9 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           target: armv5te-unknown-linux-gnueabi
-          override: true
+          default: true
       - uses: actions-rs/cargo@v1
         with:
-          toolchain: ${{ matrix.toolchain }}
           use-cross: true
           command: ${{ matrix.command }}
           args: ${{ matrix.profile }} ${{ matrix.features }} --target armv5te-unknown-linux-gnueabi
@@ -46,9 +45,9 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
+          default: true
       - uses: actions-rs/cargo@v1
         with:
-          toolchain: ${{ matrix.toolchain }}
           command: ${{ matrix.command }}
           args: ${{ matrix.profile }} ${{ matrix.features }}
   clippy_check:
@@ -70,7 +69,7 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt
-          override: true
+          default: true
       - uses: mbrobbel/rustfmt-check@0.3.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -97,10 +96,9 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
-          override: true
+          default: true
       - uses: actions-rs/cargo@v1
         with:
-          toolchain: nightly
           command: test
           args: --all-features --no-fail-fast
         env:
