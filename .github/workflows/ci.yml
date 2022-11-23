@@ -100,6 +100,7 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
+          toolchain: nightly
           command: test
           args: --all-features --no-fail-fast
         env:
