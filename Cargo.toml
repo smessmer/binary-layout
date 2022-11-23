@@ -3,6 +3,7 @@ authors = ["Sebastian Messmer <messmer@cryfs.org>"]
 categories = ["data-structures", "encoding", "memory-management", "network-programming", "no-std"]
 description = "The binary-layout library allows type-safe, inplace, zero-copy access to structured binary data. You define a custom data layout and give it a slice of binary data, and it will allow you to read and write the fields defined in the layout from the binary data without having to copy any of the data. It's similar to transmuting to/from a `#[repr(packed)]` struct, but much safer."
 documentation = "https://docs.rs/binary-layout"
+rust-version = "1.56"
 edition = "2021"
 homepage = "https://github.com/smessmer/binary-layout"
 keywords = ["binary", "layout", "data", "structured", "format"]

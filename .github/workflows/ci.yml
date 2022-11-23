@@ -17,7 +17,7 @@ jobs:
         profile: ["", "--release"]
         # TODO Add --no-default-features
         features: ["", "--all-features"]
-        toolchain: ["stable", "nightly"]
+        toolchain: ["stable", "nightly", "1.56"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
@@ -39,7 +39,7 @@ jobs:
         profile: ["", "--release"]
         # TODO Add --no-default-features
         features: ["", "--all-features"]
-        toolchain: ["stable", "nightly"]
+        toolchain: ["stable", "nightly", "1.56"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
