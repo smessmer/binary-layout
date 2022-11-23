@@ -12,6 +12,7 @@ jobs:
     name: arm
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         command: ["build", "test"]
         profile: ["", "--release"]
@@ -34,6 +35,7 @@ jobs:
     name: x64
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         command: ["build", "test"]
         profile: ["", "--release"]
