@@ -4,7 +4,7 @@ use crate::{Field, FieldCopyAccess};
 
 /// A field view represents the field metadata stored in a [Field] plus it stores the underlying
 /// storage data it operates on, either as a reference to a slice `&[u8]`, `&mut [u8]`, or as
-/// an owning [Vec<u8>].
+/// an owning [`Vec<u8>`].
 ///
 /// Since this API remembers the underlying storage data in a view object, you don't have to pass it
 /// in each time you're accessing a field. If you rather prefer an API that does not do that,

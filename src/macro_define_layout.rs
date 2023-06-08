@@ -246,7 +246,7 @@ macro_rules! define_layout {
 
 // TODO This only exists because Option<usize>::unwrap() isn't const. Remove this once it is.
 /// Internal function, don't use!
-/// Unwraps an option<usize>
+/// Unwraps an `Option<usize>`
 #[inline(always)]
 pub const fn unwrap_field_size(opt: Option<usize>) -> usize {
     match opt {

@@ -9,7 +9,7 @@ use crate::Field;
 // and [StorageIntoFieldView] for it so that it can be used as a field in other layouts.
 
 /// Internal type. Don't use this in user code.
-/// S is expected to be a non-reference type that can own things, e.g. Data<S>
+/// S is expected to be a non-reference type that can own things, e.g. `Data<S>`
 pub trait OwningNestedView<S>
 where
     S: AsRef<[u8]>,
