@@ -74,7 +74,7 @@ Annotating structs with `#[repr(packed)]` gives some of the features of this cra
 without padding. But it has serious shortcomings that this library solves.
 - `#[repr(packed)]` uses the system byte order, which will be different depending on if you're running on a little endian or big endian system. `#[repr(packed)]` is not cross-platform compatible. This library is.
 - `#[repr(packed)]` [can cause undefined behavior on some CPUs when taking references to unaligned data](https://doc.rust-lang.org/nomicon/other-reprs.html#reprpacked).
-   This library avoids that by not offering any API that takes references to unaligned data. The only data type you can get a reference to is byte arrays, and they only require an alignment of 1 which is trivially always fulfilled.
+   This library avoids that by not offering any API that takes references to unaligned data. Primitive integer types are allowed to be unaligned but they're copied and you can't get references to them. The only data type you can get a reference to is byte arrays, and they only require an alignment of 1 which is trivially always fulfilled.
 
 ### When not to use this library?
 - You need dynamic data structures, e.g. a list that can change size. This library only supports static data layouts (with the exception of open ended byte arrays at the end of a layout).
