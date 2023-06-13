@@ -169,7 +169,7 @@
 //! define_layout!(header, BigEndian, {
 //!     field1: i16,
 //! });
-//! define_layout!(middle, BigEndian, {
+//! define_layout!(middle, NativeEndian, {
 //!     deep: deep_nesting::NestedView,
 //!     field1: u16,
 //! });
