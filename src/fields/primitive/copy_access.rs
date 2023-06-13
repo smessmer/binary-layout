@@ -135,6 +135,7 @@ macro_rules! int_field {
                     match E::KIND {
                         EndianKind::Big => <$type>::from_be_bytes(value),
                         EndianKind::Little => <$type>::from_le_bytes(value),
+                        EndianKind::Native => <$type>::from_ne_bytes(value)
                     }
                 }
             }
@@ -164,6 +165,7 @@ macro_rules! int_field {
                     let value_as_bytes = match E::KIND {
                         EndianKind::Big => value.to_be_bytes(),
                         EndianKind::Little => value.to_le_bytes(),
+                        EndianKind::Native => value.to_ne_bytes(),
                     };
                     storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
                         .copy_from_slice(&value_as_bytes);
@@ -229,6 +231,7 @@ macro_rules! float_field {
                     match E::KIND {
                         EndianKind::Big => <$type>::from_be_bytes(value),
                         EndianKind::Little => <$type>::from_le_bytes(value),
+                        EndianKind::Native => <$type>::from_ne_bytes(value),
                     }
                 }
             }
@@ -265,6 +268,7 @@ macro_rules! float_field {
                     let value_as_bytes = match E::KIND {
                         EndianKind::Big => value.to_be_bytes(),
                         EndianKind::Little => value.to_le_bytes(),
+                        EndianKind::Native => value.to_ne_bytes(),
                     };
                     storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
                         .copy_from_slice(&value_as_bytes);
@@ -406,6 +410,29 @@ mod tests {
     }
 
     #[test]
+    fn test_i8_nativeendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<i8, NativeEndian, 5>;
+        type Field2 = PrimitiveField<i8, NativeEndian, 20>;
+
+        Field1::write(&mut storage, 50);
+        Field2::write(&mut storage, -20);
+
+        assert_eq!(50, Field1::read(&storage));
+        assert_eq!(-20, Field2::read(&storage));
+
+        assert_eq!(50, i8::from_ne_bytes((&storage[5..6]).try_into().unwrap()));
+        assert_eq!(
+            -20,
+            i8::from_ne_bytes((&storage[20..21]).try_into().unwrap())
+        );
+
+        assert_eq!(Some(1), PrimitiveField::<i8, NativeEndian, 5>::SIZE);
+        assert_eq!(Some(1), PrimitiveField::<i8, NativeEndian, 5>::SIZE);
+    }
+
+    #[test]
     fn test_i16_littleendian() {
         let mut storage = vec![0; 1024];
 
@@ -455,6 +482,32 @@ mod tests {
 
         assert_eq!(Some(2), PrimitiveField::<i16, BigEndian, 5>::SIZE);
         assert_eq!(Some(2), PrimitiveField::<i16, BigEndian, 5>::SIZE);
+    }
+
+    #[test]
+    fn test_i16_nativeendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<i16, NativeEndian, 5>;
+        type Field2 = PrimitiveField<i16, NativeEndian, 20>;
+
+        Field1::write(&mut storage, 500);
+        Field2::write(&mut storage, -2000);
+
+        assert_eq!(
+            500,
+            i16::from_ne_bytes((&storage[5..7]).try_into().unwrap())
+        );
+        assert_eq!(
+            -2000,
+            i16::from_ne_bytes((&storage[20..22]).try_into().unwrap())
+        );
+
+        assert_eq!(500, Field1::read(&storage));
+        assert_eq!(-2000, Field2::read(&storage));
+
+        assert_eq!(Some(2), PrimitiveField::<i16, NativeEndian, 5>::SIZE);
+        assert_eq!(Some(2), PrimitiveField::<i16, NativeEndian, 5>::SIZE);
     }
 
     #[test]
@@ -510,6 +563,32 @@ mod tests {
     }
 
     #[test]
+    fn test_i32_nativeendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<i32, NativeEndian, 5>;
+        type Field2 = PrimitiveField<i32, NativeEndian, 20>;
+
+        Field1::write(&mut storage, 10i32.pow(8));
+        Field2::write(&mut storage, -(10i32.pow(7)));
+
+        assert_eq!(
+            10i32.pow(8),
+            i32::from_ne_bytes((&storage[5..9]).try_into().unwrap())
+        );
+        assert_eq!(
+            -(10i32.pow(7)),
+            i32::from_ne_bytes((&storage[20..24]).try_into().unwrap())
+        );
+
+        assert_eq!(10i32.pow(8), Field1::read(&storage));
+        assert_eq!(-(10i32.pow(7)), Field2::read(&storage));
+
+        assert_eq!(Some(4), PrimitiveField::<i32, NativeEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<i32, NativeEndian, 5>::SIZE);
+    }
+
+    #[test]
     fn test_i64_littleendian() {
         let mut storage = vec![0; 1024];
 
@@ -559,6 +638,32 @@ mod tests {
 
         assert_eq!(Some(8), PrimitiveField::<i64, BigEndian, 5>::SIZE);
         assert_eq!(Some(8), PrimitiveField::<i64, BigEndian, 5>::SIZE);
+    }
+
+    #[test]
+    fn test_i64_nativeendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<i64, NativeEndian, 5>;
+        type Field2 = PrimitiveField<i64, NativeEndian, 20>;
+
+        Field1::write(&mut storage, 10i64.pow(15));
+        Field2::write(&mut storage, -(10i64.pow(14)));
+
+        assert_eq!(
+            10i64.pow(15),
+            i64::from_ne_bytes((&storage[5..13]).try_into().unwrap())
+        );
+        assert_eq!(
+            -(10i64.pow(14)),
+            i64::from_ne_bytes((&storage[20..28]).try_into().unwrap())
+        );
+
+        assert_eq!(10i64.pow(15), Field1::read(&storage));
+        assert_eq!(-(10i64.pow(14)), Field2::read(&storage));
+
+        assert_eq!(Some(8), PrimitiveField::<i64, NativeEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<i64, NativeEndian, 5>::SIZE);
     }
 
     #[test]
@@ -614,6 +719,32 @@ mod tests {
     }
 
     #[test]
+    fn test_i128_nativeendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<i128, NativeEndian, 5>;
+        type Field2 = PrimitiveField<i128, NativeEndian, 200>;
+
+        Field1::write(&mut storage, 10i128.pow(30));
+        Field2::write(&mut storage, -(10i128.pow(28)));
+
+        assert_eq!(
+            10i128.pow(30),
+            i128::from_ne_bytes((&storage[5..21]).try_into().unwrap())
+        );
+        assert_eq!(
+            -(10i128.pow(28)),
+            i128::from_ne_bytes((&storage[200..216]).try_into().unwrap())
+        );
+
+        assert_eq!(10i128.pow(30), Field1::read(&storage));
+        assert_eq!(-(10i128.pow(28)), Field2::read(&storage));
+
+        assert_eq!(Some(16), PrimitiveField::<i128, NativeEndian, 5>::SIZE);
+        assert_eq!(Some(16), PrimitiveField::<i128, NativeEndian, 5>::SIZE);
+    }
+
+    #[test]
     fn test_u8_littleendian() {
         let mut storage = vec![0; 1024];
 
@@ -657,6 +788,29 @@ mod tests {
 
         assert_eq!(Some(1), PrimitiveField::<u8, BigEndian, 5>::SIZE);
         assert_eq!(Some(1), PrimitiveField::<u8, BigEndian, 5>::SIZE);
+    }
+
+    #[test]
+    fn test_u8_nativeendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<u8, NativeEndian, 5>;
+        type Field2 = PrimitiveField<u8, NativeEndian, 20>;
+
+        Field1::write(&mut storage, 50);
+        Field2::write(&mut storage, 20);
+
+        assert_eq!(50, Field1::read(&storage));
+        assert_eq!(20, Field2::read(&storage));
+
+        assert_eq!(50, u8::from_ne_bytes((&storage[5..6]).try_into().unwrap()));
+        assert_eq!(
+            20,
+            u8::from_ne_bytes((&storage[20..21]).try_into().unwrap())
+        );
+
+        assert_eq!(Some(1), PrimitiveField::<u8, NativeEndian, 5>::SIZE);
+        assert_eq!(Some(1), PrimitiveField::<u8, NativeEndian, 5>::SIZE);
     }
 
     #[test]
@@ -712,6 +866,32 @@ mod tests {
     }
 
     #[test]
+    fn test_u16_nativeendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<u16, NativeEndian, 5>;
+        type Field2 = PrimitiveField<u16, NativeEndian, 20>;
+
+        Field1::write(&mut storage, 500);
+        Field2::write(&mut storage, 2000);
+
+        assert_eq!(
+            500,
+            u16::from_ne_bytes((&storage[5..7]).try_into().unwrap())
+        );
+        assert_eq!(
+            2000,
+            u16::from_ne_bytes((&storage[20..22]).try_into().unwrap())
+        );
+
+        assert_eq!(500, Field1::read(&storage));
+        assert_eq!(2000, Field2::read(&storage));
+
+        assert_eq!(Some(2), PrimitiveField::<u16, NativeEndian, 5>::SIZE);
+        assert_eq!(Some(2), PrimitiveField::<u16, NativeEndian, 5>::SIZE);
+    }
+
+    #[test]
     fn test_u32_littleendian() {
         let mut storage = vec![0; 1024];
 
@@ -761,6 +941,32 @@ mod tests {
 
         assert_eq!(Some(4), PrimitiveField::<u32, BigEndian, 5>::SIZE);
         assert_eq!(Some(4), PrimitiveField::<u32, BigEndian, 5>::SIZE);
+    }
+
+    #[test]
+    fn test_u32_nativeendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<u32, NativeEndian, 5>;
+        type Field2 = PrimitiveField<u32, NativeEndian, 20>;
+
+        Field1::write(&mut storage, 10u32.pow(8));
+        Field2::write(&mut storage, 10u32.pow(7));
+
+        assert_eq!(
+            10u32.pow(8),
+            u32::from_ne_bytes((&storage[5..9]).try_into().unwrap())
+        );
+        assert_eq!(
+            10u32.pow(7),
+            u32::from_ne_bytes((&storage[20..24]).try_into().unwrap())
+        );
+
+        assert_eq!(10u32.pow(8), Field1::read(&storage));
+        assert_eq!(10u32.pow(7), Field2::read(&storage));
+
+        assert_eq!(Some(4), PrimitiveField::<u32, NativeEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<u32, NativeEndian, 5>::SIZE);
     }
 
     #[test]
@@ -816,6 +1022,32 @@ mod tests {
     }
 
     #[test]
+    fn test_u64_nativeendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<u64, NativeEndian, 5>;
+        type Field2 = PrimitiveField<u64, NativeEndian, 20>;
+
+        Field1::write(&mut storage, 10u64.pow(15));
+        Field2::write(&mut storage, 10u64.pow(14));
+
+        assert_eq!(
+            10u64.pow(15),
+            u64::from_ne_bytes((&storage[5..13]).try_into().unwrap())
+        );
+        assert_eq!(
+            10u64.pow(14),
+            u64::from_ne_bytes((&storage[20..28]).try_into().unwrap())
+        );
+
+        assert_eq!(10u64.pow(15), Field1::read(&storage));
+        assert_eq!(10u64.pow(14), Field2::read(&storage));
+
+        assert_eq!(Some(8), PrimitiveField::<u64, NativeEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<u64, NativeEndian, 5>::SIZE);
+    }
+
+    #[test]
     fn test_u128_littleendian() {
         let mut storage = vec![0; 1024];
 
@@ -865,6 +1097,32 @@ mod tests {
 
         assert_eq!(Some(16), PrimitiveField::<u128, BigEndian, 5>::SIZE);
         assert_eq!(Some(16), PrimitiveField::<u128, BigEndian, 5>::SIZE);
+    }
+
+    #[test]
+    fn test_u128_nativeendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<u128, NativeEndian, 5>;
+        type Field2 = PrimitiveField<u128, NativeEndian, 200>;
+
+        Field1::write(&mut storage, 10u128.pow(30));
+        Field2::write(&mut storage, 10u128.pow(28));
+
+        assert_eq!(
+            10u128.pow(30),
+            u128::from_ne_bytes((&storage[5..21]).try_into().unwrap())
+        );
+        assert_eq!(
+            10u128.pow(28),
+            u128::from_ne_bytes((&storage[200..216]).try_into().unwrap())
+        );
+
+        assert_eq!(10u128.pow(30), Field1::read(&storage));
+        assert_eq!(10u128.pow(28), Field2::read(&storage));
+
+        assert_eq!(Some(16), PrimitiveField::<u128, NativeEndian, 5>::SIZE);
+        assert_eq!(Some(16), PrimitiveField::<u128, NativeEndian, 5>::SIZE);
     }
 
     #[test]
@@ -920,6 +1178,32 @@ mod tests {
     }
 
     #[test]
+    fn test_f32_nativeendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<f32, NativeEndian, 5>;
+        type Field2 = PrimitiveField<f32, NativeEndian, 20>;
+
+        Field1::write(&mut storage, 10f32.powf(8.31));
+        Field2::write(&mut storage, -(10f32.powf(7.31)));
+
+        assert_eq!(
+            10f32.powf(8.31),
+            f32::from_ne_bytes((&storage[5..9]).try_into().unwrap())
+        );
+        assert_eq!(
+            -(10f32.powf(7.31)),
+            f32::from_ne_bytes((&storage[20..24]).try_into().unwrap())
+        );
+
+        assert_eq!(10f32.powf(8.31), Field1::read(&storage));
+        assert_eq!(-(10f32.powf(7.31)), Field2::read(&storage));
+
+        assert_eq!(Some(4), PrimitiveField::<f32, NativeEndian, 5>::SIZE);
+        assert_eq!(Some(4), PrimitiveField::<f32, NativeEndian, 5>::SIZE);
+    }
+
+    #[test]
     fn test_f64_littleendian() {
         let mut storage = vec![0; 1024];
 
@@ -971,6 +1255,32 @@ mod tests {
         assert_eq!(Some(8), PrimitiveField::<f64, BigEndian, 5>::SIZE);
     }
 
+    #[test]
+    fn test_f64_nativeendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<f64, NativeEndian, 5>;
+        type Field2 = PrimitiveField<f64, NativeEndian, 20>;
+
+        Field1::write(&mut storage, 10f64.powf(15.31));
+        Field2::write(&mut storage, -(10f64.powf(15.31)));
+
+        assert_eq!(
+            10f64.powf(15.31),
+            f64::from_ne_bytes((&storage[5..13]).try_into().unwrap())
+        );
+        assert_eq!(
+            -(10f64.powf(15.31)),
+            f64::from_ne_bytes((&storage[20..28]).try_into().unwrap())
+        );
+
+        assert_eq!(10f64.powf(15.31), Field1::read(&storage));
+        assert_eq!(-(10f64.powf(15.31)), Field2::read(&storage));
+
+        assert_eq!(Some(8), PrimitiveField::<f64, NativeEndian, 5>::SIZE);
+        assert_eq!(Some(8), PrimitiveField::<f64, NativeEndian, 5>::SIZE);
+    }
+
     #[allow(clippy::unit_cmp)]
     #[test]
     fn test_unit_bigendian() {
@@ -1009,6 +1319,28 @@ mod tests {
 
         assert_eq!(Some(0), PrimitiveField::<(), LittleEndian, 5>::SIZE);
         assert_eq!(Some(0), PrimitiveField::<(), LittleEndian, 20>::SIZE);
+
+        // Zero-sized types do not mutate the storage, so it should remain
+        // unchanged for all of time.
+        assert_eq!(storage, vec![0; 1024]);
+    }
+
+    #[allow(clippy::unit_cmp)]
+    #[test]
+    fn test_unit_nativeendian() {
+        let mut storage = vec![0; 1024];
+
+        type Field1 = PrimitiveField<(), NativeEndian, 5>;
+        type Field2 = PrimitiveField<(), NativeEndian, 20>;
+
+        Field1::write(&mut storage, ());
+        Field2::write(&mut storage, ());
+
+        assert_eq!((), Field1::read(&storage));
+        assert_eq!((), Field2::read(&storage));
+
+        assert_eq!(Some(0), PrimitiveField::<(), NativeEndian, 5>::SIZE);
+        assert_eq!(Some(0), PrimitiveField::<(), NativeEndian, 20>::SIZE);
 
         // Zero-sized types do not mutate the storage, so it should remain
         // unchanged for all of time.

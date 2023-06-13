@@ -249,12 +249,15 @@ mod tests {
 
         type Field1 = PrimitiveField<[u8], LittleEndian, 5>;
         type Field2 = PrimitiveField<[u8], BigEndian, 7>;
+        type Field3 = PrimitiveField<[u8], NativeEndian, 9>;
 
         Field1::data_mut(&mut storage)[..5].copy_from_slice(&[10, 20, 30, 40, 50]);
         Field2::data_mut(&mut storage)[..5].copy_from_slice(&[60, 70, 80, 90, 100]);
+        Field3::data_mut(&mut storage)[..5].copy_from_slice(&[110, 120, 130, 140, 150]);
 
-        assert_eq!(&[10, 20, 60, 70, 80], &Field1::data(&storage)[..5]);
-        assert_eq!(&[60, 70, 80, 90, 100], &Field2::data(&storage)[..5]);
+        assert_eq!(&[10, 20, 60, 70, 110], &Field1::data(&storage)[..5]);
+        assert_eq!(&[60, 70, 110, 120, 130], &Field2::data(&storage)[..5]);
+        assert_eq!(&[110, 120, 130, 140, 150], &Field3::data(&storage)[..5]);
 
         // Check types are correct
         let _a: &[u8] = Field1::data(&storage);
@@ -267,15 +270,19 @@ mod tests {
 
         type Field1 = PrimitiveField<[u8; 2], LittleEndian, 5>;
         type Field2 = PrimitiveField<[u8; 5], BigEndian, 6>;
+        type Field3 = PrimitiveField<[u8; 5], NativeEndian, 7>;
 
         Field1::data_mut(&mut storage).copy_from_slice(&[10, 20]);
         Field2::data_mut(&mut storage).copy_from_slice(&[60, 70, 80, 90, 100]);
+        Field3::data_mut(&mut storage).copy_from_slice(&[60, 70, 80, 90, 100]);
 
         assert_eq!(&[10, 60], Field1::data(&storage));
-        assert_eq!(&[60, 70, 80, 90, 100], Field2::data(&storage));
+        assert_eq!(&[60, 60, 70, 80, 90], Field2::data(&storage));
+        assert_eq!(&[60, 70, 80, 90, 100], Field3::data(&storage));
 
         assert_eq!(Some(2), PrimitiveField::<[u8; 2], LittleEndian, 5>::SIZE);
         assert_eq!(Some(5), PrimitiveField::<[u8; 5], BigEndian, 5>::SIZE);
+        assert_eq!(Some(5), PrimitiveField::<[u8; 5], NativeEndian, 5>::SIZE);
 
         // Check types are correct
         let _a: &[u8; 2] = Field1::data(&storage);
