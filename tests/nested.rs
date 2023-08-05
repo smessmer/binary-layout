@@ -10,7 +10,7 @@ define_layout!(deep_nesting, LittleEndian, {
 define_layout!(header, BigEndian, {
     field1: i16,
 });
-define_layout!(middle, BigEndian, {
+define_layout!(middle, NativeEndian, {
     deep: deep_nesting::NestedView,
     field1: u16,
 });
@@ -62,7 +62,7 @@ fn view_readonly() {
         view.mid().deep().field1().read(),
     );
     assert_eq!(
-        u16::from_be_bytes((&data_region(1024, 5)[12..14]).try_into().unwrap()),
+        u16::from_ne_bytes((&data_region(1024, 5)[12..14]).try_into().unwrap()),
         view.mid().field1().read(),
     );
     assert_eq!(
@@ -108,7 +108,7 @@ fn view_readwrite() {
         view.mid().deep().field1().read(),
     );
     assert_eq!(
-        u16::from_be_bytes((&data_region(1024, 5)[12..14]).try_into().unwrap()),
+        u16::from_ne_bytes((&data_region(1024, 5)[12..14]).try_into().unwrap()),
         view.mid().field1().read(),
     );
     assert_eq!(
@@ -172,7 +172,7 @@ fn view_readwrite() {
     );
     assert_eq!(
         1000,
-        u16::from_be_bytes((&storage[12..14]).try_into().unwrap())
+        u16::from_ne_bytes((&storage[12..14]).try_into().unwrap())
     );
     assert_eq!(
         10_u128.pow(30),
@@ -207,7 +207,7 @@ fn view_vec_readonly() {
         view.mid().deep().field1().read(),
     );
     assert_eq!(
-        u16::from_be_bytes((&data_region(1024, 5)[12..14]).try_into().unwrap()),
+        u16::from_ne_bytes((&data_region(1024, 5)[12..14]).try_into().unwrap()),
         view.mid().field1().read(),
     );
     assert_eq!(
@@ -253,7 +253,7 @@ fn view_vec_readwrite() {
         view.mid().deep().field1().read(),
     );
     assert_eq!(
-        u16::from_be_bytes((&data_region(1024, 5)[12..14]).try_into().unwrap()),
+        u16::from_ne_bytes((&data_region(1024, 5)[12..14]).try_into().unwrap()),
         view.mid().field1().read(),
     );
     assert_eq!(
@@ -311,7 +311,7 @@ fn view_vec_readwrite() {
     );
     assert_eq!(
         1000,
-        u16::from_be_bytes((&extracted_storage[12..14]).try_into().unwrap())
+        u16::from_ne_bytes((&extracted_storage[12..14]).try_into().unwrap())
     );
     assert_eq!(
         10_u128.pow(30),

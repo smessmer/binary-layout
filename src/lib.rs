@@ -169,7 +169,7 @@
 //! define_layout!(header, BigEndian, {
 //!     field1: i16,
 //! });
-//! define_layout!(middle, BigEndian, {
+//! define_layout!(middle, NativeEndian, {
 //!     deep: deep_nesting::NestedView,
 //!     field1: u16,
 //! });
@@ -199,7 +199,7 @@ mod utils;
 
 pub mod example;
 
-pub use endianness::{BigEndian, Endianness, LittleEndian};
+pub use endianness::{BigEndian, Endianness, LittleEndian, NativeEndian};
 pub use fields::{
     primitive::{FieldCopyAccess, FieldSliceAccess, FieldView, PrimitiveField},
     wrapped::{LayoutAs, WrappedField},
@@ -214,7 +214,9 @@ pub use utils::data::Data;
 /// use binary_layout::prelude::*;
 /// ```
 pub mod prelude {
-    pub use super::{BigEndian, Field, FieldCopyAccess, FieldSliceAccess, LittleEndian};
+    pub use super::{
+        BigEndian, Field, FieldCopyAccess, FieldSliceAccess, LittleEndian, NativeEndian,
+    };
     pub use crate::define_layout;
 }
 
