@@ -18,8 +18,8 @@ jobs:
         profile: ["", "--release"]
         # TODO Add --no-default-features
         features: ["", "--all-features"]
-        # MSRV of binary-layout is 1.56 but for arm, one of our dependencies requires 1.58
-        toolchain: ["stable", "nightly", "1.58"]
+        # MSRV of binary-layout is 1.56 but for arm, one of our dependencies requires 1.563
+        toolchain: ["stable", "nightly", "1.63"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
