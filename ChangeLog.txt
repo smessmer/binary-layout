@@ -1,4 +1,4 @@
-3.1.4 (unreleased)
+3.1.4
 ------
 - Fix compiler warnings issued by newer version of rust
 
