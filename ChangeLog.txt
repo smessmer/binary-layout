@@ -1,3 +1,7 @@
+3.2.0 (unreleased)
+------
+- Add `NativeEndian` as an option
+
 3.1.4 (unreleased)
 ------
 - Fix compiler warnings issued by newer version of rust
