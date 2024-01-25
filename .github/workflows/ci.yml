@@ -18,8 +18,8 @@ jobs:
         profile: ["", "--release"]
         # TODO Add --no-default-features
         features: ["", "--all-features"]
-        # MSRV of binary-layout is 1.56 but for arm, one of our dependencies requires 1.63
-        toolchain: ["stable", "nightly", "1.63"]
+        # MSRV of binary-layout is 1.56 but for arm, one of our dependencies requires 1.65
+        toolchain: ["stable", "nightly", "1.65"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
@@ -42,7 +42,7 @@ jobs:
         profile: ["", "--release"]
         # TODO Add --no-default-features
         features: ["", "--all-features"]
-        # Nightly because -Z direct-minimal-versions is a nightly cargo featur
+        # Nightly because -Z direct-minimal-versions is a nightly cargo feature
         toolchain: ["nightly"]
     steps:
       - uses: actions/checkout@v4
