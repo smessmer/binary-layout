@@ -21,7 +21,7 @@ jobs:
         # MSRV of binary-layout is 1.56 but for arm, one of our dependencies requires 1.63
         toolchain: ["stable", "nightly", "1.63"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
@@ -45,7 +45,7 @@ jobs:
         # Nightly because -Z direct-minimal-versions is a nightly cargo featur
         toolchain: ["nightly"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
@@ -73,7 +73,7 @@ jobs:
         features: ["", "--all-features"]
         toolchain: ["stable", "nightly", "1.56"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
@@ -95,7 +95,7 @@ jobs:
         # Nightly because -Z direct-minimal-versions is a nightly cargo featur
         toolchain: ["nightly"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
@@ -112,7 +112,7 @@ jobs:
     name: Linter (clippy)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -126,7 +126,7 @@ jobs:
     name: Code Formatter (rustfmt)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -139,7 +139,7 @@ jobs:
     name: Sync README.md (cargo sync-readme)
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: cargo install cargo-readme
     - run: ./gen_readme.sh
     # Fail job if gen_readme.sh introduced changes. If this fails, then we need to run gen_readme.sh locally and add it to the commit.
@@ -148,13 +148,13 @@ jobs:
     name: Find dead doc links
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - run: RUSTDOCFLAGS="-Dwarnings" cargo doc
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
