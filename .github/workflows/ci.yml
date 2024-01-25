@@ -32,6 +32,35 @@ jobs:
           use-cross: true
           command: ${{ matrix.command }}
           args: ${{ matrix.profile }} ${{ matrix.features }} --target armv5te-unknown-linux-gnueabi
+  arm_minimal_versions:
+    name: arm_minimal_versions
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        command: ["build", "test"]
+        profile: ["", "--release"]
+        # TODO Add --no-default-features
+        features: ["", "--all-features"]
+        # Nightly because -Z direct-minimal-versions is a nightly cargo featur
+        toolchain: ["nightly"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          target: armv5te-unknown-linux-gnueabi
+          default: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: "update"
+          args: "-Z direct-minimal-versions"
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: ${{ matrix.command }}
+          args: ${{ matrix.profile }} ${{ matrix.features }} --target armv5te-unknown-linux-gnueabi
   x64:
     name: x64
     runs-on: ubuntu-latest
@@ -49,6 +78,32 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           default: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: ${{ matrix.command }}
+          args: ${{ matrix.profile }} ${{ matrix.features }}
+  x64_minimal_versions:
+    name: x64_minimal_versions
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        command: ["build", "test"]
+        profile: ["", "--release"]
+        # TODO Add --no-default-features
+        features: ["", "--all-features"]
+        # Nightly because -Z direct-minimal-versions is a nightly cargo featur
+        toolchain: ["nightly"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          default: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: "update"
+          args: "-Z direct-minimal-versions"
       - uses: actions-rs/cargo@v1
         with:
           command: ${{ matrix.command }}
