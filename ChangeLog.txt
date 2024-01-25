@@ -1,3 +1,7 @@
+3.3.0
+------
+- Reduce minimal dependency version requirements to what's actually needed and add a CI task ensuring that those versions are sufficient
+
 3.2.0
 ------
 - Add `NativeEndian` as an option
