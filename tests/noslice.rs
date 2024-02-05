@@ -49,7 +49,7 @@ fn fields() {
     // Test data can be written
     noslice::first::write(&mut storage, 60);
     noslice::second::write(&mut storage, -100_000_000_000);
-    noslice::third::try_write(&mut storage, NonZeroI32::new(-1_000_000_000).unwrap()).unwrap();
+    noslice::third::write(&mut storage, NonZeroI32::new(-1_000_000_000).unwrap());
     noslice::fourth::write(&mut storage, 1_000);
 
     // Test reading will return changed data
@@ -117,8 +117,7 @@ fn view_readwrite() {
     view.first_mut().write(50);
     view.second_mut().write(10i64.pow(15));
     view.third_mut()
-        .try_write(NonZeroI32::new(10i32.pow(8)).unwrap())
-        .unwrap();
+        .write(NonZeroI32::new(10i32.pow(8)).unwrap());
     view.fourth_mut().write(1000);
 
     // Test reading will return changed data
@@ -203,8 +202,7 @@ fn view_vec_readwrite() {
     view.first_mut().write(50);
     view.second_mut().write(10i64.pow(15));
     view.third_mut()
-        .try_write(NonZeroI32::new(10i32.pow(8)).unwrap())
-        .unwrap();
+        .write(NonZeroI32::new(10i32.pow(8)).unwrap());
     view.fourth_mut().write(1000);
 
     // Test reading will return changed data

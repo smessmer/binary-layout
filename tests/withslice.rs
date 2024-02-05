@@ -87,7 +87,7 @@ fn fields() {
     withslice::second::write(&mut storage, -100_000_000_000);
     withslice::third::data_mut(&mut storage).copy_from_slice(&[10, 20, 30, 40, 50]);
     withslice::fourth::write(&mut storage, 1_000);
-    withslice::fifth::try_write(&mut storage, NonZeroI32::new(10i32.pow(8)).unwrap()).unwrap();
+    withslice::fifth::write(&mut storage, NonZeroI32::new(10i32.pow(8)).unwrap());
     withslice::sixth::data_mut(&mut storage).copy_from_slice(&data_region(1024 - 20, 6));
 
     // Test reading will return changed data
@@ -163,8 +163,7 @@ fn view_readwrite() {
     view.third_mut().copy_from_slice(&[10, 20, 30, 40, 50]);
     view.fourth_mut().write(1000);
     view.fifth_mut()
-        .try_write(NonZeroI32::new(10i32.pow(8)).unwrap())
-        .unwrap();
+        .write(NonZeroI32::new(10i32.pow(8)).unwrap());
     view.sixth_mut()
         .copy_from_slice(&data_region(1024, 6)[20..]);
 
@@ -260,8 +259,7 @@ fn view_vec_readwrite() {
     view.third_mut().copy_from_slice(&[10, 20, 30, 40, 50]);
     view.fourth_mut().write(1000);
     view.fifth_mut()
-        .try_write(NonZeroI32::new(10i32.pow(8)).unwrap())
-        .unwrap();
+        .write(NonZeroI32::new(10i32.pow(8)).unwrap());
     view.sixth_mut()
         .copy_from_slice(&data_region(1024, 6)[20..]);
 

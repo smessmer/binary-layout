@@ -83,7 +83,6 @@ where
     }
 }
 
-// TODO Now that NonZeroXXX types support write() directly instead of try_write(), we should change the tests to use write().
 // TODO Add tests for types that can only fail when reading, only fail when writing, fail when doing either.
 //      For both, view API and field API.
 

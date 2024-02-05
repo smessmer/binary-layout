@@ -529,9 +529,8 @@ mod tests {
                     type Field1 = PrimitiveField<$type, $endian_type, 5>;
                     type Field2 = PrimitiveField<$type, $endian_type, 123>;
 
-                    // TODO Use infallible_unwrap here
-                    Field1::try_write(&mut storage, value1).unwrap();
-                    Field2::try_write(&mut storage, value2).unwrap();
+                    Field1::write(&mut storage, value1);
+                    Field2::write(&mut storage, value2);
 
                     // TODO Test reading a zero
                     assert_eq!(value1, Field1::try_read(&storage).unwrap());

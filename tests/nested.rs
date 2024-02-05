@@ -132,8 +132,7 @@ fn view_readwrite() {
     view.mid_mut().deep_mut().field1_mut().write(10);
     view.mid_mut().field1_mut().write(1000);
     view.field2_mut()
-        .try_write(NonZeroU128::new(10_u128.pow(30)).unwrap())
-        .unwrap();
+        .write(NonZeroU128::new(10_u128.pow(30)).unwrap());
     view.foot_mut().field1_mut().write(10_u32.pow(7));
     view.foot_mut().deep_mut().field1_mut().write(20);
     view.foot_mut()
@@ -280,8 +279,7 @@ fn view_vec_readwrite() {
         view.mid_mut().deep_mut().field1_mut().write(10);
         view.mid_mut().field1_mut().write(1000);
         view.field2_mut()
-            .try_write(NonZeroU128::new(10_u128.pow(30)).unwrap())
-            .unwrap();
+            .write(NonZeroU128::new(10_u128.pow(30)).unwrap());
         view.foot_mut().field1_mut().write(10_u32.pow(7));
         view.foot_mut().deep_mut().field1_mut().write(20);
         view.foot_mut()
