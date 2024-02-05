@@ -201,7 +201,10 @@ pub mod example;
 
 pub use endianness::{BigEndian, Endianness, LittleEndian, NativeEndian};
 pub use fields::{
-    primitive::{FieldCopyAccess, FieldSliceAccess, FieldView, PrimitiveField},
+    primitive::{
+        FieldCopyAccess, FieldSliceAccess, FieldTryCopyAccess, FieldView, NonZeroIsZeroError,
+        PrimitiveField,
+    },
     wrapped::{LayoutAs, WrappedField},
     Field,
 };
@@ -215,7 +218,8 @@ pub use utils::data::Data;
 /// ```
 pub mod prelude {
     pub use super::{
-        BigEndian, Field, FieldCopyAccess, FieldSliceAccess, LittleEndian, NativeEndian,
+        BigEndian, Field, FieldCopyAccess, FieldSliceAccess, FieldTryCopyAccess, LittleEndian,
+        NativeEndian, NonZeroIsZeroError,
     };
     pub use crate::define_layout;
 }

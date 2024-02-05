@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::{Field, FieldCopyAccess};
+use crate::{Field, FieldCopyAccess, FieldTryCopyAccess};
 
 /// A field view represents the field metadata stored in a [Field] plus it stores the underlying
 /// storage data it operates on, either as a reference to a slice `&[u8]`, `&mut [u8]`, or as
@@ -103,5 +103,57 @@ impl<S: AsMut<[u8]>, F: FieldCopyAccess> FieldView<S, F> {
     #[inline(always)]
     pub fn write(&mut self, v: F::HighLevelType) {
         F::write(self.storage.as_mut(), v)
+    }
+}
+impl<S: AsRef<[u8]>, F: FieldTryCopyAccess> FieldView<S, F> {
+    /// Read the field from a given data region, assuming the defined layout, using the [FieldView] API.
+    ///
+    /// # Example
+    /// ```
+    /// use binary_layout::prelude::*;
+    /// use std::num::NonZeroI8;
+    ///
+    /// define_layout!(my_layout, LittleEndian, {
+    ///   //... other fields ...
+    ///   some_integer_field: std::num::NonZeroI8,
+    ///   //... other fields ...
+    /// });
+    ///
+    /// fn func(storage_data: &[u8]) -> Result<NonZeroI8, NonZeroIsZeroError> {
+    ///   let view = my_layout::View::new(storage_data);
+    ///   let read: NonZeroI8 = view.some_integer_field().try_read()?;
+    ///   Ok(read)
+    /// }
+    /// ```
+    #[inline(always)]
+    pub fn try_read(&self) -> Result<F::HighLevelType, F::ReadError> {
+        F::try_read(self.storage.as_ref())
+    }
+}
+impl<S: AsMut<[u8]>, F: FieldTryCopyAccess> FieldView<S, F> {
+    /// Write the field to a given data region, assuming the defined layout, using the [FieldView] API.
+    ///
+    /// # Example
+    /// ```
+    /// use binary_layout::prelude::*;
+    /// use std::num::NonZeroI8;
+    /// use std::convert::Infallible;
+    ///
+    /// define_layout!(my_layout, LittleEndian, {
+    ///   //... other fields ...
+    ///   some_integer_field: std::num::NonZeroI8,
+    ///   //... other fields ...
+    /// });
+    ///
+    /// fn func(storage_data: &mut [u8]) -> Result<(), Infallible> {
+    ///   let mut view = my_layout::View::new(storage_data);
+    ///   let value = NonZeroI8::new(10).unwrap();
+    ///   view.some_integer_field_mut().try_write(value)?;
+    ///   Ok(())
+    /// }
+    /// ```
+    #[inline(always)]
+    pub fn try_write(&mut self, v: F::HighLevelType) -> Result<(), F::WriteError> {
+        F::try_write(self.storage.as_mut(), v)
     }
 }

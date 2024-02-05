@@ -1,6 +1,7 @@
 use binary_layout::{prelude::*, LayoutAs};
 use core::any::{Any, TypeId};
 use core::convert::TryInto;
+use std::num::NonZeroI32;
 
 mod common;
 use common::data_region;
@@ -21,6 +22,7 @@ define_layout!(noslice, LittleEndian, {
     first: Wrapped<i8> as i8,
     second: Wrapped<i64> as i64,
     third: Wrapped<u16> as u16,
+    // TODO Can we allow wrapping NonZero types?
 });
 
 #[test]

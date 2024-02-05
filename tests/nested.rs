@@ -1,5 +1,6 @@
 use binary_layout::prelude::*;
 use std::convert::TryInto;
+use std::num::NonZeroU128;
 
 mod common;
 use common::data_region;
@@ -23,7 +24,7 @@ define_layout!(whole, LittleEndian, {
     head: header::NestedView,
     field1: u64,
     mid: middle::NestedView,
-    field2: u128,
+    field2: NonZeroU128,
     foot: footer::NestedView,
 });
 
@@ -67,7 +68,7 @@ fn view_readonly() {
     );
     assert_eq!(
         u128::from_le_bytes((&data_region(1024, 5)[14..30]).try_into().unwrap()),
-        view.field2().read(),
+        view.field2().try_read().unwrap().get(),
     );
     assert_eq!(
         u32::from_be_bytes((&data_region(1024, 5)[30..34]).try_into().unwrap()),
@@ -113,7 +114,7 @@ fn view_readwrite() {
     );
     assert_eq!(
         u128::from_le_bytes((&data_region(1024, 5)[14..30]).try_into().unwrap()),
-        view.field2().read(),
+        view.field2().try_read().unwrap().get(),
     );
     assert_eq!(
         u32::from_be_bytes((&data_region(1024, 5)[30..34]).try_into().unwrap()),
@@ -130,7 +131,9 @@ fn view_readwrite() {
     view.field1_mut().write(50);
     view.mid_mut().deep_mut().field1_mut().write(10);
     view.mid_mut().field1_mut().write(1000);
-    view.field2_mut().write(10_u128.pow(30));
+    view.field2_mut()
+        .try_write(NonZeroU128::new(10_u128.pow(30)).unwrap())
+        .unwrap();
     view.foot_mut().field1_mut().write(10_u32.pow(7));
     view.foot_mut().deep_mut().field1_mut().write(20);
     view.foot_mut()
@@ -142,7 +145,7 @@ fn view_readwrite() {
     assert_eq!(50, view.field1().read());
     assert_eq!(10, view.mid().deep().field1().read());
     assert_eq!(1000, view.mid().field1().read());
-    assert_eq!(10_u128.pow(30), view.field2().read());
+    assert_eq!(10_u128.pow(30), view.field2().try_read().unwrap().get());
     assert_eq!(10_u32.pow(7), view.foot().field1().read());
     assert_eq!(20, view.foot().deep().field1().read());
     assert_eq!(&data_region(1024, 6)[36..], view.foot().tail());
@@ -212,7 +215,7 @@ fn view_vec_readonly() {
     );
     assert_eq!(
         u128::from_le_bytes((&data_region(1024, 5)[14..30]).try_into().unwrap()),
-        view.field2().read(),
+        view.field2().try_read().unwrap().get(),
     );
     assert_eq!(
         u32::from_be_bytes((&data_region(1024, 5)[30..34]).try_into().unwrap()),
@@ -258,7 +261,7 @@ fn view_vec_readwrite() {
     );
     assert_eq!(
         u128::from_le_bytes((&data_region(1024, 5)[14..30]).try_into().unwrap()),
-        view.field2().read(),
+        view.field2().try_read().unwrap().get(),
     );
     assert_eq!(
         u32::from_be_bytes((&data_region(1024, 5)[30..34]).try_into().unwrap()),
@@ -276,7 +279,9 @@ fn view_vec_readwrite() {
         view.field1_mut().write(50);
         view.mid_mut().deep_mut().field1_mut().write(10);
         view.mid_mut().field1_mut().write(1000);
-        view.field2_mut().write(10_u128.pow(30));
+        view.field2_mut()
+            .try_write(NonZeroU128::new(10_u128.pow(30)).unwrap())
+            .unwrap();
         view.foot_mut().field1_mut().write(10_u32.pow(7));
         view.foot_mut().deep_mut().field1_mut().write(20);
         view.foot_mut()
@@ -290,7 +295,7 @@ fn view_vec_readwrite() {
     assert_eq!(50, view.field1().read());
     assert_eq!(10, view.mid().deep().field1().read());
     assert_eq!(1000, view.mid().field1().read());
-    assert_eq!(10_u128.pow(30), view.field2().read());
+    assert_eq!(10_u128.pow(30), view.field2().try_read().unwrap().get());
     assert_eq!(10_u32.pow(7), view.foot().field1().read());
     assert_eq!(20, view.foot().deep().field1().read());
     assert_eq!(&data_region(1024, 6)[36..], view.foot().tail());

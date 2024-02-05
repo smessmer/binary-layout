@@ -1,6 +1,7 @@
 use binary_layout::prelude::*;
 use core::any::{Any, TypeId};
 use std::convert::TryInto;
+use std::num::NonZeroI32;
 
 mod common;
 use common::data_region;
@@ -10,7 +11,8 @@ define_layout!(withslice, LittleEndian, {
     second: i64,
     third: [u8; 5],
     fourth: u16,
-    fifth: [u8],
+    fifth: NonZeroI32,
+    sixth: [u8],
 });
 
 #[test]
@@ -24,7 +26,9 @@ fn metadata() {
     assert_eq!(14, withslice::fourth::OFFSET);
     assert_eq!(Some(2), withslice::fourth::SIZE);
     assert_eq!(16, withslice::fifth::OFFSET);
-    assert_eq!(None, withslice::fifth::SIZE);
+    assert_eq!(Some(4), withslice::fifth::SIZE);
+    assert_eq!(20, withslice::sixth::OFFSET);
+    assert_eq!(None, withslice::sixth::SIZE);
 }
 
 #[test]
@@ -49,15 +53,23 @@ fn types() {
         withslice::fourth::read(&storage).type_id()
     );
     assert_eq!(
+        TypeId::of::<NonZeroI32>(),
+        withslice::fifth::try_read(&storage).unwrap().type_id(),
+    );
+    assert_eq!(
         TypeId::of::<[u8]>(),
-        withslice::fifth::data(&storage).type_id()
+        withslice::sixth::data(&storage).type_id()
     );
 
     assert_eq!(TypeId::of::<i8>(), view.first().read().type_id());
     assert_eq!(TypeId::of::<i64>(), view.second().read().type_id());
     assert_eq!(TypeId::of::<[u8; 5]>(), view.third().type_id());
     assert_eq!(TypeId::of::<u16>(), view.fourth().read().type_id());
-    assert_eq!(TypeId::of::<[u8]>(), view.fifth().type_id());
+    assert_eq!(
+        TypeId::of::<NonZeroI32>(),
+        view.fifth().try_read().unwrap().type_id()
+    );
+    assert_eq!(TypeId::of::<[u8]>(), view.sixth().type_id());
 }
 
 #[test]
@@ -67,22 +79,27 @@ fn fields() {
     // Test initial data is read correctly
     assert_eq!(5, withslice::third::data(&storage).len());
     assert_eq!(5, withslice::third::data_mut(&mut storage).len());
-    assert_eq!(1024 - 16, withslice::fifth::data(&storage).len());
-    assert_eq!(1024 - 16, withslice::fifth::data_mut(&mut storage).len());
+    assert_eq!(1024 - 20, withslice::sixth::data(&storage).len());
+    assert_eq!(1024 - 20, withslice::sixth::data_mut(&mut storage).len());
 
     // Test data can be written
     withslice::first::write(&mut storage, 60);
     withslice::second::write(&mut storage, -100_000_000_000);
     withslice::third::data_mut(&mut storage).copy_from_slice(&[10, 20, 30, 40, 50]);
     withslice::fourth::write(&mut storage, 1_000);
-    withslice::fifth::data_mut(&mut storage).copy_from_slice(&data_region(1024 - 16, 6));
+    withslice::fifth::try_write(&mut storage, NonZeroI32::new(10i32.pow(8)).unwrap()).unwrap();
+    withslice::sixth::data_mut(&mut storage).copy_from_slice(&data_region(1024 - 20, 6));
 
     // Test reading will return changed data
     assert_eq!(60, withslice::first::read(&storage));
     assert_eq!(-100_000_000_000, withslice::second::read(&storage));
     assert_eq!(&[10, 20, 30, 40, 50], withslice::third::data(&storage));
     assert_eq!(1_000, withslice::fourth::read(&storage));
-    assert_eq!(&data_region(1024 - 16, 6), withslice::fifth::data(&storage));
+    assert_eq!(
+        NonZeroI32::new(10i32.pow(8)).unwrap(),
+        withslice::fifth::try_read(&storage).unwrap()
+    );
+    assert_eq!(&data_region(1024 - 20, 6), withslice::sixth::data(&storage));
 }
 
 #[test]
@@ -104,7 +121,11 @@ fn view_readonly() {
         u16::from_le_bytes((&data_region(1024, 5)[14..16]).try_into().unwrap()),
         view.fourth().read()
     );
-    assert_eq!(&data_region(1024, 5)[16..], view.fifth());
+    assert_eq!(
+        i32::from_le_bytes((&data_region(1024, 5)[16..20]).try_into().unwrap()),
+        view.fifth().try_read().unwrap().get()
+    );
+    assert_eq!(&data_region(1024, 5)[20..], view.sixth());
 
     // Test into_storage will return correct data
     let extracted_storage: &Vec<u8> = view.into_storage();
@@ -130,7 +151,11 @@ fn view_readwrite() {
         u16::from_le_bytes((&data_region(1024, 5)[14..16]).try_into().unwrap()),
         view.fourth().read()
     );
-    assert_eq!(&data_region(1024, 5)[16..], view.fifth());
+    assert_eq!(
+        i32::from_le_bytes((&data_region(1024, 5)[16..20]).try_into().unwrap()),
+        view.fifth().try_read().unwrap().get(),
+    );
+    assert_eq!(&data_region(1024, 5)[20..], view.sixth());
 
     // Test data can be written
     view.first_mut().write(50);
@@ -138,14 +163,21 @@ fn view_readwrite() {
     view.third_mut().copy_from_slice(&[10, 20, 30, 40, 50]);
     view.fourth_mut().write(1000);
     view.fifth_mut()
-        .copy_from_slice(&data_region(1024, 6)[16..]);
+        .try_write(NonZeroI32::new(10i32.pow(8)).unwrap())
+        .unwrap();
+    view.sixth_mut()
+        .copy_from_slice(&data_region(1024, 6)[20..]);
 
     // Test reading will return changed data
     assert_eq!(50, view.first().read());
     assert_eq!(10i64.pow(15), view.second().read());
     assert_eq!(&[10, 20, 30, 40, 50], view.third());
     assert_eq!(1000, view.fourth().read());
-    assert_eq!(&data_region(1024, 6)[16..], view.fifth());
+    assert_eq!(
+        NonZeroI32::new(10i32.pow(8)).unwrap(),
+        view.fifth().try_read().unwrap()
+    );
+    assert_eq!(&data_region(1024, 6)[20..], view.sixth());
 
     // Test into_storage will return correct data
     let extracted_storage = view.into_storage().to_vec();
@@ -162,7 +194,11 @@ fn view_readwrite() {
         1000,
         u16::from_le_bytes((&storage[14..16]).try_into().unwrap())
     );
-    assert_eq!(&data_region(1024, 6)[16..], &storage[16..]);
+    assert_eq!(
+        10i32.pow(8),
+        i32::from_le_bytes((&storage[16..20]).try_into().unwrap()),
+    );
+    assert_eq!(&data_region(1024, 6)[20..], &storage[20..]);
 }
 
 #[test]
@@ -183,7 +219,11 @@ fn view_vec_readonly() {
         u16::from_le_bytes((&data_region(1024, 5)[14..16]).try_into().unwrap()),
         view.fourth().read()
     );
-    assert_eq!(&data_region(1024, 5)[16..], view.fifth());
+    assert_eq!(
+        i32::from_le_bytes((&data_region(1024, 5)[16..20]).try_into().unwrap()),
+        view.fifth().try_read().unwrap().get(),
+    );
+    assert_eq!(&data_region(1024, 5)[20..], view.sixth());
 
     // Test into_storage will return correct data
     let extracted_storage: Vec<u8> = view.into_storage();
@@ -208,7 +248,11 @@ fn view_vec_readwrite() {
         u16::from_le_bytes((&data_region(1024, 5)[14..16]).try_into().unwrap()),
         view.fourth().read()
     );
-    assert_eq!(&data_region(1024, 5)[16..], view.fifth());
+    assert_eq!(
+        i32::from_le_bytes((&data_region(1024, 5)[16..20]).try_into().unwrap()),
+        view.fifth().try_read().unwrap().get(),
+    );
+    assert_eq!(&data_region(1024, 5)[20..], view.sixth());
 
     // Test data can be written
     view.first_mut().write(50);
@@ -216,14 +260,21 @@ fn view_vec_readwrite() {
     view.third_mut().copy_from_slice(&[10, 20, 30, 40, 50]);
     view.fourth_mut().write(1000);
     view.fifth_mut()
-        .copy_from_slice(&data_region(1024, 6)[16..]);
+        .try_write(NonZeroI32::new(10i32.pow(8)).unwrap())
+        .unwrap();
+    view.sixth_mut()
+        .copy_from_slice(&data_region(1024, 6)[20..]);
 
     // Test reading will return changed data
     assert_eq!(50, view.first().read());
     assert_eq!(10i64.pow(15), view.second().read());
     assert_eq!(&[10, 20, 30, 40, 50], view.third());
     assert_eq!(1000, view.fourth().read());
-    assert_eq!(&data_region(1024, 6)[16..], view.fifth());
+    assert_eq!(
+        NonZeroI32::new(10i32.pow(8)).unwrap(),
+        view.fifth().try_read().unwrap()
+    );
+    assert_eq!(&data_region(1024, 6)[20..], view.sixth());
 
     // Test into_storage will return correct data
     let extracted_storage = view.into_storage();
@@ -240,5 +291,9 @@ fn view_vec_readwrite() {
         1000,
         u16::from_le_bytes((&extracted_storage[14..16]).try_into().unwrap())
     );
-    assert_eq!(&data_region(1024, 6)[16..], &extracted_storage[16..]);
+    assert_eq!(
+        10i32.pow(8),
+        i32::from_le_bytes((&extracted_storage[16..20]).try_into().unwrap())
+    );
+    assert_eq!(&data_region(1024, 6)[20..], &extracted_storage[20..]);
 }

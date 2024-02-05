@@ -5,11 +5,13 @@ use crate::endianness::Endianness;
 mod copy_access;
 mod nested_access;
 mod slice_access;
+mod try_copy_access;
 mod view;
 
 pub use copy_access::FieldCopyAccess;
 pub use nested_access::{BorrowingNestedView, NestedViewInfo, OwningNestedView};
 pub use slice_access::FieldSliceAccess;
+pub use try_copy_access::{FieldTryCopyAccess, NonZeroIsZeroError};
 pub use view::FieldView;
 
 /// A [PrimitiveField] is a [Field](crate::Field) that directly represents a primitive type like [u8], [i16], ...
