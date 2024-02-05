@@ -2,7 +2,7 @@ use super::super::{Field, StorageIntoFieldView, StorageToFieldView};
 use super::view::FieldView;
 use super::PrimitiveField;
 use crate::endianness::{EndianKind, Endianness};
-use std::convert::Infallible;
+use core::convert::Infallible;
 
 // TODO Rename `FieldTryCopyAccess` back to `FieldCopyAccess` and fix changelog.
 // TODO Rename module back to `copy_access` and split it into several submodules
@@ -30,11 +30,11 @@ pub trait FieldTryCopyAccess: Field {
     /// # Example:
     /// ```
     /// use binary_layout::prelude::*;
-    /// use std::num::NonZeroU16;
+    /// use core::num::NonZeroU16;
     ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
-    ///   some_integer_field: std::num::NonZeroU16,
+    ///   some_integer_field: core::num::NonZeroU16,
     ///   //... other fields ...
     /// });
     ///
@@ -51,12 +51,12 @@ pub trait FieldTryCopyAccess: Field {
     ///
     /// ```
     /// use binary_layout::prelude::*;
-    /// use std::num::NonZeroU16;
-    /// use std::convert::Infallible;
+    /// use core::num::NonZeroU16;
+    /// use core::convert::Infallible;
     ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
-    ///   some_integer_field: std::num::NonZeroU16,
+    ///   some_integer_field: core::num::NonZeroU16,
     ///   //... other fields ...
     /// });
     ///
@@ -170,7 +170,7 @@ macro_rules! int_field {
 
                 ```
                 use binary_layout::prelude::*;
-                use std::convert::Infallible;
+                use core::convert::Infallible;
 
                 define_layout!(my_layout, LittleEndian, {
                     //... other fields ...
@@ -267,7 +267,7 @@ macro_rules! nonzero_int_field {
 
                 ```
                 use binary_layout::prelude::*;
-                use std::convert::Infallible;
+                use core::convert::Infallible;
 
                 define_layout!(my_layout, LittleEndian, {
                     //... other fields ...
@@ -304,24 +304,25 @@ macro_rules! nonzero_int_field {
 #[derive(Debug)]
 pub struct NonZeroIsZeroError(pub(crate) ());
 
-impl std::fmt::Display for NonZeroIsZeroError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for NonZeroIsZeroError {
+    fn fmt(&self, fmt: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(fmt, "NonZeroIsZeroError")
     }
 }
 
+#[cfg(feature = "std")]
 impl std::error::Error for NonZeroIsZeroError {}
 
-nonzero_int_field!(std::num::NonZeroI8, i8);
-nonzero_int_field!(std::num::NonZeroI16, i16);
-nonzero_int_field!(std::num::NonZeroI32, i32);
-nonzero_int_field!(std::num::NonZeroI64, i64);
-nonzero_int_field!(std::num::NonZeroI128, i128);
-nonzero_int_field!(std::num::NonZeroU8, u8);
-nonzero_int_field!(std::num::NonZeroU16, u16);
-nonzero_int_field!(std::num::NonZeroU32, u32);
-nonzero_int_field!(std::num::NonZeroU64, u64);
-nonzero_int_field!(std::num::NonZeroU128, u128);
+nonzero_int_field!(core::num::NonZeroI8, i8);
+nonzero_int_field!(core::num::NonZeroI16, i16);
+nonzero_int_field!(core::num::NonZeroI32, i32);
+nonzero_int_field!(core::num::NonZeroI64, i64);
+nonzero_int_field!(core::num::NonZeroI128, i128);
+nonzero_int_field!(core::num::NonZeroU8, u8);
+nonzero_int_field!(core::num::NonZeroU16, u16);
+nonzero_int_field!(core::num::NonZeroU32, u32);
+nonzero_int_field!(core::num::NonZeroU64, u64);
+nonzero_int_field!(core::num::NonZeroU128, u128);
 
 macro_rules! float_field {
     ($type:ty) => {
@@ -341,7 +342,7 @@ macro_rules! float_field {
 
                 ```
                 use binary_layout::prelude::*;
-                use std::convert::Infallible;
+                use core::convert::Infallible;
 
                 define_layout!(my_layout, LittleEndian, {
                     //... other fields ...
@@ -548,7 +549,7 @@ mod tests {
         };
     }
 
-    use std::num::{
+    use core::num::{
         NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroU128, NonZeroU16,
         NonZeroU32, NonZeroU64, NonZeroU8,
     };

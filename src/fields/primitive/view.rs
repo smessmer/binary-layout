@@ -111,11 +111,11 @@ impl<S: AsRef<[u8]>, F: FieldTryCopyAccess> FieldView<S, F> {
     /// # Example
     /// ```
     /// use binary_layout::prelude::*;
-    /// use std::num::NonZeroI8;
+    /// use core::num::NonZeroI8;
     ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
-    ///   some_integer_field: std::num::NonZeroI8,
+    ///   some_integer_field: core::num::NonZeroI8,
     ///   //... other fields ...
     /// });
     ///
@@ -136,12 +136,12 @@ impl<S: AsMut<[u8]>, F: FieldTryCopyAccess> FieldView<S, F> {
     /// # Example
     /// ```
     /// use binary_layout::prelude::*;
-    /// use std::num::NonZeroI8;
-    /// use std::convert::Infallible;
+    /// use core::num::NonZeroI8;
+    /// use core::convert::Infallible;
     ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
-    ///   some_integer_field: std::num::NonZeroI8,
+    ///   some_integer_field: core::num::NonZeroI8,
     ///   //... other fields ...
     /// });
     ///

@@ -161,7 +161,7 @@
 //!
 //! ```rust
 //! use binary_layout::prelude::*;
-//! use std::convert::TryInto;
+//! use core::convert::TryInto;
 //!
 //! define_layout!(deep_nesting, LittleEndian, {
 //!     field1: u16,
@@ -210,7 +210,7 @@ pub use fields::{
 };
 pub use utils::data::Data;
 
-// TODO Remove std everywhere in favor of core and make sure we have a nostd test
+// TODO Add a CI test for nostd
 
 /// Import this to get everything into scope that you need for defining and using layouts.
 ///

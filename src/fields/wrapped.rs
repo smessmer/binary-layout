@@ -21,7 +21,7 @@ use super::{
 /// # Example
 /// ```
 /// use binary_layout::{prelude::*, LayoutAs};
-/// use std::convert::Infallible;
+/// use core::convert::Infallible;
 ///
 /// struct MyIdType(u64);
 /// impl LayoutAs<u64> for MyIdType {
@@ -46,10 +46,10 @@ use super::{
 /// ```
 pub trait LayoutAs<U>: Sized {
     /// See [FieldTryCopyAccess::ReadError].
-    /// Set this to [std::convert::Infallible] if reading cannot fail.
+    /// Set this to [core::convert::Infallible] if reading cannot fail.
     type ReadError;
     /// See [FieldTryCopyAccess::WriteError].
-    /// Set this to [std::convert::Infallible] if writing cannot fail.
+    /// Set this to [core::convert::Infallible] if writing cannot fail.
     type WriteError;
 
     /// Implement this to define how the custom type is constructed from the underlying type
@@ -81,7 +81,7 @@ impl IsInfallible for WrappedFieldError<Infallible, Infallible> {}
 /// # Example (reading/writing cannot throw errors):
 /// ```
 /// use binary_layout::{prelude::*, LayoutAs};
-/// use std::convert::Infallible;
+/// use core::convert::Infallible;
 ///
 /// struct MyIdType(u64);
 /// impl LayoutAs<u64> for MyIdType {
@@ -122,7 +122,7 @@ impl IsInfallible for WrappedFieldError<Infallible, Infallible> {}
 /// # Example (reading/writing can throw errors):
 /// ```
 /// use binary_layout::{prelude::*, WrappedFieldError, LayoutAs};
-/// use std::convert::Infallible;
+/// use core::convert::Infallible;
 ///
 /// struct MyIdType(u64);
 /// impl LayoutAs<u64> for MyIdType {
@@ -236,7 +236,7 @@ impl<U, T: LayoutAs<U>, F: FieldTryCopyAccess<HighLevelType = U>> FieldTryCopyAc
     /// # Example:
     /// ```
     /// use binary_layout::{prelude::*, LayoutAs};
-    /// use std::convert::Infallible;
+    /// use core::convert::Infallible;
     ///
     /// #[derive(Debug, PartialEq, Eq)]
     /// struct MyIdType(u64);
