@@ -1,12 +1,12 @@
 use core::convert::Infallible;
 
-// TODO Docs
-
 pub(crate) trait IsInfallible {}
 
 impl IsInfallible for Infallible {}
 
+/// TODO Docs
 pub trait InfallibleResultExt<T> {
+    /// TODO Docs
     fn infallible_unwrap(self) -> T;
 }
 

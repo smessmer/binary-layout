@@ -208,7 +208,7 @@ pub use fields::{
     wrapped::{LayoutAs, WrappedField, WrappedFieldError},
     Field,
 };
-pub use utils::data::Data;
+pub use utils::{data::Data, infallible::InfallibleResultExt};
 
 // TODO Add a CI test for nostd
 
@@ -221,7 +221,7 @@ pub use utils::data::Data;
 pub mod prelude {
     pub use super::{
         BigEndian, Field, FieldCopyAccess, FieldReadExt, FieldSliceAccess, FieldWriteExt,
-        LittleEndian, NativeEndian, NonZeroIsZeroError,
+        InfallibleResultExt, LittleEndian, NativeEndian, NonZeroIsZeroError,
     };
     pub use crate::define_layout;
 }
