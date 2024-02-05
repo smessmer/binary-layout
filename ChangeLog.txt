@@ -1,13 +1,16 @@
 4.0.0 (unreleased)
 ------
-- Add `FieldTryCopyAccess` trait with `try_read()` and `try_write()`. This can be used for types that can throw errors when reading or writing them.
-- Support `std::num::NonZeroXXX` data types, using `FieldTryCopyAccess::try_read()` to throw an error if a zero is read.
-- To get access to `read()` and `write()` methods, you now need to have the `FieldReadExt` and `FieldWriteExt` traits in scope.
-  Previously, it was enough to have `FieldCopyAccess` in scope but this is no longer the case.
-  If you do `use binary_layout::prelude::*`, you don't need to change anything. But if you used `use binary_layout::FieldCopyAccess` instead, you now
+- The `FieldCopyAccess` trait now has `try_read()` and `try_write()` instead of `read()` and `write()`.
+  This can be used for types that can throw errors when reading or writing them.
+  The `read()` and `write()` methods are still available for data types that don't throw errors,
+  but they are now part of the `FieldReadExt` and `FieldWriteExt` traits and you need to have those traits in scope.
+  If you use `use binary_layout::prelude::*`, then you don't need to change anything. But if you used `use binary_layout::FieldCopyAccess` instead, you now
   need to add `FieldReadExt` and `FieldWriteExt` to it.
+- Support `std::num::NonZeroXXX` data types, using `FieldTryCopyAccess::try_read()` to throw an error if a zero is read.
 - Types implementing `LayoutAs` now need to be `Sized`.
 - The `LayoutAs` trait changed. You now need to implement `try_read` and `try_write` instead of `read` and `write` and the new methods allow for errors being thrown.
+  If your `LayoutAs` implementation does not throw errors, return `Result<_, core::convert::Infallible>` to indicate that and your type
+  will be accessible via the `read()` and `write()` methods. If your error type is anything else, then your type will be accessible via `try_read()` and `try_write()`.
 
 3.3.0
 ------

@@ -1,13 +1,22 @@
-use super::super::Field;
-use super::try_copy_access::FieldTryCopyAccess;
-use crate::utils::infallible::{InfallibleResultExt, IsInfallible};
+use super::super::{Field, StorageIntoFieldView, StorageToFieldView};
+use super::view::FieldView;
+use super::PrimitiveField;
+use crate::endianness::{EndianKind, Endianness};
+use core::convert::Infallible;
 
-/// This extension trait adds a [FieldReadExt::read] method to any type
-/// supporting [FieldTryCopyAccess::try_read] that has an implementation
-/// that cannot throw errors. This is a convenience function so that callers
-/// can just call [FieldReadExt::read] instead of having to call [FieldTryCopyAccess::try_read]
-/// and then calling [Result::unwrap] on the returned value.
-pub trait FieldReadExt: Field {
+// TODO Split into submodules
+
+/// This trait is implemented for fields with "try copy access",
+/// i.e. fields that read/write data by copying it from/to the
+/// binary blob, but where reading or writing can fail.
+/// Examples of this are primitive types like NonZeroU8, NonZeroI32, ...
+pub trait FieldCopyAccess: Field {
+    /// Error type that can be thrown from [FieldCopyAccess::read]. You can set this to [Infallible] if the function does not throw an error.
+    type ReadError;
+
+    /// Error type that can be thrown from [FieldCopyAccess::write]. You can set this to [Infallible] if the function does not throw an error.
+    type WriteError;
+
     /// The data type that is returned from read calls and has to be
     /// passed in to write calls. This can be different from the primitive
     /// type used in the binary blob, since that primitive type can be
@@ -20,32 +29,20 @@ pub trait FieldReadExt: Field {
     /// # Example:
     /// ```
     /// use binary_layout::prelude::*;
+    /// use core::num::NonZeroU16;
     ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
-    ///   some_integer_field: u16,
+    ///   some_integer_field: core::num::NonZeroU16,
     ///   //... other fields ...
     /// });
     ///
-    /// fn func(storage_data: &[u8]) {
-    ///   let read: u16 = my_layout::some_integer_field::read(storage_data);
+    /// fn func(storage_data: &[u8]) -> Result<NonZeroU16, NonZeroIsZeroError> {
+    ///   let read: NonZeroU16 = my_layout::some_integer_field::try_read(storage_data)?;
+    ///   Ok(read)
     /// }
     /// ```
-    fn read(storage: &[u8]) -> Self::HighLevelType;
-}
-
-/// This extension trait adds a [FieldWriteExt::write] method to any type
-/// supporting [FieldTryCopyAccess::try_write] that has an implementation
-/// that cannot throw errors. This is a convenience function so that callers
-/// can just call [FieldWriteExt::write] instead of having to call [FieldTryCopyAccess::try_write]
-/// and then calling [Result::unwrap] on the returned value.
-pub trait FieldWriteExt: Field {
-    /// The data type that is returned from read calls and has to be
-    /// passed in to write calls. This can be different from the primitive
-    /// type used in the binary blob, since that primitive type can be
-    /// wrapped (see [WrappedField](crate::WrappedField) ) into a high level type before being returned from read
-    /// calls (or vice versa unwrapped when writing).
-    type HighLevelType;
+    fn try_read(storage: &[u8]) -> Result<Self::HighLevelType, Self::ReadError>;
 
     /// Write the field to a given data region, assuming the defined layout, using the [Field] API.
     ///
@@ -53,54 +50,459 @@ pub trait FieldWriteExt: Field {
     ///
     /// ```
     /// use binary_layout::prelude::*;
+    /// use core::num::NonZeroU16;
+    /// use core::convert::Infallible;
     ///
     /// define_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
-    ///   some_integer_field: u16,
+    ///   some_integer_field: core::num::NonZeroU16,
     ///   //... other fields ...
     /// });
     ///
-    /// fn func(storage_data: &mut [u8]) {
-    ///   my_layout::some_integer_field::write(storage_data, 10);
+    /// fn func(storage_data: &mut [u8]) -> Result<(), Infallible> {
+    ///   let value = NonZeroU16::new(10).unwrap();
+    ///   my_layout::some_integer_field::try_write(storage_data, value)?;
+    ///   Ok(())
     /// }
     /// ```
-    fn write(storage: &mut [u8], v: Self::HighLevelType);
+    fn try_write(storage: &mut [u8], v: Self::HighLevelType) -> Result<(), Self::WriteError>;
 }
 
-impl<F> FieldReadExt for F
-where
-    F: FieldTryCopyAccess,
-    F::ReadError: IsInfallible,
-{
-    type HighLevelType = F::HighLevelType;
+macro_rules! impl_field_traits {
+    ($type: ty) => {
+        impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<$type, E, OFFSET_> {
+            /// See [Field::Endian]
+            type Endian = E;
+            /// See [Field::OFFSET]
+            const OFFSET: usize = OFFSET_;
+            /// See [Field::SIZE]
+            const SIZE: Option<usize> = Some(core::mem::size_of::<$type>());
+        }
 
-    /// This implements [FieldCopyAccess::read] for any type that implements [FieldTryCopyAccess::try_read]
-    /// if the read cannot throw an error.
-    /// See [FieldCopyAccess::read] and [FieldTryCopyAccess::try_read].
-    #[inline(always)]
-    fn read(storage: &[u8]) -> Self::HighLevelType {
-        F::try_read(storage).infallible_unwrap()
+        impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a [u8]>
+            for PrimitiveField<$type, E, OFFSET_>
+        {
+            type View = FieldView<&'a [u8], Self>;
+
+            #[inline(always)]
+            fn view(storage: &'a [u8]) -> Self::View {
+                Self::View::new(storage)
+            }
+        }
+
+        impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a mut [u8]>
+            for PrimitiveField<$type, E, OFFSET_>
+        {
+            type View = FieldView<&'a mut [u8], Self>;
+
+            #[inline(always)]
+            fn view(storage: &'a mut [u8]) -> Self::View {
+                Self::View::new(storage)
+            }
+        }
+
+        impl<S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> StorageIntoFieldView<S>
+            for PrimitiveField<$type, E, OFFSET_>
+        {
+            type View = FieldView<S, Self>;
+
+            #[inline(always)]
+            fn into_view(storage: S) -> Self::View {
+                Self::View::new(storage)
+            }
+        }
+    };
+}
+
+macro_rules! int_field {
+    ($type:ty) => {
+        impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<$type, E, OFFSET_> {
+            /// See [FieldCopyAccess::ReadError]
+            type ReadError = Infallible;
+            /// See [FieldCopyAccess::WriteError]
+            type WriteError = Infallible;
+            /// See [FieldCopyAccess::HighLevelType]
+            type HighLevelType = $type;
+
+            doc_comment::doc_comment! {
+                concat! {"
+                Read the integer field from a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_integer_field: ", stringify!($type), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &[u8]) -> ",stringify!($type), " {
+                    let read: ", stringify!($type), " = my_layout::some_integer_field::try_read(storage_data).unwrap();
+                    read
+                }
+                ```
+                "},
+                #[inline(always)]
+                fn try_read(storage: &[u8]) -> Result<$type, Infallible> {
+                    // TODO Don't initialize memory
+                    let mut value = [0; core::mem::size_of::<$type>()];
+                    value.copy_from_slice(
+                        &storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
+                    );
+                    let value = match E::KIND {
+                        EndianKind::Big => <$type>::from_be_bytes(value),
+                        EndianKind::Little => <$type>::from_le_bytes(value),
+                        EndianKind::Native => <$type>::from_ne_bytes(value)
+                    };
+                    Ok(value)
+                }
+            }
+
+            doc_comment::doc_comment! {
+                concat! {"
+                Write the integer field to a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+                use core::convert::Infallible;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_integer_field: ", stringify!($type), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &mut [u8]) {
+                    my_layout::some_integer_field::try_write(storage_data, 10).unwrap();
+                }
+                ```
+                "},
+                #[inline(always)]
+                fn try_write(storage: &mut [u8], value: $type) -> Result<(), Infallible> {
+                    let value_as_bytes = match E::KIND {
+                        EndianKind::Big => value.to_be_bytes(),
+                        EndianKind::Little => value.to_le_bytes(),
+                        EndianKind::Native => value.to_ne_bytes(),
+                    };
+                    storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
+                        .copy_from_slice(&value_as_bytes);
+                    Ok(())
+                }
+            }
+        }
+
+        impl_field_traits!($type);
+    };
+}
+
+int_field!(i8);
+int_field!(i16);
+int_field!(i32);
+int_field!(i64);
+int_field!(i128);
+int_field!(u8);
+int_field!(u16);
+int_field!(u32);
+int_field!(u64);
+int_field!(u128);
+
+macro_rules! nonzero_int_field {
+    ($type:ty, $zero_type:ty) => {
+        impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<$type, E, OFFSET_> {
+            /// See [FieldCopyAccess::ReadError]
+            type ReadError = NonZeroIsZeroError;
+            /// See [FieldCopyAccess::WriteError]
+            type WriteError = Infallible;
+            /// See [FieldCopyAccess::HighLevelType]
+            type HighLevelType = $type;
+
+            doc_comment::doc_comment! {
+                concat! {"
+                Read the integer field from a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_integer_field: ", stringify!($type), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &[u8]) -> Result<",stringify!($type), ", NonZeroIsZeroError>{
+                    let read: ", stringify!($type), " = my_layout::some_integer_field::try_read(storage_data)?;
+                    Ok(read)
+                }
+                ```
+                "},
+                #[inline(always)]
+                fn try_read(storage: &[u8]) -> Result<$type, NonZeroIsZeroError> {
+                    // TODO Don't initialize memory
+                    let mut value = [0; core::mem::size_of::<$type>()];
+                    value.copy_from_slice(
+                        &storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
+                    );
+                    let value = match E::KIND {
+                        EndianKind::Big => <$zero_type>::from_be_bytes(value),
+                        EndianKind::Little => <$zero_type>::from_le_bytes(value),
+                        EndianKind::Native => <$zero_type>::from_ne_bytes(value)
+                    };
+                    <$type>::new(value).ok_or(NonZeroIsZeroError(()))
+                }
+            }
+
+            doc_comment::doc_comment! {
+                concat! {"
+                Write the integer field to a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+                use core::convert::Infallible;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_integer_field: ", stringify!($type), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &mut [u8]) {
+                    let value = ", stringify!($type), "::new(10).unwrap();
+                    my_layout::some_integer_field::try_write(storage_data, value).unwrap();
+                }
+                ```
+                "},
+                #[inline(always)]
+                fn try_write(storage: &mut [u8], value: $type) -> Result<(), Infallible> {
+                    let value_as_bytes = match E::KIND {
+                        EndianKind::Big => value.get().to_be_bytes(),
+                        EndianKind::Little => value.get().to_le_bytes(),
+                        EndianKind::Native => value.get().to_ne_bytes(),
+                    };
+                    storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
+                        .copy_from_slice(&value_as_bytes);
+                    Ok(())
+                }
+            }
+        }
+
+        impl_field_traits!($type);
+    };
+}
+
+/// This error is thrown when trying to read a non-zero integer type, e.g. [NonZeroU32],
+/// but the data being read was actually zero.
+#[derive(Debug)]
+pub struct NonZeroIsZeroError(pub(crate) ());
+
+impl core::fmt::Display for NonZeroIsZeroError {
+    fn fmt(&self, fmt: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(fmt, "NonZeroIsZeroError")
     }
 }
 
-// TODO Add tests for types that can only fail when reading, only fail when writing, fail when doing either.
-//      For both, view API and field API.
+#[cfg(feature = "std")]
+impl std::error::Error for NonZeroIsZeroError {}
 
-impl<F> FieldWriteExt for F
-where
-    F: FieldTryCopyAccess,
-    F::WriteError: IsInfallible,
-{
-    type HighLevelType = F::HighLevelType;
+nonzero_int_field!(core::num::NonZeroI8, i8);
+nonzero_int_field!(core::num::NonZeroI16, i16);
+nonzero_int_field!(core::num::NonZeroI32, i32);
+nonzero_int_field!(core::num::NonZeroI64, i64);
+nonzero_int_field!(core::num::NonZeroI128, i128);
+nonzero_int_field!(core::num::NonZeroU8, u8);
+nonzero_int_field!(core::num::NonZeroU16, u16);
+nonzero_int_field!(core::num::NonZeroU32, u32);
+nonzero_int_field!(core::num::NonZeroU64, u64);
+nonzero_int_field!(core::num::NonZeroU128, u128);
 
-    /// This implements [FieldCopyAccess::write] for any type that implements [FieldTryCopyAccess::try_write]
-    /// if the write cannot throw an error.
-    /// See [FieldCopyAccess::write] and [FieldTryCopyAccess::try_write].
-    #[inline(always)]
-    fn write(storage: &mut [u8], value: Self::HighLevelType) {
-        F::try_write(storage, value).infallible_unwrap()
+macro_rules! float_field {
+    ($type:ty) => {
+        impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<$type, E, OFFSET_> {
+            /// See [FieldCopyAccess::ReadError]
+            type ReadError = Infallible;
+            /// See [FieldCopyAccess::WriteError]
+            type WriteError = Infallible;
+            /// See [FieldCopyAccess::HighLevelType]
+            type HighLevelType = $type;
+
+            doc_comment::doc_comment! {
+                concat! {"
+                Read the float field from a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+                use core::convert::Infallible;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_float_field: ", stringify!($type), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &[u8]) -> ", stringify!($type), " {
+                    let read: ", stringify!($type), " = my_layout::some_float_field::try_read(storage_data).unwrap();
+                    read
+                }
+                ```
+
+                # WARNING
+
+                At it's core, this method uses [", stringify!($type), "::from_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.from_bits),
+                which has some weird behavior around signaling and non-signaling `NaN` values.  Read the
+                documentation for [", stringify!($type), "::from_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.from_bits) which
+                explains the situation.
+                "},
+                #[inline(always)]
+                fn try_read(storage: &[u8]) -> Result<$type, Infallible> {
+                    // TODO Don't initialize memory
+                    let mut value = [0; core::mem::size_of::<$type>()];
+                    value.copy_from_slice(
+                        &storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
+                    );
+                    let value = match E::KIND {
+                        EndianKind::Big => <$type>::from_be_bytes(value),
+                        EndianKind::Little => <$type>::from_le_bytes(value),
+                        EndianKind::Native => <$type>::from_ne_bytes(value),
+                    };
+                    Ok(value)
+                }
+            }
+
+            doc_comment::doc_comment! {
+                concat! {"
+                Write the float field to a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_float_field: ", stringify!($type), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &mut [u8]) {
+                    my_layout::some_float_field::try_write(storage_data, 10.0).unwrap();
+                }
+                ```
+
+                # WARNING
+
+                At it's core, this method uses [", stringify!($type), "::to_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.to_bits),
+                which has some weird behavior around signaling and non-signaling `NaN` values.  Read the
+                documentation for [", stringify!($type), "::to_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.to_bits) which
+                explains the situation.
+                "},
+                #[inline(always)]
+                fn try_write(storage: &mut [u8], value: $type) -> Result<(), Infallible> {
+                    let value_as_bytes = match E::KIND {
+                        EndianKind::Big => value.to_be_bytes(),
+                        EndianKind::Little => value.to_le_bytes(),
+                        EndianKind::Native => value.to_ne_bytes(),
+                    };
+                    storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
+                        .copy_from_slice(&value_as_bytes);
+                    Ok(())
+                }
+            }
+        }
+
+        impl_field_traits!($type);
+    };
+}
+
+float_field!(f32);
+float_field!(f64);
+
+impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<(), E, OFFSET_> {
+    /// See [FieldCopyAccess::ReadError]
+    type ReadError = Infallible;
+    /// See [FieldCopyAccess::WriteError]
+    type WriteError = Infallible;
+    /// See [FieldCopyAccess::HighLevelType]
+    type HighLevelType = ();
+
+    doc_comment::doc_comment! {
+        concat! {"
+                'Read' the `", stringify!(()), "`-typed field from a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_zst_field: ", stringify!(()), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &[u8]) {
+                    let read: ", stringify!(()), " = my_layout::some_zst_field::try_read(storage_data).unwrap();
+                    read
+                }
+                ```
+
+                In reality, this method doesn't do any work; `",
+                stringify!(()), "` is a zero-sized type, so there's no work to
+                do. This implementation exists solely to make writing derive
+                macros simpler.
+                "},
+        #[inline(always)]
+        #[allow(clippy::unused_unit)] // I don't want to remove this as it's part of the trait.
+        fn try_read(_storage: &[u8]) -> Result<(), Infallible> {
+            Ok(())
+        }
+    }
+
+    doc_comment::doc_comment! {
+        concat! {"
+                'Write' the `", stringify!(()), "`-typed field to a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_zst_field: ", stringify!(()), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &mut [u8]) {
+                    my_layout::some_zst_field::try_write(storage_data, ()).unwrap();
+                }
+                ```
+
+                # WARNING
+
+                In reality, this method doesn't do any work; `",
+                stringify!(()), "` is a zero-sized type, so there's no work to
+                do. This implementation exists solely to make writing derive
+                macros simpler.
+                "},
+        #[inline(always)]
+        #[allow(clippy::unused_unit)] // I don't want to remove this as it's part of the trait.
+        fn try_write(_storage: &mut [u8], _value: ()) -> Result<(), Infallible> {
+            Ok(())
+        }
     }
 }
+
+impl_field_traits!(());
 
 #[cfg(test)]
 mod tests {
@@ -108,29 +510,34 @@ mod tests {
     use crate::prelude::*;
     use crate::PrimitiveField;
 
-    macro_rules! test_primitive_copy_access {
-        ($type:ty, $expected_size:expr, $value1:expr, $value2:expr) => {
-            test_primitive_copy_access!(@case, $type, $expected_size, $value1, $value2, little, LittleEndian, from_le_bytes);
-            test_primitive_copy_access!(@case, $type, $expected_size, $value1, $value2, big, BigEndian, from_be_bytes);
-            test_primitive_copy_access!(@case, $type, $expected_size, $value1, $value2, native, NativeEndian, from_ne_bytes);
+    macro_rules! test_nonzero_try_copy_access {
+        ($type:ty, $underlying_type:ty, $expected_size:expr, $value1:expr, $value2:expr) => {
+            test_nonzero_try_copy_access!(@case, $type, $underlying_type, $expected_size, $value1, $value2, little, LittleEndian, from_le_bytes);
+            test_nonzero_try_copy_access!(@case, $type, $underlying_type, $expected_size, $value1, $value2, big, BigEndian, from_be_bytes);
+            test_nonzero_try_copy_access!(@case, $type, $underlying_type, $expected_size, $value1, $value2, native, NativeEndian, from_ne_bytes);
         };
-        (@case, $type:ty, $expected_size:expr, $value1:expr, $value2: expr, $endian:ident, $endian_type:ty, $endian_fn:ident) => {
+        (@case, $type:ty, $underlying_type:ty, $expected_size:expr, $value1:expr, $value2: expr, $endian:ident, $endian_type:ty, $endian_fn:ident) => {
             $crate::internal::paste! {
+                #[allow(non_snake_case)]
                 #[test]
                 fn [<test_ $type _ $endian endian>]() {
                     let mut storage = vec![0; 1024];
 
+                    let value1 = <$type>::new($value1).unwrap();
+                    let value2 = <$type>::new($value2).unwrap();
+
                     type Field1 = PrimitiveField<$type, $endian_type, 5>;
                     type Field2 = PrimitiveField<$type, $endian_type, 123>;
 
-                    Field1::write(&mut storage, $value1);
-                    Field2::write(&mut storage, $value2);
+                    Field1::write(&mut storage, value1);
+                    Field2::write(&mut storage, value2);
 
-                    assert_eq!($value1, Field1::read(&storage));
-                    assert_eq!($value2, Field2::read(&storage));
+                    // TODO Test reading a zero
+                    assert_eq!(value1, Field1::try_read(&storage).unwrap());
+                    assert_eq!(value2, Field2::try_read(&storage).unwrap());
 
-                    assert_eq!($value1, $type::$endian_fn((&storage[5..(5+$expected_size)]).try_into().unwrap()));
-                    assert_eq!($value2, $type::$endian_fn((&storage[123..(123+$expected_size)]).try_into().unwrap()));
+                    assert_eq!(value1, $type::new($underlying_type::$endian_fn((&storage[5..(5+$expected_size)]).try_into().unwrap())).unwrap());
+                    assert_eq!(value2, $type::new($underlying_type::$endian_fn((&storage[123..(123+$expected_size)]).try_into().unwrap())).unwrap());
 
                     assert_eq!(Some($expected_size), Field1::SIZE);
                     assert_eq!(5, Field1::OFFSET);
@@ -141,52 +548,20 @@ mod tests {
         };
     }
 
-    test_primitive_copy_access!(i8, 1, 50, -20);
-    test_primitive_copy_access!(i16, 2, 500, -2000);
-    test_primitive_copy_access!(i32, 4, 10i32.pow(8), -(10i32.pow(7)));
-    test_primitive_copy_access!(i64, 8, 10i64.pow(15), -(10i64.pow(14)));
-    test_primitive_copy_access!(i128, 16, 10i128.pow(30), -(10i128.pow(28)));
+    use core::num::{
+        NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroU128, NonZeroU16,
+        NonZeroU32, NonZeroU64, NonZeroU8,
+    };
 
-    test_primitive_copy_access!(u8, 1, 50, 20);
-    test_primitive_copy_access!(u16, 2, 500, 2000);
-    test_primitive_copy_access!(u32, 4, 10u32.pow(8), (10u32.pow(7)));
-    test_primitive_copy_access!(u64, 8, 10u64.pow(15), (10u64.pow(14)));
-    test_primitive_copy_access!(u128, 16, 10u128.pow(30), (10u128.pow(28)));
+    test_nonzero_try_copy_access!(NonZeroI8, i8, 1, 50, -20);
+    test_nonzero_try_copy_access!(NonZeroI16, i16, 2, 500, -2000);
+    test_nonzero_try_copy_access!(NonZeroI32, i32, 4, 10i32.pow(8), -(10i32.pow(7)));
+    test_nonzero_try_copy_access!(NonZeroI64, i64, 8, 10i64.pow(15), -(10i64.pow(14)));
+    test_nonzero_try_copy_access!(NonZeroI128, i128, 16, 10i128.pow(30), -(10i128.pow(28)));
 
-    test_primitive_copy_access!(f32, 4, 10f32.powf(8.31), -(10f32.powf(7.31)));
-    test_primitive_copy_access!(f64, 8, 10f64.powf(15.31), -(10f64.powf(15.31)));
-
-    macro_rules! test_unit_copy_access {
-        ($endian:ident, $endian_type:ty) => {
-            $crate::internal::paste! {
-                #[allow(clippy::unit_cmp)]
-                #[test]
-                fn [<test_unit_ $endian endian>]() {
-                    let mut storage = vec![0; 1024];
-
-                    type Field1 = PrimitiveField<(), $endian_type, 5>;
-                    type Field2 = PrimitiveField<(), $endian_type, 123>;
-
-                    Field1::write(&mut storage, ());
-                    Field2::write(&mut storage, ());
-
-                    assert_eq!((), Field1::read(&storage));
-                    assert_eq!((), Field2::read(&storage));
-
-                    assert_eq!(Some(0), Field1::SIZE);
-                    assert_eq!(5, Field1::OFFSET);
-                    assert_eq!(Some(0), Field2::SIZE);
-                    assert_eq!(123, Field2::OFFSET);
-
-                    // Zero-sized types do not mutate the storage, so it should remain
-                    // unchanged for all of time.
-                    assert_eq!(storage, vec![0; 1024]);
-                }
-            }
-        };
-    }
-
-    test_unit_copy_access!(little, LittleEndian);
-    test_unit_copy_access!(big, BigEndian);
-    test_unit_copy_access!(native, NativeEndian);
+    test_nonzero_try_copy_access!(NonZeroU8, u8, 1, 50, 20);
+    test_nonzero_try_copy_access!(NonZeroU16, u16, 2, 500, 2000);
+    test_nonzero_try_copy_access!(NonZeroU32, u32, 4, 10u32.pow(8), (10u32.pow(7)));
+    test_nonzero_try_copy_access!(NonZeroU64, u64, 8, 10u64.pow(15), (10u64.pow(14)));
+    test_nonzero_try_copy_access!(NonZeroU128, u128, 16, 10u128.pow(30), (10u128.pow(28)));
 }

@@ -6,7 +6,7 @@ use thiserror::Error;
 use crate::utils::infallible::IsInfallible;
 
 use super::{
-    primitive::{FieldTryCopyAccess, FieldView},
+    primitive::{FieldCopyAccess, FieldView},
     Field, StorageIntoFieldView, StorageToFieldView,
 };
 
@@ -45,10 +45,10 @@ use super::{
 /// # fn main() {}
 /// ```
 pub trait LayoutAs<U>: Sized {
-    /// See [FieldTryCopyAccess::ReadError].
+    /// See [FieldCopyAccess::ReadError].
     /// Set this to [core::convert::Infallible] if reading cannot fail.
     type ReadError;
-    /// See [FieldTryCopyAccess::WriteError].
+    /// See [FieldCopyAccess::WriteError].
     /// Set this to [core::convert::Infallible] if writing cannot fail.
     type WriteError;
 
@@ -180,7 +180,7 @@ impl<
         'a,
         U,
         T: LayoutAs<U>,
-        F: FieldTryCopyAccess<HighLevelType = U> + StorageToFieldView<&'a [u8]>,
+        F: FieldCopyAccess<HighLevelType = U> + StorageToFieldView<&'a [u8]>,
     > StorageToFieldView<&'a [u8]> for WrappedField<U, T, F>
 {
     type View = FieldView<&'a [u8], Self>;
@@ -195,7 +195,7 @@ impl<
         'a,
         U,
         T: LayoutAs<U>,
-        F: FieldTryCopyAccess<HighLevelType = U> + StorageToFieldView<&'a mut [u8]>,
+        F: FieldCopyAccess<HighLevelType = U> + StorageToFieldView<&'a mut [u8]>,
     > StorageToFieldView<&'a mut [u8]> for WrappedField<U, T, F>
 {
     type View = FieldView<&'a mut [u8], Self>;
@@ -210,7 +210,7 @@ impl<
         U,
         S: AsRef<[u8]>,
         T: LayoutAs<U>,
-        F: FieldTryCopyAccess<HighLevelType = U> + StorageIntoFieldView<S>,
+        F: FieldCopyAccess<HighLevelType = U> + StorageIntoFieldView<S>,
     > StorageIntoFieldView<S> for WrappedField<U, T, F>
 {
     type View = FieldView<S, Self>;
@@ -221,14 +221,14 @@ impl<
     }
 }
 
-impl<U, T: LayoutAs<U>, F: FieldTryCopyAccess<HighLevelType = U>> FieldTryCopyAccess
+impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
     for WrappedField<U, T, F>
 {
-    /// See [FieldTryCopyAccess::ReadError]
+    /// See [FieldCopyAccess::ReadError]
     type ReadError = WrappedFieldError<F::ReadError, T::ReadError>;
-    /// See [FieldTryCopyAccess::WriteError]
+    /// See [FieldCopyAccess::WriteError]
     type WriteError = WrappedFieldError<F::WriteError, T::WriteError>;
-    /// See [FieldTryCopyAccess::HighLevelType]
+    /// See [FieldCopyAccess::HighLevelType]
     type HighLevelType = T;
 
     /// Read the field from a given data region, assuming the defined layout, using the [Field] API.
@@ -279,7 +279,7 @@ impl<U, T: LayoutAs<U>, F: FieldTryCopyAccess<HighLevelType = U>> FieldTryCopyAc
     /// Write the field to a given data region, assuming the defined layout, using the [Field] API.
     ///
     /// # Example:
-    /// See [FieldTryCopyAccess::try_read] for an example
+    /// See [FieldCopyAccess::try_read] for an example
     #[inline(always)]
     fn try_write(storage: &mut [u8], v: Self::HighLevelType) -> Result<(), Self::WriteError> {
         let v = <T as LayoutAs<U>>::try_write(v).map_err(WrappedFieldError::LayoutAsError)?;
