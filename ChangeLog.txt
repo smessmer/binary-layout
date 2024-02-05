@@ -2,6 +2,12 @@
 ------
 - Add `FieldTryCopyAccess` trait with `try_read()` and `try_write()`. This can be used for types that can throw errors when reading or writing them.
 - Support `std::num::NonZeroXXX` data types, using `FieldTryCopyAccess::try_read()` to throw an error if a zero is read.
+- To get access to `read()` and `write()` methods, you now need to have the `FieldReadExt` and `FieldWriteExt` traits in scope.
+  Previously, it was enough to have `FieldCopyAccess` in scope but this is no longer the case.
+  If you do `use binary_layout::prelude::*`, you don't need to change anything. But if you used `use binary_layout::FieldCopyAccess` instead, you now
+  need to add `FieldReadExt` and `FieldWriteExt` to it.
+- Types implementing `LayoutAs` now need to be `Sized`.
+- The `LayoutAs` trait changed. You now need to implement `try_read` and `try_write` instead of `read` and `write` and the new methods allow for errors being thrown.
 
 3.3.0
 ------

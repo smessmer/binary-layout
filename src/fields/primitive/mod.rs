@@ -8,7 +8,7 @@ mod slice_access;
 mod try_copy_access;
 mod view;
 
-pub use copy_access::FieldCopyAccess;
+pub use copy_access::{FieldReadExt, FieldWriteExt};
 pub use nested_access::{BorrowingNestedView, NestedViewInfo, OwningNestedView};
 pub use slice_access::FieldSliceAccess;
 pub use try_copy_access::{FieldTryCopyAccess, NonZeroIsZeroError};

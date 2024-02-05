@@ -1,13 +1,13 @@
-use std::convert::Infallible;
-
 use super::super::Field;
 use super::try_copy_access::FieldTryCopyAccess;
+use crate::utils::infallible::{InfallibleResultExt, IsInfallible};
 
-/// This trait is implemented for fields with "copy access",
-/// i.e. fields that read/write data by copying it from/to the
-/// binary blob. Examples of this are primitive types
-/// like u8, i32, ...
-pub trait FieldCopyAccess: Field {
+/// This extension trait adds a [FieldReadExt::read] method to any type
+/// supporting [FieldTryCopyAccess::try_read] that has an implementation
+/// that cannot throw errors. This is a convenience function so that callers
+/// can just call [FieldReadExt::read] instead of having to call [FieldTryCopyAccess::try_read]
+/// and then calling [Result::unwrap] on the returned value.
+pub trait FieldReadExt: Field {
     /// The data type that is returned from read calls and has to be
     /// passed in to write calls. This can be different from the primitive
     /// type used in the binary blob, since that primitive type can be
@@ -32,6 +32,20 @@ pub trait FieldCopyAccess: Field {
     /// }
     /// ```
     fn read(storage: &[u8]) -> Self::HighLevelType;
+}
+
+/// This extension trait adds a [FieldWriteExt::write] method to any type
+/// supporting [FieldTryCopyAccess::try_write] that has an implementation
+/// that cannot throw errors. This is a convenience function so that callers
+/// can just call [FieldWriteExt::write] instead of having to call [FieldTryCopyAccess::try_write]
+/// and then calling [Result::unwrap] on the returned value.
+pub trait FieldWriteExt: Field {
+    /// The data type that is returned from read calls and has to be
+    /// passed in to write calls. This can be different from the primitive
+    /// type used in the binary blob, since that primitive type can be
+    /// wrapped (see [WrappedField](crate::WrappedField) ) into a high level type before being returned from read
+    /// calls (or vice versa unwrapped when writing).
+    type HighLevelType;
 
     /// Write the field to a given data region, assuming the defined layout, using the [Field] API.
     ///
@@ -53,26 +67,39 @@ pub trait FieldCopyAccess: Field {
     fn write(storage: &mut [u8], v: Self::HighLevelType);
 }
 
-impl<F> FieldCopyAccess for F
+impl<F> FieldReadExt for F
 where
-    F: FieldTryCopyAccess<ReadError = Infallible, WriteError = Infallible>,
+    F: FieldTryCopyAccess,
+    F::ReadError: IsInfallible,
 {
     type HighLevelType = F::HighLevelType;
 
     /// This implements [FieldCopyAccess::read] for any type that implements [FieldTryCopyAccess::try_read]
     /// if the read cannot throw an error.
     /// See [FieldCopyAccess::read] and [FieldTryCopyAccess::try_read].
+    #[inline(always)]
     fn read(storage: &[u8]) -> Self::HighLevelType {
-        // TODO use infallible_unwrap
-        F::try_read(storage).unwrap()
+        F::try_read(storage).infallible_unwrap()
     }
+}
+
+// TODO Now that NonZeroXXX types support write() directly instead of try_write(), we should change the tests to use write().
+// TODO Add tests for types that can only fail when reading, only fail when writing, fail when doing either.
+//      For both, view API and field API.
+
+impl<F> FieldWriteExt for F
+where
+    F: FieldTryCopyAccess,
+    F::WriteError: IsInfallible,
+{
+    type HighLevelType = F::HighLevelType;
 
     /// This implements [FieldCopyAccess::write] for any type that implements [FieldTryCopyAccess::try_write]
     /// if the write cannot throw an error.
     /// See [FieldCopyAccess::write] and [FieldTryCopyAccess::try_write].
+    #[inline(always)]
     fn write(storage: &mut [u8], value: Self::HighLevelType) {
-        // TODO use infallible_unwrap
-        F::try_write(storage, value).unwrap()
+        F::try_write(storage, value).infallible_unwrap()
     }
 }
 

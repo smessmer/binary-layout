@@ -202,13 +202,15 @@ pub mod example;
 pub use endianness::{BigEndian, Endianness, LittleEndian, NativeEndian};
 pub use fields::{
     primitive::{
-        FieldCopyAccess, FieldSliceAccess, FieldTryCopyAccess, FieldView, NonZeroIsZeroError,
-        PrimitiveField,
+        FieldReadExt, FieldSliceAccess, FieldTryCopyAccess, FieldView, FieldWriteExt,
+        NonZeroIsZeroError, PrimitiveField,
     },
-    wrapped::{LayoutAs, WrappedField},
+    wrapped::{LayoutAs, WrappedField, WrappedFieldError},
     Field,
 };
 pub use utils::data::Data;
+
+// TODO Remove std everywhere in favor of core and make sure we have a nostd test
 
 /// Import this to get everything into scope that you need for defining and using layouts.
 ///
@@ -218,8 +220,8 @@ pub use utils::data::Data;
 /// ```
 pub mod prelude {
     pub use super::{
-        BigEndian, Field, FieldCopyAccess, FieldSliceAccess, FieldTryCopyAccess, LittleEndian,
-        NativeEndian, NonZeroIsZeroError,
+        BigEndian, Field, FieldReadExt, FieldSliceAccess, FieldTryCopyAccess, FieldWriteExt,
+        LittleEndian, NativeEndian, NonZeroIsZeroError,
     };
     pub use crate::define_layout;
 }

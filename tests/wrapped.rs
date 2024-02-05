@@ -1,7 +1,7 @@
 use binary_layout::{prelude::*, LayoutAs};
 use core::any::{Any, TypeId};
 use core::convert::TryInto;
-use std::num::NonZeroI32;
+use std::convert::Infallible;
 
 mod common;
 use common::data_region;
@@ -9,12 +9,15 @@ use common::data_region;
 #[derive(Debug, PartialEq, Eq)]
 pub struct Wrapped<T>(T);
 impl<T> LayoutAs<T> for Wrapped<T> {
-    fn read(v: T) -> Wrapped<T> {
-        Wrapped(v)
+    type ReadError = Infallible;
+    type WriteError = Infallible;
+
+    fn try_read(v: T) -> Result<Wrapped<T>, Infallible> {
+        Ok(Wrapped(v))
     }
 
-    fn write(v: Wrapped<T>) -> T {
-        v.0
+    fn try_write(v: Wrapped<T>) -> Result<T, Infallible> {
+        Ok(v.0)
     }
 }
 

@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::{Field, FieldCopyAccess, FieldTryCopyAccess};
+use crate::{Field, FieldReadExt, FieldTryCopyAccess, FieldWriteExt};
 
 /// A field view represents the field metadata stored in a [Field] plus it stores the underlying
 /// storage data it operates on, either as a reference to a slice `&[u8]`, `&mut [u8]`, or as
@@ -59,7 +59,7 @@ impl<S, F: Field> FieldView<S, F> {
         }
     }
 }
-impl<S: AsRef<[u8]>, F: FieldCopyAccess> FieldView<S, F> {
+impl<S: AsRef<[u8]>, F: FieldReadExt> FieldView<S, F> {
     /// Read the field from a given data region, assuming the defined layout, using the [FieldView] API.
     ///
     /// # Example
@@ -82,7 +82,7 @@ impl<S: AsRef<[u8]>, F: FieldCopyAccess> FieldView<S, F> {
         F::read(self.storage.as_ref())
     }
 }
-impl<S: AsMut<[u8]>, F: FieldCopyAccess> FieldView<S, F> {
+impl<S: AsMut<[u8]>, F: FieldWriteExt> FieldView<S, F> {
     /// Write the field to a given data region, assuming the defined layout, using the [FieldView] API.
     ///
     /// # Example

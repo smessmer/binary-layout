@@ -1,9 +1,17 @@
+use core::convert::Infallible;
+use core::fmt::Debug;
 use core::marker::PhantomData;
+use thiserror::Error;
+
+use crate::utils::infallible::IsInfallible;
 
 use super::{
-    primitive::{FieldCopyAccess, FieldView},
+    primitive::{FieldTryCopyAccess, FieldView},
     Field, StorageIntoFieldView, StorageToFieldView,
 };
+
+// TODO Add tests for LayoutAs that can return errors only when reading, only when writing, when doing either, or in neither.go t
+// TODO Update README and documentation
 
 /// Implementing the [LayoutAs] trait for a custom type allows that custom type to be used
 /// as the type of a layout field. Note that the value of this type is copied each time it
@@ -13,15 +21,18 @@ use super::{
 /// # Example
 /// ```
 /// use binary_layout::{prelude::*, LayoutAs};
+/// use std::convert::Infallible;
 ///
 /// struct MyIdType(u64);
 /// impl LayoutAs<u64> for MyIdType {
-///   fn read(v: u64) -> MyIdType {
-///     MyIdType(v)
+///   type ReadError = Infallible;
+///   type WriteError = Infallible;
+///   fn try_read(v: u64) -> Result<MyIdType, Infallible> {
+///     Ok(MyIdType(v))
 ///   }
 ///
-///   fn write(v: MyIdType) -> u64 {
-///     v.0
+///   fn try_write(v: MyIdType) -> Result<u64, Infallible> {
+///     Ok(v.0)
 ///   }
 /// }
 ///
@@ -33,32 +44,56 @@ use super::{
 ///
 /// # fn main() {}
 /// ```
-pub trait LayoutAs<U> {
+pub trait LayoutAs<U>: Sized {
+    /// See [FieldTryCopyAccess::ReadError].
+    /// Set this to [std::convert::Infallible] if reading cannot fail.
+    type ReadError;
+    /// See [FieldTryCopyAccess::WriteError].
+    /// Set this to [std::convert::Infallible] if writing cannot fail.
+    type WriteError;
+
     /// Implement this to define how the custom type is constructed from the underlying type
     /// after it was read from a layouted binary slice.
-    fn read(v: U) -> Self;
+    fn try_read(v: U) -> Result<Self, Self::ReadError>;
 
     /// Implement this to define how the custom type is converted into the underlying type
     /// so it can be written into a layouted binary slice.
-    fn write(v: Self) -> U;
+    fn try_write(v: Self) -> Result<U, Self::WriteError>;
 }
+
+/// The error being thrown when reading or writing fields that use custom data types implemented via [LayoutAs].
+#[derive(Error, Debug)]
+pub enum WrappedFieldError<PrimitiveAccessError, LayoutAsError> {
+    /// TODO Docs
+    #[error("Error accessing (reading or writing) the primitive data type: {0}")]
+    PrimitiveAccessError(PrimitiveAccessError),
+    /// TODO Docs
+    #[error("Error mapping the primitive data type in `LayoutAs`: {0}")]
+    LayoutAsError(LayoutAsError),
+}
+
+impl IsInfallible for WrappedFieldError<Infallible, Infallible> {}
 
 /// A [WrappedField] is a [Field] that, unlike [PrimitiveField](crate::PrimitiveField), does not directly represent a primitive type.
 /// Instead, it represents a wrapper type that can be converted to/from a primitive type using the [LayoutAs] trait.
 /// See [Field] for more info on this API.
 ///
-/// # Example:
+/// # Example (reading/writing cannot throw errors):
 /// ```
 /// use binary_layout::{prelude::*, LayoutAs};
+/// use std::convert::Infallible;
 ///
 /// struct MyIdType(u64);
 /// impl LayoutAs<u64> for MyIdType {
-///   fn read(v: u64) -> MyIdType {
-///     MyIdType(v)
+///   type ReadError = Infallible;
+///   type WriteError = Infallible;
+///
+///   fn try_read(v: u64) -> Result<MyIdType, Infallible> {
+///     Ok(MyIdType(v))
 ///   }
 ///
-///   fn write(v: MyIdType) -> u64 {
-///     v.0
+///   fn try_write(v: MyIdType) -> Result<u64, Infallible> {
+///     Ok(v.0)
 ///   }
 /// }
 ///
@@ -76,6 +111,49 @@ pub trait LayoutAs<U> {
 ///   // write some data
 ///   my_layout::field::write(storage_data, MyIdType(10));
 ///   // equivalent: data_slice[18..22].copy_from_slice(&10u32.to_le_bytes());
+/// }
+///
+/// # fn main() {
+/// #   let mut storage = [0; 1024];
+/// #   func(&mut storage);
+/// # }
+/// ```
+///
+/// # Example (reading/writing can throw errors):
+/// ```
+/// use binary_layout::{prelude::*, WrappedFieldError, LayoutAs};
+/// use std::convert::Infallible;
+///
+/// struct MyIdType(u64);
+/// impl LayoutAs<u64> for MyIdType {
+///   type ReadError = &'static str;
+///   type WriteError = &'static str;
+///
+///   fn try_read(v: u64) -> Result<MyIdType, &'static str> {
+///     Ok(MyIdType(v))
+///   }
+///
+///   fn try_write(v: MyIdType) -> Result<u64, &'static str> {
+///     Ok(v.0)
+///   }
+/// }
+///
+/// define_layout!(my_layout, BigEndian, {
+///   // ... other fields ...
+///   field: MyIdType as u64,
+///   // ... other fields ...
+/// });
+///
+/// fn func(storage_data: &mut [u8]) -> Result<(), WrappedFieldError<Infallible, &'static str>> {
+///   // read some data
+///   let read_data: MyIdType = my_layout::field::try_read(storage_data)?;
+///   // equivalent: let read_data = MyIdType(u16::from_le_bytes((&storage_data[0..2]).try_into().unwrap()));
+///
+///   // write some data
+///   my_layout::field::try_write(storage_data, MyIdType(10))?;
+///   // equivalent: data_slice[18..22].copy_from_slice(&10u32.to_le_bytes());
+///
+///   Ok(())
 /// }
 ///
 /// # fn main() {
@@ -102,7 +180,7 @@ impl<
         'a,
         U,
         T: LayoutAs<U>,
-        F: FieldCopyAccess<HighLevelType = U> + StorageToFieldView<&'a [u8]>,
+        F: FieldTryCopyAccess<HighLevelType = U> + StorageToFieldView<&'a [u8]>,
     > StorageToFieldView<&'a [u8]> for WrappedField<U, T, F>
 {
     type View = FieldView<&'a [u8], Self>;
@@ -117,7 +195,7 @@ impl<
         'a,
         U,
         T: LayoutAs<U>,
-        F: FieldCopyAccess<HighLevelType = U> + StorageToFieldView<&'a mut [u8]>,
+        F: FieldTryCopyAccess<HighLevelType = U> + StorageToFieldView<&'a mut [u8]>,
     > StorageToFieldView<&'a mut [u8]> for WrappedField<U, T, F>
 {
     type View = FieldView<&'a mut [u8], Self>;
@@ -132,7 +210,7 @@ impl<
         U,
         S: AsRef<[u8]>,
         T: LayoutAs<U>,
-        F: FieldCopyAccess<HighLevelType = U> + StorageIntoFieldView<S>,
+        F: FieldTryCopyAccess<HighLevelType = U> + StorageIntoFieldView<S>,
     > StorageIntoFieldView<S> for WrappedField<U, T, F>
 {
     type View = FieldView<S, Self>;
@@ -143,10 +221,14 @@ impl<
     }
 }
 
-impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
+impl<U, T: LayoutAs<U>, F: FieldTryCopyAccess<HighLevelType = U>> FieldTryCopyAccess
     for WrappedField<U, T, F>
 {
-    /// See [FieldCopyAccess::HighLevelType]
+    /// See [FieldTryCopyAccess::ReadError]
+    type ReadError = WrappedFieldError<F::ReadError, T::ReadError>;
+    /// See [FieldTryCopyAccess::WriteError]
+    type WriteError = WrappedFieldError<F::WriteError, T::WriteError>;
+    /// See [FieldTryCopyAccess::HighLevelType]
     type HighLevelType = T;
 
     /// Read the field from a given data region, assuming the defined layout, using the [Field] API.
@@ -154,16 +236,20 @@ impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
     /// # Example:
     /// ```
     /// use binary_layout::{prelude::*, LayoutAs};
+    /// use std::convert::Infallible;
     ///
     /// #[derive(Debug, PartialEq, Eq)]
     /// struct MyIdType(u64);
     /// impl LayoutAs<u64> for MyIdType {
-    ///   fn read(v: u64) -> MyIdType {
-    ///     MyIdType(v)
+    ///   type ReadError = Infallible;
+    ///   type WriteError = Infallible;
+    ///
+    ///   fn try_read(v: u64) -> Result<MyIdType, Infallible> {
+    ///     Ok(MyIdType(v))
     ///   }
     ///
-    ///   fn write(v: MyIdType) -> u64 {
-    ///     v.0
+    ///   fn try_write(v: MyIdType) -> Result<u64, Infallible> {
+    ///     Ok(v.0)
     ///   }
     /// }
     ///
@@ -184,19 +270,21 @@ impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
     /// # }
     /// ```
     #[inline(always)]
-    fn read(storage: &[u8]) -> Self::HighLevelType {
-        let v = F::read(storage);
-        <T as LayoutAs<U>>::read(v)
+    fn try_read(storage: &[u8]) -> Result<Self::HighLevelType, Self::ReadError> {
+        let v = F::try_read(storage).map_err(WrappedFieldError::PrimitiveAccessError)?;
+        let value = <T as LayoutAs<U>>::try_read(v).map_err(WrappedFieldError::LayoutAsError)?;
+        Ok(value)
     }
 
     /// Write the field to a given data region, assuming the defined layout, using the [Field] API.
     ///
     /// # Example:
-    /// See [FieldCopyAccess::read] for an example
+    /// See [FieldTryCopyAccess::try_read] for an example
     #[inline(always)]
-    fn write(storage: &mut [u8], v: Self::HighLevelType) {
-        let v = <T as LayoutAs<U>>::write(v);
-        F::write(storage, v)
+    fn try_write(storage: &mut [u8], v: Self::HighLevelType) -> Result<(), Self::WriteError> {
+        let v = <T as LayoutAs<U>>::try_write(v).map_err(WrappedFieldError::LayoutAsError)?;
+        F::try_write(storage, v).map_err(WrappedFieldError::PrimitiveAccessError)?;
+        Ok(())
     }
 }
 
@@ -205,16 +293,19 @@ mod tests {
     #![allow(clippy::float_cmp)]
     use crate::prelude::*;
     use crate::{LayoutAs, PrimitiveField, WrappedField};
-    use core::convert::TryInto;
+    use core::convert::{Infallible, TryInto};
 
     #[derive(Debug, PartialEq, Eq)]
     struct Wrapped<T>(T);
     impl<T> LayoutAs<T> for Wrapped<T> {
-        fn read(v: T) -> Self {
-            Self(v)
+        type ReadError = Infallible;
+        type WriteError = Infallible;
+
+        fn try_read(v: T) -> Result<Self, Infallible> {
+            Ok(Self(v))
         }
-        fn write(v: Self) -> T {
-            v.0
+        fn try_write(v: Self) -> Result<T, Infallible> {
+            Ok(v.0)
         }
     }
 

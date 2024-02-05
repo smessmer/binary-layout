@@ -4,12 +4,8 @@ use super::PrimitiveField;
 use crate::endianness::{EndianKind, Endianness};
 use std::convert::Infallible;
 
-// TODO Should we implement FieldTryCopyAccess instead of FieldCopyAccess for all zeroable integer types, using try_read/try_write,
-//      and then have a generic extension trait that adds read/write functions if try_read/try_write return Result<_, Infallible>?
-//      Maybe rename FieldTryCopyAccess to FieldCopyAccess then, and add two separate extension traits, one for read and one for write.
-//      This could then also be used to unify LayoutAs/TryLayoutAs. Any custom wrapper type that returns infallible could automatically
-//      get read/write methods.
-// TODO It's weird to have write for NonZero types return a Result if it can't fail. Can we do a type instead that only returns Result from read?
+// TODO Rename `FieldTryCopyAccess` back to `FieldCopyAccess` and fix changelog.
+// TODO Rename module back to `copy_access` and split it into several submodules
 
 /// This trait is implemented for fields with "try copy access",
 /// i.e. fields that read/write data by copying it from/to the
