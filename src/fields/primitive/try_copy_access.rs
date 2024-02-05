@@ -119,6 +119,103 @@ macro_rules! impl_field_traits {
     };
 }
 
+macro_rules! int_field {
+    ($type:ty) => {
+        impl<E: Endianness, const OFFSET_: usize> FieldTryCopyAccess for PrimitiveField<$type, E, OFFSET_> {
+            /// See [FieldTryCopyAccess::ReadError]
+            type ReadError = Infallible;
+            /// See [FieldTryCopyAccess::WriteError]
+            type WriteError = Infallible;
+            /// See [FieldTryCopyAccess::HighLevelType]
+            type HighLevelType = $type;
+
+            doc_comment::doc_comment! {
+                concat! {"
+                Read the integer field from a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_integer_field: ", stringify!($type), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &[u8]) -> ",stringify!($type), " {
+                    let read: ", stringify!($type), " = my_layout::some_integer_field::try_read(storage_data).unwrap();
+                    read
+                }
+                ```
+                "},
+                #[inline(always)]
+                fn try_read(storage: &[u8]) -> Result<$type, Infallible> {
+                    // TODO Don't initialize memory
+                    let mut value = [0; core::mem::size_of::<$type>()];
+                    value.copy_from_slice(
+                        &storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
+                    );
+                    let value = match E::KIND {
+                        EndianKind::Big => <$type>::from_be_bytes(value),
+                        EndianKind::Little => <$type>::from_le_bytes(value),
+                        EndianKind::Native => <$type>::from_ne_bytes(value)
+                    };
+                    Ok(value)
+                }
+            }
+
+            doc_comment::doc_comment! {
+                concat! {"
+                Write the integer field to a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+                use std::convert::Infallible;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_integer_field: ", stringify!($type), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &mut [u8]) {
+                    my_layout::some_integer_field::try_write(storage_data, 10).unwrap();
+                }
+                ```
+                "},
+                #[inline(always)]
+                fn try_write(storage: &mut [u8], value: $type) -> Result<(), Infallible> {
+                    let value_as_bytes = match E::KIND {
+                        EndianKind::Big => value.to_be_bytes(),
+                        EndianKind::Little => value.to_le_bytes(),
+                        EndianKind::Native => value.to_ne_bytes(),
+                    };
+                    storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
+                        .copy_from_slice(&value_as_bytes);
+                    Ok(())
+                }
+            }
+        }
+
+        impl_field_traits!($type);
+    };
+}
+
+int_field!(i8);
+int_field!(i16);
+int_field!(i32);
+int_field!(i64);
+int_field!(i128);
+int_field!(u8);
+int_field!(u16);
+int_field!(u32);
+int_field!(u64);
+int_field!(u128);
+
 macro_rules! nonzero_int_field {
     ($type:ty, $zero_type:ty) => {
         impl<E: Endianness, const OFFSET_: usize> FieldTryCopyAccess for PrimitiveField<$type, E, OFFSET_> {
@@ -182,10 +279,9 @@ macro_rules! nonzero_int_field {
                     //... other fields ...
                 });
 
-                fn func(storage_data: &mut [u8]) -> Result<(), Infallible> {
+                fn func(storage_data: &mut [u8]) {
                     let value = ", stringify!($type), "::new(10).unwrap();
-                    my_layout::some_integer_field::try_write(storage_data, value)?;
-                    Ok(())
+                    my_layout::some_integer_field::try_write(storage_data, value).unwrap();
                 }
                 ```
                 "},
@@ -230,6 +326,187 @@ nonzero_int_field!(std::num::NonZeroU16, u16);
 nonzero_int_field!(std::num::NonZeroU32, u32);
 nonzero_int_field!(std::num::NonZeroU64, u64);
 nonzero_int_field!(std::num::NonZeroU128, u128);
+
+macro_rules! float_field {
+    ($type:ty) => {
+        impl<E: Endianness, const OFFSET_: usize> FieldTryCopyAccess for PrimitiveField<$type, E, OFFSET_> {
+            /// See [FieldTryCopyAccess::ReadError]
+            type ReadError = Infallible;
+            /// See [FieldTryCopyAccess::WriteError]
+            type WriteError = Infallible;
+            /// See [FieldTryCopyAccess::HighLevelType]
+            type HighLevelType = $type;
+
+            doc_comment::doc_comment! {
+                concat! {"
+                Read the float field from a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+                use std::convert::Infallible;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_float_field: ", stringify!($type), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &[u8]) -> ", stringify!($type), " {
+                    let read: ", stringify!($type), " = my_layout::some_float_field::try_read(storage_data).unwrap();
+                    read
+                }
+                ```
+
+                # WARNING
+
+                At it's core, this method uses [", stringify!($type), "::from_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.from_bits),
+                which has some weird behavior around signaling and non-signaling `NaN` values.  Read the
+                documentation for [", stringify!($type), "::from_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.from_bits) which
+                explains the situation.
+                "},
+                #[inline(always)]
+                fn try_read(storage: &[u8]) -> Result<$type, Infallible> {
+                    // TODO Don't initialize memory
+                    let mut value = [0; core::mem::size_of::<$type>()];
+                    value.copy_from_slice(
+                        &storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
+                    );
+                    let value = match E::KIND {
+                        EndianKind::Big => <$type>::from_be_bytes(value),
+                        EndianKind::Little => <$type>::from_le_bytes(value),
+                        EndianKind::Native => <$type>::from_ne_bytes(value),
+                    };
+                    Ok(value)
+                }
+            }
+
+            doc_comment::doc_comment! {
+                concat! {"
+                Write the float field to a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_float_field: ", stringify!($type), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &mut [u8]) {
+                    my_layout::some_float_field::try_write(storage_data, 10.0).unwrap();
+                }
+                ```
+
+                # WARNING
+
+                At it's core, this method uses [", stringify!($type), "::to_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.to_bits),
+                which has some weird behavior around signaling and non-signaling `NaN` values.  Read the
+                documentation for [", stringify!($type), "::to_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.to_bits) which
+                explains the situation.
+                "},
+                #[inline(always)]
+                fn try_write(storage: &mut [u8], value: $type) -> Result<(), Infallible> {
+                    let value_as_bytes = match E::KIND {
+                        EndianKind::Big => value.to_be_bytes(),
+                        EndianKind::Little => value.to_le_bytes(),
+                        EndianKind::Native => value.to_ne_bytes(),
+                    };
+                    storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
+                        .copy_from_slice(&value_as_bytes);
+                    Ok(())
+                }
+            }
+        }
+
+        impl_field_traits!($type);
+    };
+}
+
+float_field!(f32);
+float_field!(f64);
+
+impl<E: Endianness, const OFFSET_: usize> FieldTryCopyAccess for PrimitiveField<(), E, OFFSET_> {
+    /// See [FieldTryCopyAccess::ReadError]
+    type ReadError = Infallible;
+    /// See [FieldTryCopyAccess::WriteError]
+    type WriteError = Infallible;
+    /// See [FieldTryCopyAccess::HighLevelType]
+    type HighLevelType = ();
+
+    doc_comment::doc_comment! {
+        concat! {"
+                'Read' the `", stringify!(()), "`-typed field from a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_zst_field: ", stringify!(()), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &[u8]) {
+                    let read: ", stringify!(()), " = my_layout::some_zst_field::try_read(storage_data).unwrap();
+                    read
+                }
+                ```
+
+                In reality, this method doesn't do any work; `",
+                stringify!(()), "` is a zero-sized type, so there's no work to
+                do. This implementation exists solely to make writing derive
+                macros simpler.
+                "},
+        #[inline(always)]
+        #[allow(clippy::unused_unit)] // I don't want to remove this as it's part of the trait.
+        fn try_read(_storage: &[u8]) -> Result<(), Infallible> {
+            Ok(())
+        }
+    }
+
+    doc_comment::doc_comment! {
+        concat! {"
+                'Write' the `", stringify!(()), "`-typed field to a given data region, assuming the defined layout, using the [Field] API.
+
+                # Example:
+
+                ```
+                use binary_layout::prelude::*;
+
+                define_layout!(my_layout, LittleEndian, {
+                    //... other fields ...
+                    some_zst_field: ", stringify!(()), "
+                    //... other fields ...
+                });
+
+                fn func(storage_data: &mut [u8]) {
+                    my_layout::some_zst_field::try_write(storage_data, ()).unwrap();
+                }
+                ```
+
+                # WARNING
+
+                In reality, this method doesn't do any work; `",
+                stringify!(()), "` is a zero-sized type, so there's no work to
+                do. This implementation exists solely to make writing derive
+                macros simpler.
+                "},
+        #[inline(always)]
+        #[allow(clippy::unused_unit)] // I don't want to remove this as it's part of the trait.
+        fn try_write(_storage: &mut [u8], _value: ()) -> Result<(), Infallible> {
+            Ok(())
+        }
+    }
+}
+
+impl_field_traits!(());
 
 #[cfg(test)]
 mod tests {

@@ -1,7 +1,7 @@
-use super::super::{Field, StorageIntoFieldView, StorageToFieldView};
-use super::view::FieldView;
-use super::PrimitiveField;
-use crate::endianness::{EndianKind, Endianness};
+use std::convert::Infallible;
+
+use super::super::Field;
+use super::try_copy_access::FieldTryCopyAccess;
 
 /// This trait is implemented for fields with "copy access",
 /// i.e. fields that read/write data by copying it from/to the
@@ -53,308 +53,28 @@ pub trait FieldCopyAccess: Field {
     fn write(storage: &mut [u8], v: Self::HighLevelType);
 }
 
-macro_rules! impl_field_traits {
-    ($type: ty) => {
-        impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<$type, E, OFFSET_> {
-            /// See [Field::Endian]
-            type Endian = E;
-            /// See [Field::OFFSET]
-            const OFFSET: usize = OFFSET_;
-            /// See [Field::SIZE]
-            const SIZE: Option<usize> = Some(core::mem::size_of::<$type>());
-        }
+impl<F> FieldCopyAccess for F
+where
+    F: FieldTryCopyAccess<ReadError = Infallible, WriteError = Infallible>,
+{
+    type HighLevelType = F::HighLevelType;
 
-        impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a [u8]>
-            for PrimitiveField<$type, E, OFFSET_>
-        {
-            type View = FieldView<&'a [u8], Self>;
-
-            #[inline(always)]
-            fn view(storage: &'a [u8]) -> Self::View {
-                Self::View::new(storage)
-            }
-        }
-
-        impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a mut [u8]>
-            for PrimitiveField<$type, E, OFFSET_>
-        {
-            type View = FieldView<&'a mut [u8], Self>;
-
-            #[inline(always)]
-            fn view(storage: &'a mut [u8]) -> Self::View {
-                Self::View::new(storage)
-            }
-        }
-
-        impl<S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> StorageIntoFieldView<S>
-            for PrimitiveField<$type, E, OFFSET_>
-        {
-            type View = FieldView<S, Self>;
-
-            #[inline(always)]
-            fn into_view(storage: S) -> Self::View {
-                Self::View::new(storage)
-            }
-        }
-    };
-}
-
-macro_rules! int_field {
-    ($type:ty) => {
-        impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<$type, E, OFFSET_> {
-            /// See [FieldCopyAccess::HighLevelType]
-            type HighLevelType = $type;
-
-            doc_comment::doc_comment! {
-                concat! {"
-                Read the integer field from a given data region, assuming the defined layout, using the [Field] API.
-
-                # Example:
-
-                ```
-                use binary_layout::prelude::*;
-
-                define_layout!(my_layout, LittleEndian, {
-                    //... other fields ...
-                    some_integer_field: ", stringify!($type), "
-                    //... other fields ...
-                });
-
-                fn func(storage_data: &[u8]) {
-                    let read: ", stringify!($type), " = my_layout::some_integer_field::read(storage_data);
-                }
-                ```
-                "},
-                #[inline(always)]
-                fn read(storage: &[u8]) -> $type {
-                    // TODO Don't initialize memory
-                    let mut value = [0; core::mem::size_of::<$type>()];
-                    value.copy_from_slice(
-                        &storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
-                    );
-                    match E::KIND {
-                        EndianKind::Big => <$type>::from_be_bytes(value),
-                        EndianKind::Little => <$type>::from_le_bytes(value),
-                        EndianKind::Native => <$type>::from_ne_bytes(value)
-                    }
-                }
-            }
-
-            doc_comment::doc_comment! {
-                concat! {"
-                Write the integer field to a given data region, assuming the defined layout, using the [Field] API.
-
-                # Example:
-
-                ```
-                use binary_layout::prelude::*;
-
-                define_layout!(my_layout, LittleEndian, {
-                    //... other fields ...
-                    some_integer_field: ", stringify!($type), "
-                    //... other fields ...
-                });
-
-                fn func(storage_data: &mut [u8]) {
-                    my_layout::some_integer_field::write(storage_data, 10);
-                }
-                ```
-                "},
-                #[inline(always)]
-                fn write(storage: &mut [u8], value: $type) {
-                    let value_as_bytes = match E::KIND {
-                        EndianKind::Big => value.to_be_bytes(),
-                        EndianKind::Little => value.to_le_bytes(),
-                        EndianKind::Native => value.to_ne_bytes(),
-                    };
-                    storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
-                        .copy_from_slice(&value_as_bytes);
-                }
-            }
-        }
-
-        impl_field_traits!($type);
-    };
-}
-
-int_field!(i8);
-int_field!(i16);
-int_field!(i32);
-int_field!(i64);
-int_field!(i128);
-int_field!(u8);
-int_field!(u16);
-int_field!(u32);
-int_field!(u64);
-int_field!(u128);
-
-macro_rules! float_field {
-    ($type:ty) => {
-        impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<$type, E, OFFSET_> {
-            /// See [FieldCopyAccess::HighLevelType]
-            type HighLevelType = $type;
-
-            doc_comment::doc_comment! {
-                concat! {"
-                Read the float field from a given data region, assuming the defined layout, using the [Field] API.
-
-                # Example:
-
-                ```
-                use binary_layout::prelude::*;
-
-                define_layout!(my_layout, LittleEndian, {
-                    //... other fields ...
-                    some_float_field: ", stringify!($type), "
-                    //... other fields ...
-                });
-
-                fn func(storage_data: &[u8]) {
-                    let read: ", stringify!($type), " = my_layout::some_float_field::read(storage_data);
-                }
-                ```
-
-                # WARNING
-
-                At it's core, this method uses [", stringify!($type), "::from_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.from_bits),
-                which has some weird behavior around signaling and non-signaling `NaN` values.  Read the
-                documentation for [", stringify!($type), "::from_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.from_bits) which
-                explains the situation.
-                "},
-                #[inline(always)]
-                fn read(storage: &[u8]) -> $type {
-                    // TODO Don't initialize memory
-                    let mut value = [0; core::mem::size_of::<$type>()];
-                    value.copy_from_slice(
-                        &storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
-                    );
-                    match E::KIND {
-                        EndianKind::Big => <$type>::from_be_bytes(value),
-                        EndianKind::Little => <$type>::from_le_bytes(value),
-                        EndianKind::Native => <$type>::from_ne_bytes(value),
-                    }
-                }
-            }
-
-            doc_comment::doc_comment! {
-                concat! {"
-                Write the float field to a given data region, assuming the defined layout, using the [Field] API.
-
-                # Example:
-
-                ```
-                use binary_layout::prelude::*;
-
-                define_layout!(my_layout, LittleEndian, {
-                    //... other fields ...
-                    some_float_field: ", stringify!($type), "
-                    //... other fields ...
-                });
-
-                fn func(storage_data: &mut [u8]) {
-                    my_layout::some_float_field::write(storage_data, 10.0);
-                }
-                ```
-
-                # WARNING
-
-                At it's core, this method uses [", stringify!($type), "::to_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.to_bits),
-                which has some weird behavior around signaling and non-signaling `NaN` values.  Read the
-                documentation for [", stringify!($type), "::to_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.to_bits) which
-                explains the situation.
-                "},
-                #[inline(always)]
-                fn write(storage: &mut [u8], value: $type) {
-                    let value_as_bytes = match E::KIND {
-                        EndianKind::Big => value.to_be_bytes(),
-                        EndianKind::Little => value.to_le_bytes(),
-                        EndianKind::Native => value.to_ne_bytes(),
-                    };
-                    storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
-                        .copy_from_slice(&value_as_bytes);
-                }
-            }
-        }
-
-        impl_field_traits!($type);
-    };
-}
-
-float_field!(f32);
-float_field!(f64);
-
-impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<(), E, OFFSET_> {
-    /// See [FieldCopyAccess::HighLevelType]
-    type HighLevelType = ();
-
-    doc_comment::doc_comment! {
-        concat! {"
-                'Read' the `", stringify!(()), "`-typed field from a given data region, assuming the defined layout, using the [Field] API.
-
-                # Example:
-
-                ```
-                use binary_layout::prelude::*;
-
-                define_layout!(my_layout, LittleEndian, {
-                    //... other fields ...
-                    some_zst_field: ", stringify!(()), "
-                    //... other fields ...
-                });
-
-                fn func(storage_data: &[u8]) {
-                    let read: ", stringify!(()), " = my_layout::some_zst_field::read(storage_data);
-                }
-                ```
-
-                In reality, this method doesn't do any work; `",
-                stringify!(()), "` is a zero-sized type, so there's no work to
-                do. This implementation exists solely to make writing derive
-                macros simpler.
-                "},
-        #[inline(always)]
-        #[allow(clippy::unused_unit)] // I don't want to remove this as it's part of the trait.
-        fn read(_storage: &[u8]) -> () {
-            ()
-        }
+    /// This implements [FieldCopyAccess::read] for any type that implements [FieldTryCopyAccess::try_read]
+    /// if the read cannot throw an error.
+    /// See [FieldCopyAccess::read] and [FieldTryCopyAccess::try_read].
+    fn read(storage: &[u8]) -> Self::HighLevelType {
+        // TODO use infallible_unwrap
+        F::try_read(storage).unwrap()
     }
 
-    doc_comment::doc_comment! {
-        concat! {"
-                'Write' the `", stringify!(()), "`-typed field to a given data region, assuming the defined layout, using the [Field] API.
-
-                # Example:
-
-                ```
-                use binary_layout::prelude::*;
-
-                define_layout!(my_layout, LittleEndian, {
-                    //... other fields ...
-                    some_zst_field: ", stringify!(()), "
-                    //... other fields ...
-                });
-
-                fn func(storage_data: &mut [u8]) {
-                    my_layout::some_zst_field::write(storage_data, ());
-                }
-                ```
-
-                # WARNING
-
-                In reality, this method doesn't do any work; `",
-                stringify!(()), "` is a zero-sized type, so there's no work to
-                do. This implementation exists solely to make writing derive
-                macros simpler.
-                "},
-        #[inline(always)]
-        #[allow(clippy::unused_unit)] // I don't want to remove this as it's part of the trait.
-        fn write(_storage: &mut [u8], _value: ()) {
-            ()
-        }
+    /// This implements [FieldCopyAccess::write] for any type that implements [FieldTryCopyAccess::try_write]
+    /// if the write cannot throw an error.
+    /// See [FieldCopyAccess::write] and [FieldTryCopyAccess::try_write].
+    fn write(storage: &mut [u8], value: Self::HighLevelType) {
+        // TODO use infallible_unwrap
+        F::try_write(storage, value).unwrap()
     }
 }
-
-impl_field_traits!(());
 
 #[cfg(test)]
 mod tests {
