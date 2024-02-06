@@ -66,13 +66,13 @@ pub trait LayoutAs<U>: Sized {
 #[derive(Debug)]
 #[cfg_attr(feature = "std", derive(Error))]
 pub enum WrappedFieldError<PrimitiveAccessError, LayoutAsError> {
-    /// TODO Docs
+    /// An error happened when reading or writing the primitive data type the [LayoutAs] stores values at.
     #[cfg_attr(
         feature = "std",
         error("Error accessing (reading or writing) the primitive data type: {0}")
     )]
     PrimitiveAccessError(PrimitiveAccessError),
-    /// TODO Docs
+    /// An error happened in the call to [LayoutAs::try_read] or [LayoutAs::try_write]
     #[cfg_attr(
         feature = "std",
         error("Error mapping the primitive data type in `LayoutAs`: {0}")

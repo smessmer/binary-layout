@@ -167,7 +167,6 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'
     /// ```
     #[inline(always)]
     fn data(storage: &'a [u8]) -> &'a [u8; N] {
-        // TODO Can this be done without try_from? https://stackoverflow.com/questions/71216771/create-array-reference-to-sub-slice
         <&[u8; N]>::try_from(&storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
 
@@ -190,7 +189,6 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'
     /// ```
     #[inline(always)]
     fn data_mut(storage: &'a mut [u8]) -> &'a mut [u8; N] {
-        // TODO Can this be done without try_from? https://stackoverflow.com/questions/71216771/create-array-reference-to-sub-slice
         <&mut [u8; N]>::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
     }
 }
