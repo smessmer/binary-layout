@@ -4,13 +4,11 @@ use crate::endianness::Endianness;
 
 mod copy_access;
 mod nested_access;
-mod read_write_ext;
 mod slice_access;
 mod view;
 
-pub use copy_access::{FieldCopyAccess, NonZeroIsZeroError};
+pub use copy_access::{FieldCopyAccess, FieldReadExt, FieldWriteExt, NonZeroIsZeroError};
 pub use nested_access::{BorrowingNestedView, NestedViewInfo, OwningNestedView};
-pub use read_write_ext::{FieldReadExt, FieldWriteExt};
 pub use slice_access::FieldSliceAccess;
 pub use view::FieldView;
 

@@ -83,4 +83,42 @@ impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<(),
 
 impl_field_traits!(());
 
-// TODO Tests (I think we accidentally deleted them a few commits further up when we removed the previous version of FieldCopyAccess and replaced it with a version that is based on FieldTryCopyAccess)
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+    use crate::PrimitiveField;
+
+    macro_rules! test_unit_copy_access {
+        ($endian:ident, $endian_type:ty) => {
+            $crate::internal::paste! {
+                #[allow(clippy::unit_cmp)]
+                #[test]
+                fn [<test_unit_ $endian endian>]() {
+                    let mut storage = vec![0; 1024];
+
+                    type Field1 = PrimitiveField<(), $endian_type, 5>;
+                    type Field2 = PrimitiveField<(), $endian_type, 123>;
+
+                    Field1::write(&mut storage, ());
+                    Field2::write(&mut storage, ());
+
+                    assert_eq!((), Field1::read(&storage));
+                    assert_eq!((), Field2::read(&storage));
+
+                    assert_eq!(Some(0), Field1::SIZE);
+                    assert_eq!(5, Field1::OFFSET);
+                    assert_eq!(Some(0), Field2::SIZE);
+                    assert_eq!(123, Field2::OFFSET);
+
+                    // Zero-sized types do not mutate the storage, so it should remain
+                    // unchanged for all of time.
+                    assert_eq!(storage, vec![0; 1024]);
+                }
+            }
+        };
+    }
+
+    test_unit_copy_access!(little, LittleEndian);
+    test_unit_copy_access!(big, BigEndian);
+    test_unit_copy_access!(native, NativeEndian);
+}

@@ -113,5 +113,7 @@ mod primitive_float;
 mod primitive_int;
 mod primitive_nonzero_int;
 mod primitive_unit;
+mod read_write_ext;
 
 pub use primitive_nonzero_int::NonZeroIsZeroError;
+pub use read_write_ext::{FieldReadExt, FieldWriteExt};

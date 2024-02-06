@@ -119,7 +119,6 @@ nonzero_int_field!(core::num::NonZeroU128, u128);
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::float_cmp)]
     use crate::prelude::*;
     use crate::PrimitiveField;
 
