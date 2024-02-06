@@ -170,7 +170,7 @@ shows how you can mix different endian layouts together:
 
 ```rust
 use binary_layout::prelude::*;
-use std::convert::TryInto;
+use core::convert::TryInto;
 
 define_layout!(deep_nesting, LittleEndian, {
     field1: u16,
