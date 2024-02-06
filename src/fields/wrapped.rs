@@ -1,6 +1,7 @@
 use core::convert::Infallible;
 use core::fmt::Debug;
 use core::marker::PhantomData;
+#[cfg(feature = "std")]
 use thiserror::Error;
 
 use crate::utils::infallible::IsInfallible;
@@ -62,13 +63,20 @@ pub trait LayoutAs<U>: Sized {
 }
 
 /// The error being thrown when reading or writing fields that use custom data types implemented via [LayoutAs].
-#[derive(Error, Debug)]
+#[derive(Debug)]
+#[cfg_attr(feature = "std", derive(Error))]
 pub enum WrappedFieldError<PrimitiveAccessError, LayoutAsError> {
     /// TODO Docs
-    #[error("Error accessing (reading or writing) the primitive data type: {0}")]
+    #[cfg_attr(
+        feature = "std",
+        error("Error accessing (reading or writing) the primitive data type: {0}")
+    )]
     PrimitiveAccessError(PrimitiveAccessError),
     /// TODO Docs
-    #[error("Error mapping the primitive data type in `LayoutAs`: {0}")]
+    #[cfg_attr(
+        feature = "std",
+        error("Error mapping the primitive data type in `LayoutAs`: {0}")
+    )]
     LayoutAsError(LayoutAsError),
 }
 
