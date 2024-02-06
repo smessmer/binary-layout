@@ -1,5 +1,6 @@
 4.0.0 (unreleased)
 ------
+- Updated MSRV to 1.59
 - The `FieldCopyAccess` trait now has `try_read()` and `try_write()` instead of `read()` and `write()`.
   This can be used for types that can throw errors when reading or writing them.
   The `read()` and `write()` methods are still available for data types that don't throw errors,

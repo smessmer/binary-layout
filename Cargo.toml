@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 name = "binary-layout"
 readme = "README.md"
 repository = "https://github.com/smessmer/binary-layout"
-rust-version = "1.56"
+rust-version = "1.59"
 version = "3.3.0"
 
 [dependencies]
