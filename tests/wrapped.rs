@@ -2,6 +2,7 @@ use binary_layout::{prelude::*, LayoutAs};
 use core::any::{Any, TypeId};
 use core::convert::TryInto;
 use std::convert::Infallible;
+use std::num::NonZeroI32;
 
 mod common;
 use common::data_region;
@@ -25,7 +26,7 @@ define_layout!(noslice, LittleEndian, {
     first: Wrapped<i8> as i8,
     second: Wrapped<i64> as i64,
     third: Wrapped<u16> as u16,
-    // TODO Can we allow wrapping NonZero types?
+    fourth: Wrapped<NonZeroI32> as NonZeroI32,
 });
 
 #[test]
@@ -36,6 +37,8 @@ fn metadata() {
     assert_eq!(Some(8), noslice::second::SIZE);
     assert_eq!(9, noslice::third::OFFSET);
     assert_eq!(Some(2), noslice::third::SIZE);
+    assert_eq!(11, noslice::fourth::OFFSET);
+    assert_eq!(Some(4), noslice::fourth::SIZE);
 }
 
 #[test]
@@ -55,10 +58,18 @@ fn types() {
         TypeId::of::<Wrapped<u16>>(),
         noslice::third::read(&storage).type_id()
     );
+    assert_eq!(
+        TypeId::of::<Wrapped<NonZeroI32>>(),
+        noslice::fourth::try_read(&storage).unwrap().type_id()
+    );
 
     assert_eq!(TypeId::of::<Wrapped<i8>>(), view.first().read().type_id());
     assert_eq!(TypeId::of::<Wrapped<i64>>(), view.second().read().type_id());
     assert_eq!(TypeId::of::<Wrapped<u16>>(), view.third().read().type_id());
+    assert_eq!(
+        TypeId::of::<Wrapped<NonZeroI32>>(),
+        view.fourth().try_read().unwrap().type_id(),
+    );
 }
 
 #[test]
@@ -84,16 +95,33 @@ fn fields() {
         )),
         noslice::third::read(&storage)
     );
+    assert_eq!(
+        Wrapped(
+            NonZeroI32::new(i32::from_le_bytes(
+                (&data_region(1024, 5)[11..15]).try_into().unwrap()
+            ))
+            .unwrap()
+        ),
+        noslice::fourth::try_read(&storage).unwrap(),
+    );
 
     // Test data can be written
     noslice::first::write(&mut storage, Wrapped(60));
     noslice::second::write(&mut storage, Wrapped(-100_000_000_000));
     noslice::third::write(&mut storage, Wrapped(1_000));
+    noslice::fourth::write(
+        &mut storage,
+        Wrapped(NonZeroI32::new(1_000_000_000).unwrap()),
+    );
 
     // Test reading will return changed data
     assert_eq!(Wrapped(60), noslice::first::read(&storage));
     assert_eq!(Wrapped(-100_000_000_000), noslice::second::read(&storage));
     assert_eq!(Wrapped(1_000), noslice::third::read(&storage));
+    assert_eq!(
+        Wrapped(NonZeroI32::new(1_000_000_000).unwrap()),
+        noslice::fourth::try_read(&storage).unwrap(),
+    );
 }
 
 #[test]
@@ -119,6 +147,15 @@ fn view_readonly() {
             (&data_region(1024, 5)[9..11]).try_into().unwrap()
         )),
         view.third().read()
+    );
+    assert_eq!(
+        Wrapped(
+            NonZeroI32::new(i32::from_le_bytes(
+                (&data_region(1024, 5)[11..15]).try_into().unwrap()
+            ))
+            .unwrap()
+        ),
+        view.fourth().try_read().unwrap(),
     );
 
     // Test into_storage will return correct data
@@ -150,16 +187,31 @@ fn view_readwrite() {
         )),
         view.third().read()
     );
+    assert_eq!(
+        Wrapped(
+            NonZeroI32::new(i32::from_le_bytes(
+                (&data_region(1024, 5)[11..15]).try_into().unwrap()
+            ))
+            .unwrap()
+        ),
+        view.fourth().try_read().unwrap(),
+    );
 
     // Test data can be written
     view.first_mut().write(Wrapped(50));
     view.second_mut().write(Wrapped(10i64.pow(15)));
     view.third_mut().write(Wrapped(1000));
+    view.fourth_mut()
+        .write(Wrapped(NonZeroI32::new(1_000_000_000).unwrap()));
 
     // Test reading will return changed data
     assert_eq!(Wrapped(50), view.first().read());
     assert_eq!(Wrapped(10i64.pow(15)), view.second().read());
     assert_eq!(Wrapped(1000), view.third().read());
+    assert_eq!(
+        Wrapped(NonZeroI32::new(1_000_000_000).unwrap()),
+        view.fourth().try_read().unwrap()
+    );
 
     // Test into_storage will return correct data
     let extracted_storage = view.into_storage().to_vec();
@@ -174,6 +226,10 @@ fn view_readwrite() {
     assert_eq!(
         1000,
         u16::from_le_bytes((&storage[9..11]).try_into().unwrap())
+    );
+    assert_eq!(
+        1_000_000_000,
+        i32::from_le_bytes((&storage[11..15]).try_into().unwrap())
     );
 }
 
@@ -199,6 +255,15 @@ fn view_vec_readonly() {
             (&data_region(1024, 5)[9..11]).try_into().unwrap()
         )),
         view.third().read()
+    );
+    assert_eq!(
+        Wrapped(
+            NonZeroI32::new(i32::from_le_bytes(
+                (&data_region(1024, 5)[11..15]).try_into().unwrap()
+            ))
+            .unwrap()
+        ),
+        view.fourth().try_read().unwrap(),
     );
 
     // Test into_storage will return correct data
@@ -229,16 +294,31 @@ fn view_vec_readwrite() {
         )),
         view.third().read()
     );
+    assert_eq!(
+        Wrapped(
+            NonZeroI32::new(i32::from_le_bytes(
+                (&data_region(1024, 5)[11..15]).try_into().unwrap()
+            ))
+            .unwrap()
+        ),
+        view.fourth().try_read().unwrap(),
+    );
 
     // Test data can be written
     view.first_mut().write(Wrapped(50));
     view.second_mut().write(Wrapped(10i64.pow(15)));
     view.third_mut().write(Wrapped(1000));
+    view.fourth_mut()
+        .write(Wrapped(NonZeroI32::new(1_000_000_000).unwrap()));
 
     // Test reading will return changed data
     assert_eq!(Wrapped(50), view.first().read());
     assert_eq!(Wrapped(10i64.pow(15)), view.second().read());
     assert_eq!(Wrapped(1000), view.third().read());
+    assert_eq!(
+        Wrapped(NonZeroI32::new(1_000_000_000).unwrap()),
+        view.fourth().try_read().unwrap()
+    );
 
     // Test into_storage will return correct data
     let extracted_storage = view.into_storage();
@@ -253,5 +333,9 @@ fn view_vec_readwrite() {
     assert_eq!(
         1000,
         u16::from_le_bytes((&extracted_storage[9..11]).try_into().unwrap())
+    );
+    assert_eq!(
+        1_000_000_000,
+        i32::from_le_bytes((&extracted_storage[11..15]).try_into().unwrap())
     );
 }
