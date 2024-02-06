@@ -16,8 +16,7 @@ jobs:
       matrix:
         command: ["build", "test"]
         profile: ["", "--release"]
-        # TODO Add --no-default-features
-        features: ["", "--all-features"]
+        features: ["", "--all-features", "--no-default-features"]
         # MSRV of binary-layout is 1.59 but for arm, one of our dependencies requires 1.70
         toolchain: ["stable", "nightly", "1.70"]
     steps:
@@ -40,8 +39,7 @@ jobs:
       matrix:
         command: ["build", "test"]
         profile: ["", "--release"]
-        # TODO Add --no-default-features
-        features: ["", "--all-features"]
+        features: ["", "--all-features", "--no-default-features"]
         # Nightly because -Z direct-minimal-versions is a nightly cargo feature
         toolchain: ["nightly"]
     steps:
@@ -69,8 +67,7 @@ jobs:
       matrix:
         command: ["build", "test"]
         profile: ["", "--release"]
-        # TODO Add --no-default-features
-        features: ["", "--all-features"]
+        features: ["", "--all-features", "--no-default-features"]
         toolchain: ["stable", "nightly", "1.59"]
     steps:
       - uses: actions/checkout@v4
@@ -90,8 +87,7 @@ jobs:
       matrix:
         command: ["build", "test"]
         profile: ["", "--release"]
-        # TODO Add --no-default-features
-        features: ["", "--all-features"]
+        features: ["", "--all-features", "--no-default-features"]
         # Nightly because -Z direct-minimal-versions is a nightly cargo featur
         toolchain: ["nightly"]
     steps:
