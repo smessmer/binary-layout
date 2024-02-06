@@ -276,9 +276,17 @@ mod tests {
 
     use rand::{rngs::StdRng, RngCore, SeedableRng};
 
-    fn data_region(size: usize, seed: u64) -> Vec<u8> {
+    #[cfg(feature = "std")]
+    fn data_region_vec(size: usize, seed: u64) -> Vec<u8> {
         let mut rng = StdRng::seed_from_u64(seed);
         let mut res = vec![0; size];
+        rng.fill_bytes(&mut res);
+        res
+    }
+
+    fn data_region(seed: u64) -> [u8; 1024] {
+        let mut rng = StdRng::seed_from_u64(seed);
+        let mut res = [0; 1024];
         rng.fill_bytes(&mut res);
         res
     }
@@ -325,14 +333,29 @@ mod tests {
         });
     }
 
+    #[cfg(feature = "std")]
     #[test]
-    fn there_can_be_multiple_views_if_readonly() {
+    fn there_can_be_multiple_views_if_readonly_vec() {
         define_layout!(my_layout, BigEndian, {
             field1: u16,
             field2: i64,
         });
 
-        let storage = data_region(1024, 0);
+        let storage = data_region_vec(1024, 0);
+        let view1 = my_layout::View::new(&storage);
+        let view2 = my_layout::View::new(&storage);
+        view1.field1().read();
+        view2.field1().read();
+    }
+
+    #[test]
+    fn there_can_be_multiple_views_if_readonly_array() {
+        define_layout!(my_layout, BigEndian, {
+            field1: u16,
+            field2: i64,
+        });
+
+        let storage = data_region(0);
         let view1 = my_layout::View::new(&storage);
         let view2 = my_layout::View::new(&storage);
         view1.field1().read();

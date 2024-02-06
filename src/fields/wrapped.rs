@@ -327,7 +327,7 @@ mod tests {
             $crate::internal::paste! {
                 #[test]
                 fn [<test_ $type _ $endian endian>]() {
-                    let mut storage = vec![0; 1024];
+                    let mut storage = [0; 1024];
 
                     type Field1 = WrappedField<$type, Wrapped<$type>, PrimitiveField<$type, $endian_type, 5>>;
                     type Field2 = WrappedField<$type, Wrapped<$type>, PrimitiveField<$type, $endian_type, 123>>;
@@ -374,7 +374,7 @@ mod tests {
                 #[allow(clippy::unit_cmp)]
                 #[test]
                 fn [<test_unit_ $endian endian>]() {
-                    let mut storage = vec![0; 1024];
+                    let mut storage = [0; 1024];
 
                     type Field1 = WrappedField<(), Wrapped<()>, PrimitiveField<(), LittleEndian, 5>>;
                     type Field2 = WrappedField<(), Wrapped<()>, PrimitiveField<(), LittleEndian, 123>>;
@@ -392,7 +392,7 @@ mod tests {
 
                     // Zero-sized types do not mutate the storage, so it should remain
                     // unchanged for all of time.
-                    assert_eq!(storage, vec![0; 1024]);
+                    assert_eq!(storage, [0; 1024]);
                 }
             }
         };

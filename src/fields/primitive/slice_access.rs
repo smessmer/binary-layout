@@ -245,7 +245,7 @@ mod tests {
 
     #[test]
     fn test_slice() {
-        let mut storage = vec![0; 1024];
+        let mut storage = [0; 1024];
 
         type Field1 = PrimitiveField<[u8], LittleEndian, 5>;
         type Field2 = PrimitiveField<[u8], BigEndian, 7>;
@@ -266,7 +266,7 @@ mod tests {
 
     #[test]
     fn test_array() {
-        let mut storage = vec![0; 1024];
+        let mut storage = [0; 1024];
 
         type Field1 = PrimitiveField<[u8; 2], LittleEndian, 5>;
         type Field2 = PrimitiveField<[u8; 5], BigEndian, 6>;

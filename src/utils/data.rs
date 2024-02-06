@@ -201,6 +201,7 @@ impl<'a> Data<&'a mut [u8]> {
 }
 
 #[cfg(test)]
+#[cfg(feature = "std")] // TODO add no-std tests?
 mod tests {
     use super::*;
     use rand::{rngs::StdRng, RngCore, SeedableRng};

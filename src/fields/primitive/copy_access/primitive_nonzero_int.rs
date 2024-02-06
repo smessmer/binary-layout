@@ -134,7 +134,7 @@ mod tests {
                 #[allow(non_snake_case)]
                 #[test]
                 fn [<test_ $type _ $endian endian_tryread_write>]() {
-                    let mut storage = vec![0; 1024];
+                    let mut storage = [0; 1024];
 
                     let value1 = <$type>::new($value1).unwrap();
                     let value2 = <$type>::new($value2).unwrap();
@@ -163,7 +163,7 @@ mod tests {
                 fn [<test_ $type _ $endian endian_tryread_trywrite>]() {
                     use crate::InfallibleResultExt;
 
-                    let mut storage = vec![0; 1024];
+                    let mut storage = [0; 1024];
 
                     let value1 = <$type>::new($value1).unwrap();
                     let value2 = <$type>::new($value2).unwrap();
