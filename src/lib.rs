@@ -87,17 +87,21 @@
 //! ## Supported field types
 //!
 //! ### Primitive integer types
-//! - [u8](https://doc.rust-lang.org/stable/std/primitive.u8.html), [u16](https://doc.rust-lang.org/stable/std/primitive.u16.html), [u32](https://doc.rust-lang.org/stable/std/primitive.u32.html), [u64](https://doc.rust-lang.org/stable/std/primitive.u64.html), [u128](https://doc.rust-lang.org/stable/std/primitive.u128.html)
-//! - [i8](https://doc.rust-lang.org/stable/std/primitive.i8.html), [i16](https://doc.rust-lang.org/stable/std/primitive.i16.html), [i32](https://doc.rust-lang.org/stable/std/primitive.i32.html), [i64](https://doc.rust-lang.org/stable/std/primitive.i64.html), [i128](https://doc.rust-lang.org/stable/std/primitive.i128.html)
+//! - [u8](https://doc.rust-lang.org/stable/core/primitive.u8.html), [u16](https://doc.rust-lang.org/stable/core/primitive.u16.html), [u32](https://doc.rust-lang.org/stable/core/primitive.u32.html), [u64](https://doc.rust-lang.org/stable/core/primitive.u64.html), [u128](https://doc.rust-lang.org/stable/core/primitive.u128.html)
+//! - [i8](https://doc.rust-lang.org/stable/core/primitive.i8.html), [i16](https://doc.rust-lang.org/stable/core/primitive.i16.html), [i32](https://doc.rust-lang.org/stable/core/primitive.i32.html), [i64](https://doc.rust-lang.org/stable/core/primitive.i64.html), [i128](https://doc.rust-lang.org/stable/core/primitive.i128.html)
 //!
 //! ### Primitive float types
-//! - [f32](https://doc.rust-lang.org/std/primitive.f32.html), [f64](https://doc.rust-lang.org/std/primitive.f64.html)
+//! - [f32](https://doc.rust-lang.org/core/primitive.f32.html), [f64](https://doc.rust-lang.org/core/primitive.f64.html)
+//!
+//! ### Non-zero primitive integer types
+//! - [NonZeroU8](https://doc.rust-lang.org/core/num/struct.NonZeroU8.html), [NonZeroU16](https://doc.rust-lang.org/core/num/struct.NonZeroU16.html), [NonZeroU32](https://doc.rust-lang.org/core/num/struct.NonZeroU32.html), [NonZeroU64](https://doc.rust-lang.org/core/num/struct.NonZeroU64.html), [NonZeroU128](https://doc.rust-lang.org/core/num/struct.NonZeroU128.html)
+//! - [NonZeroI8](https://doc.rust-lang.org/core/num/struct.NonZeroI8.html), [NonZeroI16](https://doc.rust-lang.org/core/num/struct.NonZeroI16.html), [NonZeroI32](https://doc.rust-lang.org/core/num/struct.NonZeroI32.html), [NonZeroI64](https://doc.rust-lang.org/core/num/struct.NonZeroI64.html), [NonZeroI128](https://doc.rust-lang.org/core/num/struct.NonZeroI128.html)
 //!
 //! ### Primitive Zero-Sized Types (ZSTs)
 //!
 //! ZSTs neither read nor write to the underlying storage, but the appropriate traits are implemented for them to support derive macros which may require all members of a struct to implement or enum to also support the various traits.
 //!
-//! - [`()`](https://doc.rust-lang.org/std/primitive.unit.html), also known as the `unit` type.
+//! - [`()`](https://doc.rust-lang.org/core/primitive.unit.html), also known as the `unit` type.
 //!
 //! For these fields, the [trait@Field] API offers [FieldReadExt::read], [FieldWriteExt::write], [FieldCopyAccess::try_read], [FieldCopyAccess::try_write] and the [struct@FieldView] API offers [FieldView::read] and [FieldView::write].
 //!
@@ -114,8 +118,8 @@
 //!
 //! # Data types maybe supported in the future
 //! These data types aren't supported yet, but they could be added in theory and might be added in future versions.
-//! - [bool](https://doc.rust-lang.org/stable/std/primitive.bool.html) stored as 1 byte
-//! - [bool](https://doc.rust-lang.org/stable/std/primitive.bool.html) stored as 1 bit
+//! - [bool](https://doc.rust-lang.org/stable/core/primitive.bool.html) stored as 1 byte
+//! - [bool](https://doc.rust-lang.org/stable/core/primitive.bool.html) stored as 1 bit
 //!
 //! ### Data types with dynamic length
 //! This crate relies on a static layout, it cannot support data types with dynamic length.
