@@ -210,9 +210,6 @@ pub use fields::{
 };
 pub use utils::{data::Data, infallible::InfallibleResultExt};
 
-// TODO The thiserror dependency might not be nostd compatible
-// TODO Add a CI test for nostd
-
 /// Import this to get everything into scope that you need for defining and using layouts.
 ///
 /// # Example
