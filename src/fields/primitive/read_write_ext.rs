@@ -74,9 +74,9 @@ where
 {
     type HighLevelType = F::HighLevelType;
 
-    /// This implements [FieldCopyAccess::read] for any type that implements [FieldCopyAccess::try_read]
-    /// if the read cannot throw an error.
-    /// See [FieldCopyAccess::read] and [FieldCopyAccess::try_read].
+    /// This implements a convenience method for reading any data type whose [FieldCopyAccess::try_read]
+    /// does not throw errors.
+    /// See [FieldCopyAccess::try_read].
     #[inline(always)]
     fn read(storage: &[u8]) -> Self::HighLevelType {
         F::try_read(storage).infallible_unwrap()
@@ -93,9 +93,9 @@ where
 {
     type HighLevelType = F::HighLevelType;
 
-    /// This implements [FieldCopyAccess::write] for any type that implements [FieldCopyAccess::try_write]
-    /// if the write cannot throw an error.
-    /// See [FieldCopyAccess::write] and [FieldCopyAccess::try_write].
+    /// This implements a convenience method for writing any data type whose [FieldCopyAccess::try_write]
+    /// does not throw errors.
+    /// See [FieldCopyAccess::try_write].
     #[inline(always)]
     fn write(storage: &mut [u8], value: Self::HighLevelType) {
         F::try_write(storage, value).infallible_unwrap()

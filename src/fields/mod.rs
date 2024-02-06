@@ -15,7 +15,8 @@ pub mod wrapped;
 /// By itself, [Field] only offers the things common to all fields, but there
 /// are additional traits for fields that fulfill certain properties:
 /// - [FieldCopyAccess](crate::FieldCopyAccess) for fields that read/write data by copying it to/from the storage. This includes primitive types like [i8] or [u16].
-///   This trait offers [read](crate::FieldCopyAccess::read) and [write](crate::FieldCopyAccess::write) to read or write such fields.
+///   This trait offers [try_read](crate::FieldCopyAccess::try_read) and [try_write](crate::FieldCopyAccess::try_write) to read or write such fields.
+///   For types whose read or write operations don't throw errors, there are also the [read](crate::FieldReadExt::read) and [write](crate::FieldWriteExt) convenience methods.
 /// - [FieldSliceAccess](crate::FieldSliceAccess) for fields that read/write data by creating sub-slices over the storage. This includes, for example, byte arrays
 ///   and this trait offers [data](crate::FieldSliceAccess::data) and [data_mut](crate::FieldSliceAccess::data_mut) to access such fields.
 ///

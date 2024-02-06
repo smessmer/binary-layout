@@ -6,10 +6,10 @@ use super::PrimitiveField;
 /// binary blob, but where reading or writing can fail.
 /// Examples of this are primitive types like NonZeroU8, NonZeroI32, ...
 pub trait FieldCopyAccess: Field {
-    /// Error type that can be thrown from [FieldCopyAccess::read]. You can set this to [Infallible] if the function does not throw an error.
+    /// Error type that can be thrown from [FieldCopyAccess::try_read]. You can set this to [Infallible](core::convert::Infallible) if the function does not throw an error.
     type ReadError;
 
-    /// Error type that can be thrown from [FieldCopyAccess::write]. You can set this to [Infallible] if the function does not throw an error.
+    /// Error type that can be thrown from [FieldCopyAccess::try_write]. You can set this to [Infallible](core::convert::Infallible) if the function does not throw an error.
     type WriteError;
 
     /// The data type that is returned from read calls and has to be

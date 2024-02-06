@@ -99,7 +99,7 @@
 //!
 //! - [`()`](https://doc.rust-lang.org/std/primitive.unit.html), also known as the `unit` type.
 //!
-//! For these fields, the [trait@Field] API offers [FieldCopyAccess::read], [FieldCopyAccess::write] and the [struct@FieldView] API offers [FieldView::read] and [FieldView::write].
+//! For these fields, the [trait@Field] API offers [FieldReadExt::read], [FieldWriteExt::write], [FieldCopyAccess::try_read], [FieldCopyAccess::try_write] and the [struct@FieldView] API offers [FieldView::read] and [FieldView::write].
 //!
 //! ### Fixed size byte arrays: `[u8; N]`.
 //! For these fields, the [trait@Field] API offers [FieldSliceAccess::data], [FieldSliceAccess::data_mut], and the [struct@FieldView] API returns a slice.

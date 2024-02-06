@@ -92,7 +92,7 @@ macro_rules! nonzero_int_field {
     };
 }
 
-/// This error is thrown when trying to read a non-zero integer type, e.g. [NonZeroU32],
+/// This error is thrown when trying to read a non-zero integer type, e.g. [NonZeroU32](core::num::NonZeroU32),
 /// but the data being read was actually zero.
 #[derive(Debug)]
 pub struct NonZeroIsZeroError(pub(crate) ());
