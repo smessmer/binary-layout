@@ -38,11 +38,7 @@ macro_rules! nonzero_int_field {
                 "},
                 #[inline(always)]
                 fn try_read(storage: &[u8]) -> Result<$type, NonZeroIsZeroError> {
-                    // TODO Don't initialize memory
-                    let mut value = [0; core::mem::size_of::<$type>()];
-                    value.copy_from_slice(
-                        &storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())],
-                    );
+                    let value: [u8; core::mem::size_of::<$type>()] = storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())].try_into().unwrap();
                     let value = match E::KIND {
                         EndianKind::Big => <$zero_type>::from_be_bytes(value),
                         EndianKind::Little => <$zero_type>::from_le_bytes(value),
