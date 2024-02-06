@@ -91,6 +91,17 @@ mod tests {
     macro_rules! test_unit_copy_access {
         ($endian:ident, $endian_type:ty) => {
             $crate::internal::paste! {
+                #[test]
+                fn [<test_unit_ $endian endian_metadata>]() {
+                    type Field1 = PrimitiveField<(), $endian_type, 5>;
+                    type Field2 = PrimitiveField<(), $endian_type, 123>;
+
+                    assert_eq!(Some(0), Field1::SIZE);
+                    assert_eq!(5, Field1::OFFSET);
+                    assert_eq!(Some(0), Field2::SIZE);
+                    assert_eq!(123, Field2::OFFSET);
+                }
+
                 #[allow(clippy::unit_cmp)]
                 #[test]
                 fn [<test_unit_ $endian endian>]() {
@@ -104,11 +115,6 @@ mod tests {
 
                     assert_eq!((), Field1::read(&storage));
                     assert_eq!((), Field2::read(&storage));
-
-                    assert_eq!(Some(0), Field1::SIZE);
-                    assert_eq!(5, Field1::OFFSET);
-                    assert_eq!(Some(0), Field2::SIZE);
-                    assert_eq!(123, Field2::OFFSET);
 
                     // Zero-sized types do not mutate the storage, so it should remain
                     // unchanged for all of time.

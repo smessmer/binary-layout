@@ -128,6 +128,21 @@ mod tests {
             $crate::internal::paste! {
                 #[allow(non_snake_case)]
                 #[test]
+                fn [<test_ $type _ $endian endian_metadata>]() {
+                    type Field1 = PrimitiveField<$type, $endian_type, 5>;
+                    type Field2 = PrimitiveField<$type, $endian_type, 123>;
+                    type Field3 = PrimitiveField<$type, $endian_type, 150>;
+
+                    assert_eq!(Some($expected_size), Field1::SIZE);
+                    assert_eq!(5, Field1::OFFSET);
+                    assert_eq!(Some($expected_size), Field2::SIZE);
+                    assert_eq!(123, Field2::OFFSET);
+                    assert_eq!(Some($expected_size), Field3::SIZE);
+                    assert_eq!(150, Field3::OFFSET);
+                }
+
+                #[allow(non_snake_case)]
+                #[test]
                 fn [<test_ $type _ $endian endian_tryread_write>]() {
                     let mut storage = [0; 1024];
 
@@ -136,21 +151,19 @@ mod tests {
 
                     type Field1 = PrimitiveField<$type, $endian_type, 5>;
                     type Field2 = PrimitiveField<$type, $endian_type, 123>;
+                    type Field3 = PrimitiveField<$type, $endian_type, 150>;
 
                     Field1::write(&mut storage, value1);
                     Field2::write(&mut storage, value2);
+                    // don't write Field3, that should leave it at zero
 
-                    // TODO Test reading a zero
                     assert_eq!(value1, Field1::try_read(&storage).unwrap());
                     assert_eq!(value2, Field2::try_read(&storage).unwrap());
+                    assert!(matches!(Field3::try_read(&storage), Err(NonZeroIsZeroError(_))));
 
                     assert_eq!(value1, $type::new($underlying_type::$endian_fn((&storage[5..(5+$expected_size)]).try_into().unwrap())).unwrap());
                     assert_eq!(value2, $type::new($underlying_type::$endian_fn((&storage[123..(123+$expected_size)]).try_into().unwrap())).unwrap());
-
-                    assert_eq!(Some($expected_size), Field1::SIZE);
-                    assert_eq!(5, Field1::OFFSET);
-                    assert_eq!(Some($expected_size), Field2::SIZE);
-                    assert_eq!(123, Field2::OFFSET);
+                    assert_eq!(0, $underlying_type::$endian_fn((&storage[150..(150+$expected_size)]).try_into().unwrap()));
                 }
 
                 #[allow(non_snake_case)]
@@ -165,21 +178,19 @@ mod tests {
 
                     type Field1 = PrimitiveField<$type, $endian_type, 5>;
                     type Field2 = PrimitiveField<$type, $endian_type, 123>;
+                    type Field3 = PrimitiveField<$type, $endian_type, 150>;
 
                     Field1::try_write(&mut storage, value1).infallible_unwrap();
                     Field2::try_write(&mut storage, value2).infallible_unwrap();
+                    // don't write Field3, that should leave it at zero
 
-                    // TODO Test reading a zero
                     assert_eq!(value1, Field1::try_read(&storage).unwrap());
                     assert_eq!(value2, Field2::try_read(&storage).unwrap());
+                    assert!(matches!(Field3::try_read(&storage), Err(NonZeroIsZeroError(_))));
 
                     assert_eq!(value1, $type::new($underlying_type::$endian_fn((&storage[5..(5+$expected_size)]).try_into().unwrap())).unwrap());
                     assert_eq!(value2, $type::new($underlying_type::$endian_fn((&storage[123..(123+$expected_size)]).try_into().unwrap())).unwrap());
-
-                    assert_eq!(Some($expected_size), Field1::SIZE);
-                    assert_eq!(5, Field1::OFFSET);
-                    assert_eq!(Some($expected_size), Field2::SIZE);
-                    assert_eq!(123, Field2::OFFSET);
+                    assert_eq!(0, $underlying_type::$endian_fn((&storage[150..(150+$expected_size)]).try_into().unwrap()));
                 }
             }
         };
