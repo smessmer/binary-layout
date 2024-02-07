@@ -1,7 +1,7 @@
 use super::super::Field;
 use super::PrimitiveField;
 
-// TODO add support for the `char` primitive data type
+// TODO add support for the `char` and `bool` primitive data types
 
 /// This trait is implemented for fields with "try copy access",
 /// i.e. fields that read/write data by copying it from/to the
