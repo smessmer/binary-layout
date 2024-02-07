@@ -128,7 +128,7 @@ mod tests {
 
                 #[allow(non_snake_case)]
                 #[test]
-                fn [<test_ $type _ $endian endian_read_write>]() {
+                fn [<test_ $type _ $endian endian_fieldapi_read_write>]() {
                     let mut storage = [0; 1024];
 
                     type Field1 = PrimitiveField<$type, $endian_type, 5>;
@@ -150,7 +150,7 @@ mod tests {
 
                 #[allow(non_snake_case)]
                 #[test]
-                fn [<test_ $type _ $endian endian_tryread_trywrite>]() {
+                fn [<test_ $type _ $endian endian_fieldapi_tryread_trywrite>]() {
                     use crate::InfallibleResultExt;
 
                     let mut storage = [0; 1024];
@@ -170,6 +170,54 @@ mod tests {
                     assert_eq!($value1, $type::$endian_fn((&storage[5..(5+$expected_size)]).try_into().unwrap()));
                     assert_eq!($value2, $type::$endian_fn((&storage[123..(123+$expected_size)]).try_into().unwrap()));
                     assert_eq!(0, $type::$endian_fn((&storage[150..(150+$expected_size)]).try_into().unwrap()));
+                }
+
+                #[allow(non_snake_case)]
+                #[test]
+                fn [<test_ $type _ $endian endian_viewapi_read_write>]() {
+                    define_layout!(layout, $endian_type, {
+                        field1: $type,
+                        field2: $type,
+                        field3: $type,
+                    });
+                    let mut storage = [0; 1024];
+                    let mut view = layout::View::new(&mut storage);
+
+                    view.field1_mut().write($value1);
+                    view.field2_mut().write($value2);
+                    view.field3_mut().write(0);
+
+                    assert_eq!($value1, view.field1().read());
+                    assert_eq!($value2, view.field2().read());
+                    assert_eq!(0, view.field3().read());
+
+                    assert_eq!($value1, $type::$endian_fn((&storage[0..(0+$expected_size)]).try_into().unwrap()));
+                    assert_eq!($value2, $type::$endian_fn((&storage[$expected_size..(2*$expected_size)]).try_into().unwrap()));
+                    assert_eq!(0, $type::$endian_fn((&storage[2*$expected_size..(3*$expected_size)]).try_into().unwrap()));
+                }
+
+                #[allow(non_snake_case)]
+                #[test]
+                fn [<test_ $type _ $endian endian_viewapi_tryread_trywrite>]() {
+                    define_layout!(layout, $endian_type, {
+                        field1: $type,
+                        field2: $type,
+                        field3: $type,
+                    });
+                    let mut storage = [0; 1024];
+                    let mut view = layout::View::new(&mut storage);
+
+                    view.field1_mut().try_write($value1).infallible_unwrap();
+                    view.field2_mut().try_write($value2).infallible_unwrap();
+                    view.field3_mut().try_write(0).infallible_unwrap();
+
+                    assert_eq!($value1, view.field1().try_read().infallible_unwrap());
+                    assert_eq!($value2, view.field2().try_read().infallible_unwrap());
+                    assert_eq!(0, view.field3().try_read().infallible_unwrap());
+
+                    assert_eq!($value1, $type::$endian_fn((&storage[0..(0+$expected_size)]).try_into().unwrap()));
+                    assert_eq!($value2, $type::$endian_fn((&storage[$expected_size..(2*$expected_size)]).try_into().unwrap()));
+                    assert_eq!(0, $type::$endian_fn((&storage[2*$expected_size..(3*$expected_size)]).try_into().unwrap()));
                 }
             }
         };

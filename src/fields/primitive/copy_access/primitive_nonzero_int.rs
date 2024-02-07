@@ -143,7 +143,7 @@ mod tests {
 
                 #[allow(non_snake_case)]
                 #[test]
-                fn [<test_ $type _ $endian endian_tryread_write>]() {
+                fn [<test_ $type _ $endian endian_fieldapi_tryread_write>]() {
                     let mut storage = [0; 1024];
 
                     let value1 = <$type>::new($value1).unwrap();
@@ -168,7 +168,7 @@ mod tests {
 
                 #[allow(non_snake_case)]
                 #[test]
-                fn [<test_ $type _ $endian endian_tryread_trywrite>]() {
+                fn [<test_ $type _ $endian endian_fieldapi_tryread_trywrite>]() {
                     use crate::InfallibleResultExt;
 
                     let mut storage = [0; 1024];
@@ -191,6 +191,60 @@ mod tests {
                     assert_eq!(value1, $type::new($underlying_type::$endian_fn((&storage[5..(5+$expected_size)]).try_into().unwrap())).unwrap());
                     assert_eq!(value2, $type::new($underlying_type::$endian_fn((&storage[123..(123+$expected_size)]).try_into().unwrap())).unwrap());
                     assert_eq!(0, $underlying_type::$endian_fn((&storage[150..(150+$expected_size)]).try_into().unwrap()));
+                }
+
+                #[allow(non_snake_case)]
+                #[test]
+                fn [<test_ $type _ $endian endian_viewapi_tryread_write>]() {
+                    define_layout!(layout, $endian_type, {
+                        field1: $type,
+                        field2: $type,
+                        field3: $type,
+                    });
+                    let mut storage = [0; 1024];
+                    let mut view = layout::View::new(&mut storage);
+
+                    let value1 = <$type>::new($value1).unwrap();
+                    let value2 = <$type>::new($value2).unwrap();
+
+                    view.field1_mut().write(value1);
+                    view.field2_mut().write(value2);
+                    // don't write Field3, that should leave it at zero
+
+                    assert_eq!(value1, view.field1().try_read().unwrap());
+                    assert_eq!(value2, view.field2().try_read().unwrap());
+                    assert!(matches!(view.field3().try_read(), Err(NonZeroIsZeroError(_))));
+
+                    assert_eq!(value1, $type::new($underlying_type::$endian_fn((&storage[0..($expected_size)]).try_into().unwrap())).unwrap());
+                    assert_eq!(value2, $type::new($underlying_type::$endian_fn((&storage[$expected_size..(2*$expected_size)]).try_into().unwrap())).unwrap());
+                    assert_eq!(0, $underlying_type::$endian_fn((&storage[2*$expected_size..(3*$expected_size)]).try_into().unwrap()));
+                }
+
+                #[allow(non_snake_case)]
+                #[test]
+                fn [<test_ $type _ $endian endian_viewapi_tryread_trywrite>]() {
+                    define_layout!(layout, $endian_type, {
+                        field1: $type,
+                        field2: $type,
+                        field3: $type,
+                    });
+                    let mut storage = [0; 1024];
+                    let mut view = layout::View::new(&mut storage);
+
+                    let value1 = <$type>::new($value1).unwrap();
+                    let value2 = <$type>::new($value2).unwrap();
+
+                    view.field1_mut().try_write(value1).infallible_unwrap();
+                    view.field2_mut().try_write(value2).infallible_unwrap();
+                    // don't write Field3, that should leave it at zero
+
+                    assert_eq!(value1, view.field1().try_read().unwrap());
+                    assert_eq!(value2, view.field2().try_read().unwrap());
+                    assert!(matches!(view.field3().try_read(), Err(NonZeroIsZeroError(_))));
+
+                    assert_eq!(value1, $type::new($underlying_type::$endian_fn((&storage[0..($expected_size)]).try_into().unwrap())).unwrap());
+                    assert_eq!(value2, $type::new($underlying_type::$endian_fn((&storage[$expected_size..(2*$expected_size)]).try_into().unwrap())).unwrap());
+                    assert_eq!(0, $underlying_type::$endian_fn((&storage[2*$expected_size..(3*$expected_size)]).try_into().unwrap()));
                 }
             }
         };

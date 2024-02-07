@@ -295,3 +295,5 @@ fn view_vec_readwrite() {
     );
     assert_eq!(&data_region(1024, 6)[20..], &extracted_storage[20..]);
 }
+
+// TODO Here and in other tests, add an array-based alternative to the _vec_ views

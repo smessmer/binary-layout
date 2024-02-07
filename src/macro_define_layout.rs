@@ -1,3 +1,5 @@
+// TODO rename to `binary_layout!`
+
 /// This macro defines a data layout. Given such a layout, the [Field](crate::Field) or [FieldView](crate::FieldView) APIs can be used to access data based on it.
 ///
 /// Data layouts define

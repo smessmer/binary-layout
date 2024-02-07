@@ -104,7 +104,7 @@ mod tests {
 
                 #[allow(clippy::unit_cmp)]
                 #[test]
-                fn [<test_unit_ $endian endian>]() {
+                fn [<test_unit_ $endian endian_fieldapi>]() {
                     let mut storage = [0; 1024];
 
                     type Field1 = PrimitiveField<(), $endian_type, 5>;
@@ -115,6 +115,27 @@ mod tests {
 
                     assert_eq!((), Field1::read(&storage));
                     assert_eq!((), Field2::read(&storage));
+
+                    // Zero-sized types do not mutate the storage, so it should remain
+                    // unchanged for all of time.
+                    assert_eq!(storage, [0; 1024]);
+                }
+
+                #[allow(clippy::unit_cmp)]
+                #[test]
+                fn [<test_unit_ $endian endian_viewapi>]() {
+                    define_layout!(layout, $endian_type, {
+                        field1: (),
+                        field2: (),
+                    });
+                    let mut storage = [0; 1024];
+                    let mut view = layout::View::new(&mut storage);
+
+                    view.field1_mut().write(());
+                    view.field2_mut().write(());
+
+                    assert_eq!((), view.field1().read());
+                    assert_eq!((), view.field2().read());
 
                     // Zero-sized types do not mutate the storage, so it should remain
                     // unchanged for all of time.
