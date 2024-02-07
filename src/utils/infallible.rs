@@ -26,3 +26,23 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn infallible_unwrap() {
+        let value: Result<u32, Infallible> = Ok(2);
+        assert_eq!(2, value.infallible_unwrap());
+    }
+
+    struct AlternativeInfallible {}
+    impl IsInfallible for AlternativeInfallible {}
+
+    #[test]
+    fn alternative_infallible_unwrap() {
+        let value: Result<u32, AlternativeInfallible> = Ok(2);
+        assert_eq!(2, value.infallible_unwrap());
+    }
+}
