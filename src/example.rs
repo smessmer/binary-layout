@@ -7,6 +7,6 @@ binary_layout!(icmp_packet, BigEndian, {
   packet_type: u8,
   code: u8,
   checksum: u16,
-  rest_of_header: [u8; 4],
-  data_section: [u8], // open ended byte array, matches until the end of the packet
+  //rest_of_header: [u8; 4],
+  //data_section: [u8], // open ended byte array, matches until the end of the packet
 });

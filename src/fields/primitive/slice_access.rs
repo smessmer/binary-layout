@@ -1,18 +1,19 @@
-use core::convert::TryFrom;
-
-use super::super::{Field, StorageIntoFieldView, StorageToFieldView};
+use super::super::Field;
 use super::PrimitiveField;
+use crate::data_types::{
+    slice::{SliceRead, SliceWrite},
+    DataTypeMetadata,
+};
 use crate::endianness::Endianness;
-use crate::utils::data::Data;
+
+// TODO Split FieldSliceAccess into FieldDataAccess and FieldDataMutAccess
 
 /// This trait is implemented for fields with "slice access",
 /// i.e. fields that are read/write directly without a copy
 /// by returning a borrowed slice to the underlying data.
-pub trait FieldSliceAccess<'a>: Field {
-    /// The type of slice returned from calls requesting read access
-    type SliceType: 'a;
-    /// The type of slice returned from calls requesting write access
-    type MutSliceType: 'a;
+pub trait FieldSliceAccess: Field {
+    /// TODO Docs
+    type HighLevelType: ?Sized;
 
     /// Borrow the data in the byte array with read access using the [Field] API.
     ///
@@ -29,7 +30,7 @@ pub trait FieldSliceAccess<'a>: Field {
     ///     let tail_data: &[u8] = my_layout::tail_data::data(storage_data);
     /// }
     /// ```
-    fn data(storage: &'a [u8]) -> Self::SliceType;
+    fn data<'a>(storage: &'a [u8]) -> &'a Self::HighLevelType;
 
     /// Borrow the data in the byte array with write access using the [Field] API.
     ///
@@ -46,17 +47,16 @@ pub trait FieldSliceAccess<'a>: Field {
     ///     let tail_data: &mut [u8] = my_layout::tail_data::data_mut(storage_data);
     /// }
     /// ```
-    fn data_mut(storage: &'a mut [u8]) -> Self::MutSliceType;
+    fn data_mut<'a>(storage: &'a mut [u8]) -> &'a mut Self::HighLevelType;
 }
 
-/// Field type `[u8]`:
-/// This field represents an [open ended byte array](crate#open-ended-byte-arrays-u8).
-/// In this impl, we define accessors for such fields.
-impl<'a, E: Endianness, const OFFSET_: usize> FieldSliceAccess<'a>
-    for PrimitiveField<[u8], E, OFFSET_>
+impl<
+        T: ?Sized + DataTypeMetadata + SliceRead + SliceWrite,
+        E: Endianness,
+        const OFFSET_: usize,
+    > FieldSliceAccess for PrimitiveField<T, E, OFFSET_>
 {
-    type SliceType = &'a [u8];
-    type MutSliceType = &'a mut [u8];
+    type HighLevelType = T;
 
     /// Borrow the data in the byte array with read access using the [Field] API.
     ///
@@ -74,8 +74,13 @@ impl<'a, E: Endianness, const OFFSET_: usize> FieldSliceAccess<'a>
     /// }
     /// ```
     #[inline(always)]
-    fn data(storage: &'a [u8]) -> &'a [u8] {
-        &storage[Self::OFFSET..]
+    fn data<'a>(storage: &'a [u8]) -> &'a T {
+        let storage = if let Some(size) = Self::SIZE {
+            &storage[Self::OFFSET..(Self::OFFSET + size)]
+        } else {
+            &storage[Self::OFFSET..]
+        };
+        <T as SliceRead>::data(storage)
     }
 
     /// Borrow the data in the byte array with write access using the [Field] API.
@@ -94,146 +99,69 @@ impl<'a, E: Endianness, const OFFSET_: usize> FieldSliceAccess<'a>
     /// }
     /// ```
     #[inline(always)]
-    fn data_mut(storage: &'a mut [u8]) -> &'a mut [u8] {
-        &mut storage[Self::OFFSET..]
-    }
-}
-impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<[u8], E, OFFSET_> {
-    /// See [Field::Endian]
-    type Endian = E;
-    /// See [Field::OFFSET]
-    const OFFSET: usize = OFFSET_;
-    /// See [Field::SIZE]
-    const SIZE: Option<usize> = None;
-}
-impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a [u8]>
-    for PrimitiveField<[u8], E, OFFSET_>
-{
-    type View = &'a [u8];
-
-    #[inline(always)]
-    fn view(storage: &'a [u8]) -> Self::View {
-        &storage[Self::OFFSET..]
+    fn data_mut<'a>(storage: &'a mut [u8]) -> &'a mut T {
+        let storage = if let Some(size) = Self::SIZE {
+            &mut storage[Self::OFFSET..(Self::OFFSET + size)]
+        } else {
+            &mut storage[Self::OFFSET..]
+        };
+        <T as SliceWrite>::data_mut(storage)
     }
 }
 
-impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a mut [u8]>
-    for PrimitiveField<[u8], E, OFFSET_>
-{
-    type View = &'a mut [u8];
+// /// Field type `[u8; N]`:
+// /// This field represents a [fixed size byte array](crate#fixed-size-byte-arrays-u8-n).
+// /// In this impl, we define accessors for such fields.
+// impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'a>
+//     for PrimitiveField<[u8; N], E, OFFSET_>
+// {
+//     type SliceType = &'a [u8; N];
+//     type MutSliceType = &'a mut [u8; N];
 
-    #[inline(always)]
-    fn view(storage: &'a mut [u8]) -> Self::View {
-        &mut storage[Self::OFFSET..]
-    }
-}
+//     /// Borrow the data in the byte array with read access using the [Field] API.
+//     /// See also [FieldSliceAccess::data].
+//     ///
+//     /// # Example:
+//     /// ```
+//     /// use binary_layout::prelude::*;
+//     ///
+//     /// binary_layout!(my_layout, LittleEndian, {
+//     ///     //... other fields ...
+//     ///     some_field: [u8; 5],
+//     ///     //... other fields
+//     /// });
+//     ///
+//     /// fn func(storage_data: &[u8]) {
+//     ///     let some_field: &[u8; 5] = my_layout::some_field::data(storage_data);
+//     /// }
+//     /// ```
+//     #[inline(always)]
+//     fn data(storage: &'a [u8]) -> &'a [u8; N] {
+//         <&[u8; N]>::try_from(&storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
+//     }
 
-impl<S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> StorageIntoFieldView<S>
-    for PrimitiveField<[u8], E, OFFSET_>
-{
-    type View = Data<S>;
-
-    #[inline(always)]
-    fn into_view(storage: S) -> Self::View {
-        Data::from(storage).into_subregion(Self::OFFSET..)
-    }
-}
-
-/// Field type `[u8; N]`:
-/// This field represents a [fixed size byte array](crate#fixed-size-byte-arrays-u8-n).
-/// In this impl, we define accessors for such fields.
-impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'a>
-    for PrimitiveField<[u8; N], E, OFFSET_>
-{
-    type SliceType = &'a [u8; N];
-    type MutSliceType = &'a mut [u8; N];
-
-    /// Borrow the data in the byte array with read access using the [Field] API.
-    /// See also [FieldSliceAccess::data].
-    ///
-    /// # Example:
-    /// ```
-    /// use binary_layout::prelude::*;
-    ///
-    /// binary_layout!(my_layout, LittleEndian, {
-    ///     //... other fields ...
-    ///     some_field: [u8; 5],
-    ///     //... other fields
-    /// });
-    ///
-    /// fn func(storage_data: &[u8]) {
-    ///     let some_field: &[u8; 5] = my_layout::some_field::data(storage_data);
-    /// }
-    /// ```
-    #[inline(always)]
-    fn data(storage: &'a [u8]) -> &'a [u8; N] {
-        <&[u8; N]>::try_from(&storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
-    }
-
-    /// Borrow the data in the byte array with write access using the [Field] API.
-    /// See also [FieldSliceAccess::data_mut]
-    ///
-    /// # Example:
-    /// ```
-    /// use binary_layout::prelude::*;
-    ///
-    /// binary_layout!(my_layout, LittleEndian, {
-    ///     //... other fields ...
-    ///     some_field: [u8; 5],
-    ///     //... other fields
-    /// });
-    ///
-    /// fn func(storage_data: &mut [u8]) {
-    ///     let some_field: &mut [u8; 5] = my_layout::some_field::data_mut(storage_data);
-    /// }
-    /// ```
-    #[inline(always)]
-    fn data_mut(storage: &'a mut [u8]) -> &'a mut [u8; N] {
-        <&mut [u8; N]>::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
-    }
-}
-impl<E: Endianness, const N: usize, const OFFSET_: usize> Field
-    for PrimitiveField<[u8; N], E, OFFSET_>
-{
-    /// See [Field::Endian]
-    type Endian = E;
-    /// See [Field::OFFSET]
-    const OFFSET: usize = OFFSET_;
-    /// See [Field::SIZE]
-    const SIZE: Option<usize> = Some(N);
-}
-impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> StorageToFieldView<&'a [u8]>
-    for PrimitiveField<[u8; N], E, OFFSET_>
-{
-    type View = &'a [u8; N];
-
-    #[inline(always)]
-    fn view(storage: &'a [u8]) -> Self::View {
-        Self::View::try_from(&storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
-    }
-}
-
-impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> StorageToFieldView<&'a mut [u8]>
-    for PrimitiveField<[u8; N], E, OFFSET_>
-{
-    type View = &'a mut [u8; N];
-
-    #[inline(always)]
-    fn view(storage: &'a mut [u8]) -> Self::View {
-        Self::View::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
-    }
-}
-
-impl<S: AsRef<[u8]>, E: Endianness, const N: usize, const OFFSET_: usize> StorageIntoFieldView<S>
-    for PrimitiveField<[u8; N], E, OFFSET_>
-{
-    type View = Data<S>;
-
-    #[inline(always)]
-    fn into_view(storage: S) -> Self::View {
-        Data::from(storage).into_subregion(Self::OFFSET..(Self::OFFSET + N))
-    }
-}
+//     /// Borrow the data in the byte array with write access using the [Field] API.
+//     /// See also [FieldSliceAccess::data_mut]
+//     ///
+//     /// # Example:
+//     /// ```
+//     /// use binary_layout::prelude::*;
+//     ///
+//     /// binary_layout!(my_layout, LittleEndian, {
+//     ///     //... other fields ...
+//     ///     some_field: [u8; 5],
+//     ///     //... other fields
+//     /// });
+//     ///
+//     /// fn func(storage_data: &mut [u8]) {
+//     ///     let some_field: &mut [u8; 5] = my_layout::some_field::data_mut(storage_data);
+//     /// }
+//     /// ```
+//     #[inline(always)]
+//     fn data_mut(storage: &'a mut [u8]) -> &'a mut [u8; N] {
+//         <&mut [u8; N]>::try_from(&mut storage[Self::OFFSET..(Self::OFFSET + N)]).unwrap()
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

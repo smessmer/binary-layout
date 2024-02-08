@@ -1,5 +1,11 @@
-use super::super::Field;
 use super::PrimitiveField;
+use crate::data_types::{
+    primitive::{PrimitiveRead, PrimitiveWrite},
+    DataTypeMetadata,
+};
+use crate::endianness::Endianness;
+use crate::fields::Field;
+use crate::view::PrimitiveFieldView;
 
 /// This trait is implemented for fields with "try copy access",
 /// i.e. fields that read/write data by copying it from/to the
@@ -63,57 +69,81 @@ pub trait FieldCopyAccess: Field {
     fn try_write(storage: &mut [u8], v: Self::HighLevelType) -> Result<(), Self::WriteError>;
 }
 
-macro_rules! impl_field_traits {
-    ($type: ty) => {
-        impl<E: Endianness, const OFFSET_: usize> Field for PrimitiveField<$type, E, OFFSET_> {
-            /// See [Field::Endian]
-            type Endian = E;
-            /// See [Field::OFFSET]
-            const OFFSET: usize = OFFSET_;
-            /// See [Field::SIZE]
-            const SIZE: Option<usize> = Some(core::mem::size_of::<$type>());
+impl<T: DataTypeMetadata + PrimitiveRead + PrimitiveWrite, E: Endianness, const OFFSET_: usize>
+    FieldCopyAccess for PrimitiveField<T, E, OFFSET_>
+{
+    /// See [FieldCopyAccess::ReadError]
+    type ReadError = <T as PrimitiveRead>::Error;
+    /// See [FieldCopyAccess::WriteError]
+    type WriteError = <T as PrimitiveWrite>::Error;
+    /// See [FieldCopyAccess::HighLevelType]
+    type HighLevelType = T;
+
+    doc_comment::doc_comment! {
+        concat! {"
+        Read the integer field from a given data region, assuming the defined layout, using the [Field] API.
+
+        # Example:
+
+        ```
+        use binary_layout::prelude::*;
+
+        binary_layout!(my_layout, LittleEndian, {
+            //... other fields ...
+            some_integer_field: u32,
+            //... other fields ...
+        });
+
+        fn func(storage_data: &[u8]) -> u32 {
+            let read: u32 = my_layout::some_integer_field::try_read(storage_data).unwrap();
+            read
         }
-
-        impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a [u8]>
-            for PrimitiveField<$type, E, OFFSET_>
-        {
-            type View = FieldView<&'a [u8], Self>;
-
-            #[inline(always)]
-            fn view(storage: &'a [u8]) -> Self::View {
-                Self::View::new(storage)
-            }
+        ```
+        "},
+        #[inline(always)]
+        fn try_read(storage: &[u8]) -> Result<T, Self::ReadError> {
+            let storage = if let Some(size) = Self::SIZE {
+                &storage[Self::OFFSET..(Self::OFFSET + size)]
+            } else {
+                &storage[Self::OFFSET..]
+            };
+            <T as PrimitiveRead>::try_read::<E>(&storage)
         }
+    }
 
-        impl<'a, E: Endianness, const OFFSET_: usize> StorageToFieldView<&'a mut [u8]>
-            for PrimitiveField<$type, E, OFFSET_>
-        {
-            type View = FieldView<&'a mut [u8], Self>;
+    doc_comment::doc_comment! {
+        concat! {"
+        Write the integer field to a given data region, assuming the defined layout, using the [Field] API.
 
-            #[inline(always)]
-            fn view(storage: &'a mut [u8]) -> Self::View {
-                Self::View::new(storage)
-            }
+        # Example:
+
+        ```
+        use binary_layout::prelude::*;
+        use core::convert::Infallible;
+
+        binary_layout!(my_layout, LittleEndian, {
+            //... other fields ...
+            some_integer_field: u32,
+            //... other fields ...
+        });
+
+        fn func(storage_data: &mut [u8]) {
+            my_layout::some_integer_field::try_write(storage_data, 10).unwrap();
         }
-
-        impl<S: AsRef<[u8]>, E: Endianness, const OFFSET_: usize> StorageIntoFieldView<S>
-            for PrimitiveField<$type, E, OFFSET_>
-        {
-            type View = FieldView<S, Self>;
-
-            #[inline(always)]
-            fn into_view(storage: S) -> Self::View {
-                Self::View::new(storage)
-            }
+        ```
+        "},
+        #[inline(always)]
+        fn try_write(storage: &mut [u8], value: T) -> Result<(), Self::WriteError> {
+            let storage = if let Some(size) = Self::SIZE {
+                &mut storage[Self::OFFSET..(Self::OFFSET + size)]
+            } else {
+                &mut storage[Self::OFFSET..]
+            };
+            <T as PrimitiveWrite>::try_write::<E>(value, storage)
         }
-    };
+    }
 }
 
-mod primitive_float;
-mod primitive_int;
-mod primitive_nonzero_int;
-mod primitive_unit;
 mod read_write_ext;
 
-pub use primitive_nonzero_int::NonZeroIsZeroError;
 pub use read_write_ext::{FieldReadExt, FieldWriteExt};

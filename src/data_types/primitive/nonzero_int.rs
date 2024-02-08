@@ -1,92 +1,13 @@
-use core::convert::Infallible;
+use core::num::{
+    NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroU128, NonZeroU16,
+    NonZeroU32, NonZeroU64, NonZeroU8,
+};
 
-use super::{FieldCopyAccess, PrimitiveField};
+use super::{PrimitiveRead, PrimitiveWrite};
+use crate::data_types::DataTypeMetadata;
 use crate::endianness::{EndianKind, Endianness};
-use crate::fields::primitive::view::FieldView;
-use crate::fields::{Field, StorageIntoFieldView, StorageToFieldView};
-
-macro_rules! nonzero_int_field {
-    ($type:ty, $zero_type:ty) => {
-        impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<$type, E, OFFSET_> {
-            /// See [FieldCopyAccess::ReadError]
-            type ReadError = NonZeroIsZeroError;
-            /// See [FieldCopyAccess::WriteError]
-            type WriteError = Infallible;
-            /// See [FieldCopyAccess::HighLevelType]
-            type HighLevelType = $type;
-
-            doc_comment::doc_comment! {
-                concat! {"
-                Read the integer field from a given data region, assuming the defined layout, using the [Field] API.
-
-                # Example:
-
-                ```
-                use binary_layout::prelude::*;
-
-                binary_layout!(my_layout, LittleEndian, {
-                    //... other fields ...
-                    some_integer_field: ", stringify!($type), "
-                    //... other fields ...
-                });
-
-                fn func(storage_data: &[u8]) -> Result<",stringify!($type), ", NonZeroIsZeroError>{
-                    let read: ", stringify!($type), " = my_layout::some_integer_field::try_read(storage_data)?;
-                    Ok(read)
-                }
-                ```
-                "},
-                #[inline(always)]
-                fn try_read(storage: &[u8]) -> Result<$type, NonZeroIsZeroError> {
-                    let value: [u8; core::mem::size_of::<$type>()] = storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())].try_into().unwrap();
-                    let value = match E::KIND {
-                        EndianKind::Big => <$zero_type>::from_be_bytes(value),
-                        EndianKind::Little => <$zero_type>::from_le_bytes(value),
-                        EndianKind::Native => <$zero_type>::from_ne_bytes(value)
-                    };
-                    <$type>::new(value).ok_or(NonZeroIsZeroError(()))
-                }
-            }
-
-            doc_comment::doc_comment! {
-                concat! {"
-                Write the integer field to a given data region, assuming the defined layout, using the [Field] API.
-
-                # Example:
-
-                ```
-                use binary_layout::prelude::*;
-                use core::convert::Infallible;
-
-                binary_layout!(my_layout, LittleEndian, {
-                    //... other fields ...
-                    some_integer_field: ", stringify!($type), "
-                    //... other fields ...
-                });
-
-                fn func(storage_data: &mut [u8]) {
-                    let value = ", stringify!($type), "::new(10).unwrap();
-                    my_layout::some_integer_field::try_write(storage_data, value).unwrap();
-                }
-                ```
-                "},
-                #[inline(always)]
-                fn try_write(storage: &mut [u8], value: $type) -> Result<(), Infallible> {
-                    let value_as_bytes = match E::KIND {
-                        EndianKind::Big => value.get().to_be_bytes(),
-                        EndianKind::Little => value.get().to_le_bytes(),
-                        EndianKind::Native => value.get().to_ne_bytes(),
-                    };
-                    storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
-                        .copy_from_slice(&value_as_bytes);
-                    Ok(())
-                }
-            }
-        }
-
-        impl_field_traits!($type);
-    };
-}
+use crate::view::PrimitiveFieldView;
+use crate::Field;
 
 /// This error is thrown when trying to read a non-zero integer type, e.g. [NonZeroU32](core::num::NonZeroU32),
 /// but the data being read was actually zero.
@@ -102,16 +23,62 @@ impl core::fmt::Display for NonZeroIsZeroError {
 #[cfg(feature = "std")]
 impl std::error::Error for NonZeroIsZeroError {}
 
-nonzero_int_field!(core::num::NonZeroI8, i8);
-nonzero_int_field!(core::num::NonZeroI16, i16);
-nonzero_int_field!(core::num::NonZeroI32, i32);
-nonzero_int_field!(core::num::NonZeroI64, i64);
-nonzero_int_field!(core::num::NonZeroI128, i128);
-nonzero_int_field!(core::num::NonZeroU8, u8);
-nonzero_int_field!(core::num::NonZeroU16, u16);
-nonzero_int_field!(core::num::NonZeroU32, u32);
-nonzero_int_field!(core::num::NonZeroU64, u64);
-nonzero_int_field!(core::num::NonZeroU128, u128);
+macro_rules! impl_nonzero_int {
+    ($type:ty, $zeroable_type:ty) => {
+        impl DataTypeMetadata for $type {
+            const SIZE: Option<usize> = Some(core::mem::size_of::<$type>());
+
+            type View<S, F> = PrimitiveFieldView<S, F> where F: Field;
+        }
+
+        impl PrimitiveRead for $type {
+            /// Reading integers can fail if a zero is read
+            type Error = NonZeroIsZeroError;
+
+            /// Read the integer field from a given storage.
+            /// The storage slice size must exactly match the size of the expected integer, otherwise this will panic.
+            #[inline(always)]
+            fn try_read<E: Endianness>(storage: &[u8]) -> Result<Self, Self::Error> {
+                let value: [u8; core::mem::size_of::<$type>()] = storage.try_into().unwrap();
+                let value = match E::KIND {
+                    EndianKind::Big => <$zeroable_type>::from_be_bytes(value),
+                    EndianKind::Little => <$zeroable_type>::from_le_bytes(value),
+                    EndianKind::Native => <$zeroable_type>::from_ne_bytes(value),
+                };
+                <$type>::new(value).ok_or(NonZeroIsZeroError(()))
+            }
+        }
+
+        impl PrimitiveWrite for $type {
+            /// Writing integers can't fail
+            type Error = core::convert::Infallible;
+
+            /// Write the integer field to a given storage.
+            /// The storage slice size must exactly match the size of the expected integer, otherwise this will panic.
+            #[inline(always)]
+            fn try_write<E: Endianness>(self, storage: &mut [u8]) -> Result<(), Self::Error> {
+                let value = match E::KIND {
+                    EndianKind::Big => self.get().to_be_bytes(),
+                    EndianKind::Little => self.get().to_le_bytes(),
+                    EndianKind::Native => self.get().to_ne_bytes(),
+                };
+                storage.copy_from_slice(&value);
+                Ok(())
+            }
+        }
+    };
+}
+
+impl_nonzero_int!(NonZeroU8, u8);
+impl_nonzero_int!(NonZeroU16, u16);
+impl_nonzero_int!(NonZeroU32, u32);
+impl_nonzero_int!(NonZeroU64, u64);
+impl_nonzero_int!(NonZeroU128, u128);
+impl_nonzero_int!(NonZeroI8, i8);
+impl_nonzero_int!(NonZeroI16, i16);
+impl_nonzero_int!(NonZeroI32, i32);
+impl_nonzero_int!(NonZeroI64, i64);
+impl_nonzero_int!(NonZeroI128, i128);
 
 #[cfg(test)]
 mod tests {

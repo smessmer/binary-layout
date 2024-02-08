@@ -1,16 +1,18 @@
 use core::marker::PhantomData;
 
+use crate::data_types::DataTypeMetadata;
 use crate::endianness::Endianness;
+use crate::view::PrimitiveFieldView;
+use crate::Field;
 
 mod copy_access;
 mod nested_access;
 mod slice_access;
 mod view;
 
-pub use copy_access::{FieldCopyAccess, FieldReadExt, FieldWriteExt, NonZeroIsZeroError};
-pub use nested_access::{BorrowingNestedView, NestedViewInfo, OwningNestedView};
+pub use copy_access::{FieldCopyAccess, FieldReadExt, FieldWriteExt};
+// pub use nested_access::{BorrowingNestedView, NestedViewInfo, OwningNestedView};
 pub use slice_access::FieldSliceAccess;
-pub use view::FieldView;
 
 /// A [PrimitiveField] is a [Field](crate::Field) that directly represents a primitive type like [u8], [i16], ...
 /// See [Field](crate::Field) for more info on this API.
@@ -47,4 +49,17 @@ pub use view::FieldView;
 pub struct PrimitiveField<T: ?Sized, E: Endianness, const OFFSET_: usize> {
     _p1: PhantomData<T>,
     _p2: PhantomData<E>,
+}
+
+impl<T: ?Sized + DataTypeMetadata, E: Endianness, const OFFSET_: usize> Field
+    for PrimitiveField<T, E, OFFSET_>
+{
+    /// See [Field::Endian]
+    type Endian = E;
+    /// See [Field::View]
+    type View<S> = <T as DataTypeMetadata>::View<S, Self>;
+    /// See [Field::OFFSET]
+    const OFFSET: usize = OFFSET_;
+    /// See [Field::SIZE]
+    const SIZE: Option<usize> = T::SIZE;
 }

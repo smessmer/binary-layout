@@ -1,52 +1,35 @@
-use core::convert::Infallible;
-
-use super::{FieldCopyAccess, PrimitiveField};
+use super::{PrimitiveRead, PrimitiveWrite};
+use crate::data_types::DataTypeMetadata;
 use crate::endianness::{EndianKind, Endianness};
-use crate::fields::primitive::view::FieldView;
-use crate::fields::{Field, StorageIntoFieldView, StorageToFieldView};
+use crate::view::PrimitiveFieldView;
+use crate::Field;
 
-macro_rules! float_field {
+macro_rules! impl_float {
     ($type:ty) => {
-        impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<$type, E, OFFSET_> {
-            /// See [FieldCopyAccess::ReadError]
-            type ReadError = Infallible;
-            /// See [FieldCopyAccess::WriteError]
-            type WriteError = Infallible;
-            /// See [FieldCopyAccess::HighLevelType]
-            type HighLevelType = $type;
+        impl DataTypeMetadata for $type {
+            const SIZE: Option<usize> = Some(core::mem::size_of::<$type>());
+
+            type View<S, F> = PrimitiveFieldView<S, F> where F: Field;
+        }
+
+        impl PrimitiveRead for $type {
+            /// Reading floats can't fail
+            type Error = core::convert::Infallible;
 
             doc_comment::doc_comment! {
                 concat! {"
-                Read the float field from a given data region, assuming the defined layout, using the [Field] API.
+                Read the float field from a given storage.
+                The storage slice size must exactly match the size of the expected float, otherwise this will panic.
 
-                # Example:
-
-                ```
-                use binary_layout::prelude::*;
-                use core::convert::Infallible;
-
-                binary_layout!(my_layout, LittleEndian, {
-                    //... other fields ...
-                    some_float_field: ", stringify!($type), "
-                    //... other fields ...
-                });
-
-                fn func(storage_data: &[u8]) -> ", stringify!($type), " {
-                    let read: ", stringify!($type), " = my_layout::some_float_field::try_read(storage_data).unwrap();
-                    read
-                }
-                ```
-
-                # WARNING
-
+                # Warning
                 At it's core, this method uses [", stringify!($type), "::from_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.from_bits),
                 which has some weird behavior around signaling and non-signaling `NaN` values.  Read the
                 documentation for [", stringify!($type), "::from_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.from_bits) which
                 explains the situation.
                 "},
                 #[inline(always)]
-                fn try_read(storage: &[u8]) -> Result<$type, Infallible> {
-                    let value: [u8; core::mem::size_of::<$type>()] = storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())].try_into().unwrap();
+                fn try_read<E: Endianness>(storage: &[u8]) -> Result<Self, Self::Error> {
+                    let value: [u8; core::mem::size_of::<$type>()] = storage.try_into().unwrap();
                     let value = match E::KIND {
                         EndianKind::Big => <$type>::from_be_bytes(value),
                         EndianKind::Little => <$type>::from_le_bytes(value),
@@ -55,54 +38,40 @@ macro_rules! float_field {
                     Ok(value)
                 }
             }
+        }
+
+        impl PrimitiveWrite for $type {
+            /// Writing floats can't fail
+            type Error = core::convert::Infallible;
 
             doc_comment::doc_comment! {
                 concat! {"
-                Write the float field to a given data region, assuming the defined layout, using the [Field] API.
-
-                # Example:
-
-                ```
-                use binary_layout::prelude::*;
-
-                binary_layout!(my_layout, LittleEndian, {
-                    //... other fields ...
-                    some_float_field: ", stringify!($type), "
-                    //... other fields ...
-                });
-
-                fn func(storage_data: &mut [u8]) {
-                    my_layout::some_float_field::try_write(storage_data, 10.0).unwrap();
-                }
-                ```
+                Write the float field to a given storage.
+                The storage slice size must exactly match the size of the expected float, otherwise this will panic.
 
                 # WARNING
-
                 At it's core, this method uses [", stringify!($type), "::to_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.to_bits),
                 which has some weird behavior around signaling and non-signaling `NaN` values.  Read the
                 documentation for [", stringify!($type), "::to_bits](https://doc.rust-lang.org/std/primitive.", stringify!($type), ".html#method.to_bits) which
                 explains the situation.
                 "},
                 #[inline(always)]
-                fn try_write(storage: &mut [u8], value: $type) -> Result<(), Infallible> {
-                    let value_as_bytes = match E::KIND {
-                        EndianKind::Big => value.to_be_bytes(),
-                        EndianKind::Little => value.to_le_bytes(),
-                        EndianKind::Native => value.to_ne_bytes(),
+                fn try_write<E: Endianness>(self, storage: &mut [u8]) -> Result<(), Self::Error> {
+                    let value = match E::KIND {
+                        EndianKind::Big => self.to_be_bytes(),
+                        EndianKind::Little => self.to_le_bytes(),
+                        EndianKind::Native => self.to_ne_bytes(),
                     };
-                    storage[Self::OFFSET..(Self::OFFSET + core::mem::size_of::<$type>())]
-                        .copy_from_slice(&value_as_bytes);
+                    storage.copy_from_slice(&value);
                     Ok(())
                 }
             }
         }
-
-        impl_field_traits!($type);
     };
 }
 
-float_field!(f32);
-float_field!(f64);
+impl_float!(f32);
+impl_float!(f64);
 
 #[cfg(test)]
 mod tests {

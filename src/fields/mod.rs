@@ -1,4 +1,5 @@
 use super::endianness::Endianness;
+use crate::view::FieldView;
 
 pub mod bool;
 pub mod char;
@@ -51,9 +52,12 @@ pub mod wrapped;
 ///   // equivalent: data_slice[18..22].copy_from_slice(&[1, 2, 3, 4, 5]);
 /// }
 /// ```
-pub trait Field {
+pub trait Field: Sized {
     /// The endianness of the field. Can be [LittleEndian](crate::LittleEndian) or [BigEndian](crate::BigEndian).
     type Endian: Endianness;
+
+    /// TODO Docs
+    type View<S>: FieldView<S, Self>;
 
     /// The offset of the field in the layout.
     ///
@@ -93,19 +97,4 @@ pub trait Field {
     /// assert_eq!(None, my_layout::tail::SIZE);
     /// ```
     const SIZE: Option<usize>;
-}
-
-#[doc(hidden)]
-pub trait StorageIntoFieldView<S>
-where
-    S: AsRef<[u8]>,
-{
-    type View;
-    fn into_view(storage: S) -> Self::View;
-}
-
-#[doc(hidden)]
-pub trait StorageToFieldView<S> {
-    type View;
-    fn view(storage: S) -> Self::View;
 }

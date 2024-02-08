@@ -203,23 +203,24 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+mod data_types;
 mod endianness;
 mod fields;
 mod macro_binary_layout;
 mod utils;
+mod view;
 
 pub mod example;
 
+pub use data_types::primitive::NonZeroIsZeroError;
 pub use endianness::{BigEndian, Endianness, LittleEndian, NativeEndian};
 pub use fields::{
-    primitive::{
-        FieldCopyAccess, FieldReadExt, FieldSliceAccess, FieldView, FieldWriteExt,
-        NonZeroIsZeroError, PrimitiveField,
-    },
-    wrapped::{LayoutAs, WrappedField, WrappedFieldError},
+    primitive::{FieldCopyAccess, FieldReadExt, FieldSliceAccess, FieldWriteExt, PrimitiveField},
+    //wrapped::{LayoutAs, WrappedField, WrappedFieldError},
     Field,
 };
 pub use utils::{data::Data, infallible::InfallibleResultExt};
+pub use view::FieldView;
 
 /// Import this to get everything into scope that you need for defining and using layouts.
 ///
@@ -240,10 +241,6 @@ pub mod prelude {
 /// Internal things that need to be exported so our macros can use them. Don't use directly!
 #[doc(hidden)]
 pub mod internal {
-    pub use crate::fields::{
-        primitive::{BorrowingNestedView, NestedViewInfo, OwningNestedView},
-        StorageIntoFieldView, StorageToFieldView,
-    };
     pub use crate::macro_binary_layout::{option_usize_add, unwrap_field_size};
     pub use doc_comment::doc_comment;
     pub use paste::paste;
