@@ -20,7 +20,7 @@ pub trait FieldReadExt: Field {
     /// ```
     /// use binary_layout::prelude::*;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
     ///   some_integer_field: u16,
     ///   //... other fields ...
@@ -53,7 +53,7 @@ pub trait FieldWriteExt: Field {
     /// ```
     /// use binary_layout::prelude::*;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
     ///   some_integer_field: u16,
     ///   //... other fields ...

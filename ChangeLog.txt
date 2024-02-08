@@ -13,6 +13,7 @@
   If your `LayoutAs` implementation does not throw errors, return `Result<_, core::convert::Infallible>` to indicate that and your type
   will be accessible via the `read()` and `write()` methods. If your error type is anything else, then your type will be accessible via `try_read()` and `try_write()`.
 - Added support for the `bool as u8` and `char as u32` data type
+- Renamed `define_layout!` macro to `binary_layout!`. For now, `define_layout!` still works but it will be removed in a future version.
 
 3.3.0
 ------

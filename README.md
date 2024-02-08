@@ -23,7 +23,7 @@ This crate is `#[no_std]` compatible.
 use binary_layout::prelude::*;
 
 // See https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol for ICMP packet layout
-define_layout!(icmp_packet, BigEndian, {
+binary_layout!(icmp_packet, BigEndian, {
   packet_type: u8,
   code: u8,
   checksum: u16,
@@ -52,7 +52,7 @@ fn func(packet_data: &mut [u8]) {
 }
 ```
 
-See the [icmp_packet](https://docs.rs/binary-layout/latest/binary_layout/example/icmp_packet/index.html) module for what this [define_layout!](https://docs.rs/binary-layout/latest/binary_layout/macro.define_layout.html) macro generates for you.
+See the [icmp_packet](https://docs.rs/binary-layout/latest/binary_layout/example/icmp_packet/index.html) module for what this [binary_layout!](https://docs.rs/binary-layout/latest/binary_layout/macro.binary_layout.html) macro generates for you.
 
 ## What to use this library for?
 Anything that needs inplace zero-copy access to structured binary data.
@@ -89,7 +89,7 @@ But if you don't need direct access to your data and are ok with a serialization
 - [Binread](https://crates.io/crates/binread), [Binwrite](https://crates.io/crates/binwrite), [Binrw](https://crates.io/crates/binrw) are great libraries for (de)serializing binary data.
 
 ## APIs
-Layouts are defined using the [define_layout!](https://docs.rs/binary-layout/latest/binary_layout/macro.define_layout.html) macro. Based on such a layout, this library offers two alternative APIs for data access:
+Layouts are defined using the [binary_layout!](https://docs.rs/binary-layout/latest/binary_layout/macro.binary_layout.html) macro. Based on such a layout, this library offers two alternative APIs for data access:
 1. The [Field](https://docs.rs/binary-layout/latest/binary_layout/trait.Field.html) API that offers free functions to read/write the data based on an underlying slice of storage (`packet_data` in the example above) holding the packet data. This API does not wrap the underlying slice of storage data, which means you have to pass it in to each accessor.
    This is not the API used in the example above, see [Field](https://docs.rs/binary-layout/latest/binary_layout/trait.Field.html) for an API example.
 2. The [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) API that wraps a slice of storage data and remembers it in a `View` object, allowing access to the fields without having to pass in the packed data slice each time. This is the API used in the example above. See [FieldView](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldView.html) for another example.
@@ -156,19 +156,19 @@ To make this cross-platform compatible, we'd have to wrap these slices into our 
 This complexity is why it wasn't implemented yet, but feel free to open a PR if you need this.
 
 ## Nesting
-Layouts can be nested within each other by using the `NestedView` type created by the [define_layout!](https://docs.rs/binary-layout/latest/binary_layout/macro.define_layout.html) macro for one layout as a field type in another layout.
+Layouts can be nested within each other by using the `NestedView` type created by the [binary_layout!](https://docs.rs/binary-layout/latest/binary_layout/macro.binary_layout.html) macro for one layout as a field type in another layout.
 
 Example:
 ```rust
 use binary_layout::prelude::*;
 
-define_layout!(icmp_header, BigEndian, {
+binary_layout!(icmp_header, BigEndian, {
   packet_type: u8,
   code: u8,
   checksum: u16,
   rest_of_header: [u8; 4],
 });
-define_layout!(icmp_packet, BigEndian, {
+binary_layout!(icmp_packet, BigEndian, {
   header: icmp_header::NestedView,
   data_section: [u8], // open ended byte array, matches until the end of the packet
 });
@@ -182,22 +182,22 @@ shows how you can mix different endian layouts together:
 use binary_layout::prelude::*;
 use core::convert::TryInto;
 
-define_layout!(deep_nesting, LittleEndian, {
+binary_layout!(deep_nesting, LittleEndian, {
     field1: u16,
 });
-define_layout!(header, BigEndian, {
+binary_layout!(header, BigEndian, {
     field1: i16,
 });
-define_layout!(middle, NativeEndian, {
+binary_layout!(middle, NativeEndian, {
     deep: deep_nesting::NestedView,
     field1: u16,
 });
-define_layout!(footer, BigEndian, {
+binary_layout!(footer, BigEndian, {
     field1: u32,
     deep: deep_nesting::NestedView,
     tail: [u8],
 });
-define_layout!(whole, LittleEndian, {
+binary_layout!(whole, LittleEndian, {
     head: header::NestedView,
     field1: u64,
     mid: middle::NestedView,

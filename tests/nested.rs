@@ -5,22 +5,22 @@ use std::num::NonZeroU128;
 mod common;
 use common::data_region;
 
-define_layout!(deep_nesting, LittleEndian, {
+binary_layout!(deep_nesting, LittleEndian, {
     field1: u16,
 });
-define_layout!(header, BigEndian, {
+binary_layout!(header, BigEndian, {
     field1: i16,
 });
-define_layout!(middle, NativeEndian, {
+binary_layout!(middle, NativeEndian, {
     deep: deep_nesting::NestedView,
     field1: u16,
 });
-define_layout!(footer, BigEndian, {
+binary_layout!(footer, BigEndian, {
     field1: u32,
     deep: deep_nesting::NestedView,
     tail: [u8],
 });
-define_layout!(whole, LittleEndian, {
+binary_layout!(whole, LittleEndian, {
     head: header::NestedView,
     field1: u64,
     mid: middle::NestedView,

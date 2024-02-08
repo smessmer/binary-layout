@@ -19,7 +19,7 @@ pub use view::FieldView;
 /// ```
 /// use binary_layout::prelude::*;
 ///
-/// define_layout!(my_layout, LittleEndian, {
+/// binary_layout!(my_layout, LittleEndian, {
 ///   field_one: u16,
 ///   another_field: [u8; 16],
 ///   something_else: u32,

@@ -2,12 +2,12 @@ use binary_layout::prelude::*;
 
 #[test]
 fn metadata() {
-    define_layout!(unit_layout_1, LittleEndian, { field1: () });
+    binary_layout!(unit_layout_1, LittleEndian, { field1: () });
 
     assert_eq!(0, unit_layout_1::field1::OFFSET);
     assert_eq!(Some(0), unit_layout_1::field1::SIZE);
 
-    define_layout!(unit_layout_2, LittleEndian, {
+    binary_layout!(unit_layout_2, LittleEndian, {
         field1: u8,
         field2: (),
         field3: u128
@@ -25,13 +25,13 @@ fn metadata() {
 fn test_layout_with_unit() {
     let mut storage: [u8; 1024] = [0; 1024];
 
-    define_layout!(unit_layout_1, LittleEndian, { field1: () });
+    binary_layout!(unit_layout_1, LittleEndian, { field1: () });
     let mut view = unit_layout_1::View::new(&mut storage[0..0]); // Zero length slice
     view.field1_mut().write(()); // Shouldn't cause any issues.
     assert_eq!(storage, [0u8; 1024]);
     storage.fill(0u8);
 
-    define_layout!(unit_layout_2, LittleEndian, {
+    binary_layout!(unit_layout_2, LittleEndian, {
         field1: (),
         field2: ()
     });
@@ -41,7 +41,7 @@ fn test_layout_with_unit() {
     assert_eq!(storage, [0u8; 1024]);
     storage.fill(0u8);
 
-    define_layout!(unit_layout_3, LittleEndian, {
+    binary_layout!(unit_layout_3, LittleEndian, {
         field1: (),
         field2: (),
         field3: ()
@@ -53,7 +53,7 @@ fn test_layout_with_unit() {
     assert_eq!(storage, [0u8; 1024]);
     storage.fill(0u8);
 
-    define_layout!(unit_layout_4, LittleEndian, {
+    binary_layout!(unit_layout_4, LittleEndian, {
         field1: u8,
         field2: ()
     });
@@ -64,7 +64,7 @@ fn test_layout_with_unit() {
     assert_eq!(storage[1..], [0u8; 1023]);
     storage.fill(0u8);
 
-    define_layout!(unit_layout_5, LittleEndian, {
+    binary_layout!(unit_layout_5, LittleEndian, {
         field1: (),
         field2: u8
     });
@@ -75,7 +75,7 @@ fn test_layout_with_unit() {
     assert_eq!(storage[1..], [0u8; 1023]);
     storage.fill(0u8);
 
-    define_layout!(unit_layout_6, LittleEndian, {
+    binary_layout!(unit_layout_6, LittleEndian, {
         field1: (),
         field2: u8,
         field3: ()
@@ -88,7 +88,7 @@ fn test_layout_with_unit() {
     assert_eq!(storage[1..], [0u8; 1023]);
     storage.fill(0u8);
 
-    define_layout!(unit_layout_7, LittleEndian, {
+    binary_layout!(unit_layout_7, LittleEndian, {
         field1: u8,
         field2: (),
         field3: u128
@@ -102,13 +102,13 @@ fn test_layout_with_unit() {
     assert_eq!(storage[18..], [0u8; 1006]);
     storage.fill(0u8);
 
-    define_layout!(unit_layout_8, BigEndian, { field1: () });
+    binary_layout!(unit_layout_8, BigEndian, { field1: () });
     let mut view = unit_layout_8::View::new(&mut storage[0..0]); // Zero length slice
     view.field1_mut().write(()); // Shouldn't cause any issues.
     assert_eq!(storage, [0u8; 1024]);
     storage.fill(0u8);
 
-    define_layout!(unit_layout_9, BigEndian, {
+    binary_layout!(unit_layout_9, BigEndian, {
         field1: (),
         field2: ()
     });
@@ -118,7 +118,7 @@ fn test_layout_with_unit() {
     assert_eq!(storage, [0u8; 1024]);
     storage.fill(0u8);
 
-    define_layout!(unit_layout_10, BigEndian, {
+    binary_layout!(unit_layout_10, BigEndian, {
         field1: (),
         field2: (),
         field3: ()
@@ -130,7 +130,7 @@ fn test_layout_with_unit() {
     assert_eq!(storage, [0u8; 1024]);
     storage.fill(0u8);
 
-    define_layout!(unit_layout_11, BigEndian, {
+    binary_layout!(unit_layout_11, BigEndian, {
         field1: u8,
         field2: ()
     });
@@ -141,7 +141,7 @@ fn test_layout_with_unit() {
     assert_eq!(storage[1..], [0u8; 1023]);
     storage.fill(0u8);
 
-    define_layout!(unit_layout_12, BigEndian, {
+    binary_layout!(unit_layout_12, BigEndian, {
         field1: (),
         field2: u8
     });
@@ -152,7 +152,7 @@ fn test_layout_with_unit() {
     assert_eq!(storage[1..], [0u8; 1023]);
     storage.fill(0u8);
 
-    define_layout!(unit_layout_13, BigEndian, {
+    binary_layout!(unit_layout_13, BigEndian, {
         field1: (),
         field2: u8,
         field3: ()
@@ -165,7 +165,7 @@ fn test_layout_with_unit() {
     assert_eq!(storage[1..], [0u8; 1023]);
     storage.fill(0u8);
 
-    define_layout!(unit_layout_14, BigEndian, {
+    binary_layout!(unit_layout_14, BigEndian, {
         field1: u8,
         field2: (),
         field3: u128

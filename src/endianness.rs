@@ -17,7 +17,7 @@ pub trait Endianness {
 /// ```
 /// use binary_layout::prelude::*;
 ///
-/// define_layout!(my_layout, BigEndian, {
+/// binary_layout!(my_layout, BigEndian, {
 ///   field1: i16,
 ///   field2: u32,
 /// });
@@ -33,7 +33,7 @@ impl Endianness for BigEndian {
 /// ```
 /// use binary_layout::prelude::*;
 ///
-/// define_layout!(my_layout, LittleEndian, {
+/// binary_layout!(my_layout, LittleEndian, {
 ///   field1: i16,
 ///   field2: u32,
 /// });
@@ -49,7 +49,7 @@ impl Endianness for LittleEndian {
 /// ```
 /// use binary_layout::prelude::*;
 ///
-/// define_layout!(my_layout, NativeEndian, {
+/// binary_layout!(my_layout, NativeEndian, {
 ///   field1: i16,
 ///   field2: u32,
 /// });

@@ -22,7 +22,7 @@ impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<(),
                 ```
                 use binary_layout::prelude::*;
 
-                define_layout!(my_layout, LittleEndian, {
+                binary_layout!(my_layout, LittleEndian, {
                     //... other fields ...
                     some_zst_field: ", stringify!(()), "
                     //... other fields ...
@@ -55,7 +55,7 @@ impl<E: Endianness, const OFFSET_: usize> FieldCopyAccess for PrimitiveField<(),
                 ```
                 use binary_layout::prelude::*;
 
-                define_layout!(my_layout, LittleEndian, {
+                binary_layout!(my_layout, LittleEndian, {
                     //... other fields ...
                     some_zst_field: ", stringify!(()), "
                     //... other fields ...
@@ -124,7 +124,7 @@ mod tests {
                 #[allow(clippy::unit_cmp)]
                 #[test]
                 fn [<test_unit_ $endian endian_viewapi>]() {
-                    define_layout!(layout, $endian_type, {
+                    binary_layout!(layout, $endian_type, {
                         field1: (),
                         field2: (),
                     });

@@ -6,7 +6,7 @@ use common::data_region;
 
 #[test]
 fn test_little_endian() {
-    define_layout!(my_layout, LittleEndian, {
+    binary_layout!(my_layout, LittleEndian, {
         field1: u16,
         field2: i64,
     });
@@ -29,7 +29,7 @@ fn test_little_endian() {
 
 #[test]
 fn test_big_endian() {
-    define_layout!(my_layout, BigEndian, {
+    binary_layout!(my_layout, BigEndian, {
         field1: u16,
         field2: i64,
     });
@@ -52,7 +52,7 @@ fn test_big_endian() {
 
 #[test]
 fn test_native_endian() {
-    define_layout!(my_layout, NativeEndian, {
+    binary_layout!(my_layout, NativeEndian, {
         field1: u16,
         field2: i64,
     });

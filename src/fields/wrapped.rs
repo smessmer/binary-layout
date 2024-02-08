@@ -37,7 +37,7 @@ use super::{
 ///   }
 /// }
 ///
-/// define_layout!(my_layout, BigEndian, {
+/// binary_layout!(my_layout, BigEndian, {
 ///   // ... other fields ...
 ///   field: MyIdType as u64,
 ///   // ... other fields ...
@@ -105,7 +105,7 @@ impl IsInfallible for WrappedFieldError<Infallible, Infallible> {}
 ///   }
 /// }
 ///
-/// define_layout!(my_layout, BigEndian, {
+/// binary_layout!(my_layout, BigEndian, {
 ///   // ... other fields ...
 ///   field: MyIdType as u64,
 ///   // ... other fields ...
@@ -146,7 +146,7 @@ impl IsInfallible for WrappedFieldError<Infallible, Infallible> {}
 ///   }
 /// }
 ///
-/// define_layout!(my_layout, BigEndian, {
+/// binary_layout!(my_layout, BigEndian, {
 ///   // ... other fields ...
 ///   field: MyIdType as u64,
 ///   // ... other fields ...
@@ -261,7 +261,7 @@ impl<U, T: LayoutAs<U>, F: FieldCopyAccess<HighLevelType = U>> FieldCopyAccess
     ///   }
     /// }
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
     ///   some_integer_field: MyIdType as u64,
     ///   //... other fields ...

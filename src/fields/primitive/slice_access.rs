@@ -20,7 +20,7 @@ pub trait FieldSliceAccess<'a>: Field {
     /// ```
     /// use binary_layout::prelude::*;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///     //... other fields ...
     ///     tail_data: [u8],
     /// });
@@ -37,7 +37,7 @@ pub trait FieldSliceAccess<'a>: Field {
     /// ```
     /// use binary_layout::prelude::*;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///     //... other fields ...
     ///     tail_data: [u8],
     /// });
@@ -64,7 +64,7 @@ impl<'a, E: Endianness, const OFFSET_: usize> FieldSliceAccess<'a>
     /// ```
     /// use binary_layout::prelude::*;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///     //... other fields ...
     ///     tail_data: [u8],
     /// });
@@ -84,7 +84,7 @@ impl<'a, E: Endianness, const OFFSET_: usize> FieldSliceAccess<'a>
     /// ```
     /// use binary_layout::prelude::*;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///     //... other fields ...
     ///     tail_data: [u8],
     /// });
@@ -155,7 +155,7 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'
     /// ```
     /// use binary_layout::prelude::*;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///     //... other fields ...
     ///     some_field: [u8; 5],
     ///     //... other fields
@@ -177,7 +177,7 @@ impl<'a, E: Endianness, const N: usize, const OFFSET_: usize> FieldSliceAccess<'
     /// ```
     /// use binary_layout::prelude::*;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///     //... other fields ...
     ///     some_field: [u8; 5],
     ///     //... other fields

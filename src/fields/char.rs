@@ -30,7 +30,7 @@ impl LayoutAs<u32> for char {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{define_layout, InfallibleResultExt, WrappedFieldError};
+    use crate::{binary_layout, InfallibleResultExt, WrappedFieldError};
 
     const INVALID_UNICODE: u32 = 0xD83Du32;
 
@@ -40,7 +40,7 @@ mod tests {
                 #[allow(non_snake_case)]
                 #[test]
                 fn [<test_char_ $endian endian_viewapi_tryread_write>]() {
-                    define_layout!(layout, $endian_type, {
+                    binary_layout!(layout, $endian_type, {
                         field1: char as u32,
                         field2: char as u32,
                         field3: char as u32,
@@ -69,7 +69,7 @@ mod tests {
                 #[allow(non_snake_case)]
                 #[test]
                 fn [<test_char_ $endian endian_viewapi_tryread_trywrite>]() {
-                    define_layout!(layout, $endian_type, {
+                    binary_layout!(layout, $endian_type, {
                         field1: char as u32,
                         field2: char as u32,
                         field3: char as u32,

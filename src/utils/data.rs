@@ -147,9 +147,9 @@ impl<'a> Data<&'a [u8]> {
     /// Example:
     /// ---------------
     /// ```
-    /// use binary_layout::define_layout;
+    /// use binary_layout::binary_layout;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///   field: u16,
     ///   data: [u8],
     /// });
@@ -178,9 +178,9 @@ impl<'a> Data<&'a mut [u8]> {
     /// Example:
     /// ---------------
     /// ```
-    /// use binary_layout::define_layout;
+    /// use binary_layout::binary_layout;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///   field: u16,
     ///   data: [u8],
     /// });

@@ -3,7 +3,7 @@ use binary_layout::prelude::*;
 mod common;
 use common::data_region;
 
-define_layout!(sliceonly, LittleEndian, { field: [u8] });
+binary_layout!(sliceonly, LittleEndian, { field: [u8] });
 
 #[test]
 fn metadata() {

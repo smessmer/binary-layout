@@ -6,7 +6,7 @@ use std::num::NonZeroI32;
 mod common;
 use common::data_region;
 
-define_layout!(withslice, LittleEndian, {
+binary_layout!(withslice, LittleEndian, {
     first: i8,
     second: i64,
     third: [u8; 5],

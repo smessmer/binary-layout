@@ -26,7 +26,7 @@ pub trait FieldCopyAccess: Field {
     /// use binary_layout::prelude::*;
     /// use core::num::NonZeroU16;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
     ///   some_integer_field: core::num::NonZeroU16,
     ///   //... other fields ...
@@ -48,7 +48,7 @@ pub trait FieldCopyAccess: Field {
     /// use core::num::NonZeroU16;
     /// use core::convert::Infallible;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///   //... other fields ...
     ///   some_integer_field: core::num::NonZeroU16,
     ///   //... other fields ...

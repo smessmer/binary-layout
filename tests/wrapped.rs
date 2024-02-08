@@ -22,7 +22,7 @@ impl<T> LayoutAs<T> for Wrapped<T> {
     }
 }
 
-define_layout!(noslice, LittleEndian, {
+binary_layout!(noslice, LittleEndian, {
     first: Wrapped<i8> as i8,
     second: Wrapped<i64> as i64,
     third: Wrapped<u16> as u16,

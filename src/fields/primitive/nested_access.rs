@@ -3,7 +3,7 @@ use super::{Endianness, PrimitiveField};
 use crate::utils::data::Data;
 use crate::Field;
 
-// Nesting generally works by having the define_layout! macro implement [OwningNestedView], [BorrowingNestedView]
+// Nesting generally works by having the binary_layout! macro implement [OwningNestedView], [BorrowingNestedView]
 // and [NestedViewInfo] for a marker type "NestedLayout" it creates in the layout's generated code.
 // Then, the code in this module here creates implementations of [Field], [StorageToFieldView]
 // and [StorageIntoFieldView] for it so that it can be used as a field in other layouts.

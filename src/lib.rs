@@ -13,7 +13,7 @@
 //! use binary_layout::prelude::*;
 //!
 //! // See https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol for ICMP packet layout
-//! define_layout!(icmp_packet, BigEndian, {
+//! binary_layout!(icmp_packet, BigEndian, {
 //!   packet_type: u8,
 //!   code: u8,
 //!   checksum: u16,
@@ -42,7 +42,7 @@
 //! }
 //! ```
 //!
-//! See the [icmp_packet](crate::example::icmp_packet) module for what this [define_layout!] macro generates for you.
+//! See the [icmp_packet](crate::example::icmp_packet) module for what this [binary_layout!] macro generates for you.
 //!
 //! # What to use this library for?
 //! Anything that needs inplace zero-copy access to structured binary data.
@@ -79,7 +79,7 @@
 //! - [Binread](https://crates.io/crates/binread), [Binwrite](https://crates.io/crates/binwrite), [Binrw](https://crates.io/crates/binrw) are great libraries for (de)serializing binary data.
 //!
 //! # APIs
-//! Layouts are defined using the [define_layout!] macro. Based on such a layout, this library offers two alternative APIs for data access:
+//! Layouts are defined using the [binary_layout!] macro. Based on such a layout, this library offers two alternative APIs for data access:
 //! 1. The [trait@Field] API that offers free functions to read/write the data based on an underlying slice of storage (`packet_data` in the example above) holding the packet data. This API does not wrap the underlying slice of storage data, which means you have to pass it in to each accessor.
 //!    This is not the API used in the example above, see [trait@Field] for an API example.
 //! 2. The [struct@FieldView] API that wraps a slice of storage data and remembers it in a `View` object, allowing access to the fields without having to pass in the packed data slice each time. This is the API used in the example above. See [struct@FieldView] for another example.
@@ -146,19 +146,19 @@
 //! This complexity is why it wasn't implemented yet, but feel free to open a PR if you need this.
 //!
 //! # Nesting
-//! Layouts can be nested within each other by using the `NestedView` type created by the [define_layout!] macro for one layout as a field type in another layout.
+//! Layouts can be nested within each other by using the `NestedView` type created by the [binary_layout!] macro for one layout as a field type in another layout.
 //!
 //! Example:
 //! ```
 //! use binary_layout::prelude::*;
 //!
-//! define_layout!(icmp_header, BigEndian, {
+//! binary_layout!(icmp_header, BigEndian, {
 //!   packet_type: u8,
 //!   code: u8,
 //!   checksum: u16,
 //!   rest_of_header: [u8; 4],
 //! });
-//! define_layout!(icmp_packet, BigEndian, {
+//! binary_layout!(icmp_packet, BigEndian, {
 //!   header: icmp_header::NestedView,
 //!   data_section: [u8], // open ended byte array, matches until the end of the packet
 //! });
@@ -173,22 +173,22 @@
 //! use binary_layout::prelude::*;
 //! use core::convert::TryInto;
 //!
-//! define_layout!(deep_nesting, LittleEndian, {
+//! binary_layout!(deep_nesting, LittleEndian, {
 //!     field1: u16,
 //! });
-//! define_layout!(header, BigEndian, {
+//! binary_layout!(header, BigEndian, {
 //!     field1: i16,
 //! });
-//! define_layout!(middle, NativeEndian, {
+//! binary_layout!(middle, NativeEndian, {
 //!     deep: deep_nesting::NestedView,
 //!     field1: u16,
 //! });
-//! define_layout!(footer, BigEndian, {
+//! binary_layout!(footer, BigEndian, {
 //!     field1: u32,
 //!     deep: deep_nesting::NestedView,
 //!     tail: [u8],
 //! });
-//! define_layout!(whole, LittleEndian, {
+//! binary_layout!(whole, LittleEndian, {
 //!     head: header::NestedView,
 //!     field1: u64,
 //!     mid: middle::NestedView,
@@ -204,7 +204,7 @@
 
 mod endianness;
 mod fields;
-mod macro_define_layout;
+mod macro_binary_layout;
 mod utils;
 
 pub mod example;
@@ -231,6 +231,8 @@ pub mod prelude {
         BigEndian, Field, FieldCopyAccess, FieldReadExt, FieldSliceAccess, FieldWriteExt,
         InfallibleResultExt, LittleEndian, NativeEndian, NonZeroIsZeroError,
     };
+    pub use crate::binary_layout;
+    #[allow(deprecated)]
     pub use crate::define_layout;
 }
 
@@ -241,7 +243,7 @@ pub mod internal {
         primitive::{BorrowingNestedView, NestedViewInfo, OwningNestedView},
         StorageIntoFieldView, StorageToFieldView,
     };
-    pub use crate::macro_define_layout::{option_usize_add, unwrap_field_size};
+    pub use crate::macro_binary_layout::{option_usize_add, unwrap_field_size};
     pub use doc_comment::doc_comment;
     pub use paste::paste;
 }

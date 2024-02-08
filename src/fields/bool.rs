@@ -37,7 +37,7 @@ impl LayoutAs<u8> for bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{define_layout, WrappedFieldError};
+    use crate::{binary_layout, WrappedFieldError};
 
     const INVALID_BOOL: u8 = 3;
 
@@ -47,7 +47,7 @@ mod tests {
                 #[allow(non_snake_case)]
                 #[test]
                 fn [<test_bool_ $endian endian_viewapi_tryread_write>]() {
-                    define_layout!(layout, $endian_type, {
+                    binary_layout!(layout, $endian_type, {
                         field1: bool as u8,
                         field2: bool as u8,
                         field3: bool as u8,
@@ -72,7 +72,7 @@ mod tests {
                 #[allow(non_snake_case)]
                 #[test]
                 fn [<test_bool_ $endian endian_viewapi_tryread_trywrite>]() {
-                    define_layout!(layout, $endian_type, {
+                    binary_layout!(layout, $endian_type, {
                         field1: bool as u8,
                         field2: bool as u8,
                         field3: bool as u8,

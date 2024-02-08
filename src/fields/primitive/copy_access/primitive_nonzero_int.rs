@@ -24,7 +24,7 @@ macro_rules! nonzero_int_field {
                 ```
                 use binary_layout::prelude::*;
 
-                define_layout!(my_layout, LittleEndian, {
+                binary_layout!(my_layout, LittleEndian, {
                     //... other fields ...
                     some_integer_field: ", stringify!($type), "
                     //... other fields ...
@@ -58,7 +58,7 @@ macro_rules! nonzero_int_field {
                 use binary_layout::prelude::*;
                 use core::convert::Infallible;
 
-                define_layout!(my_layout, LittleEndian, {
+                binary_layout!(my_layout, LittleEndian, {
                     //... other fields ...
                     some_integer_field: ", stringify!($type), "
                     //... other fields ...
@@ -196,7 +196,7 @@ mod tests {
                 #[allow(non_snake_case)]
                 #[test]
                 fn [<test_ $type _ $endian endian_viewapi_tryread_write>]() {
-                    define_layout!(layout, $endian_type, {
+                    binary_layout!(layout, $endian_type, {
                         field1: $type,
                         field2: $type,
                         field3: $type,
@@ -223,7 +223,7 @@ mod tests {
                 #[allow(non_snake_case)]
                 #[test]
                 fn [<test_ $type _ $endian endian_viewapi_tryread_trywrite>]() {
-                    define_layout!(layout, $endian_type, {
+                    binary_layout!(layout, $endian_type, {
                         field1: $type,
                         field2: $type,
                         field3: $type,

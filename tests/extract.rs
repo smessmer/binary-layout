@@ -5,7 +5,7 @@ use common::data_region;
 
 #[test]
 fn given_immutableview_when_extractingimmutableref() {
-    define_layout!(layout, LittleEndian, {
+    binary_layout!(layout, LittleEndian, {
         field: u8,
         tail: [u8],
     });
@@ -22,7 +22,7 @@ fn given_immutableview_when_extractingimmutableref() {
 
 #[test]
 fn given_immutableview_with_reftovec_when_extractingimmutableref() {
-    define_layout!(layout, LittleEndian, {
+    binary_layout!(layout, LittleEndian, {
         field: u8,
         tail: [u8],
     });
@@ -39,7 +39,7 @@ fn given_immutableview_with_reftovec_when_extractingimmutableref() {
 
 #[test]
 fn given_mutableview_when_extractingimmutableref() {
-    define_layout!(layout, LittleEndian, {
+    binary_layout!(layout, LittleEndian, {
         field: u8,
         tail: [u8],
     });
@@ -55,7 +55,7 @@ fn given_mutableview_when_extractingimmutableref() {
 
 #[test]
 fn given_mutableview_with_reftovec_when_extractingimmutableref() {
-    define_layout!(layout, LittleEndian, {
+    binary_layout!(layout, LittleEndian, {
         field: u8,
         tail: [u8],
     });
@@ -71,7 +71,7 @@ fn given_mutableview_with_reftovec_when_extractingimmutableref() {
 
 #[test]
 fn given_mutableview_when_extractingmutableref() {
-    define_layout!(layout, LittleEndian, {
+    binary_layout!(layout, LittleEndian, {
         field: u8,
         tail: [u8],
     });
@@ -87,7 +87,7 @@ fn given_mutableview_when_extractingmutableref() {
 
 #[test]
 fn given_mutableview_with_reftovec_when_extractingmutableref() {
-    define_layout!(layout, LittleEndian, {
+    binary_layout!(layout, LittleEndian, {
         field: u8,
         tail: [u8],
     });

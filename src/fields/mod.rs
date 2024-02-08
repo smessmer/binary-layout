@@ -26,7 +26,7 @@ pub mod wrapped;
 /// ```
 /// use binary_layout::prelude::*;
 ///
-/// define_layout!(my_layout, LittleEndian, {
+/// binary_layout!(my_layout, LittleEndian, {
 ///   field_one: u16,
 ///   another_field: [u8; 16],
 ///   something_else: u32,
@@ -61,7 +61,7 @@ pub trait Field {
     /// ```
     /// use binary_layout::prelude::*;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///   field1: u16,
     ///   field2: i32,
     ///   field3: u8,
@@ -80,7 +80,7 @@ pub trait Field {
     /// ```
     /// use binary_layout::prelude::*;
     ///
-    /// define_layout!(my_layout, LittleEndian, {
+    /// binary_layout!(my_layout, LittleEndian, {
     ///   field1: u16,
     ///   field2: i32,
     ///   field3: u8,
