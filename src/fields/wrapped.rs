@@ -11,8 +11,6 @@ use super::{
     Field, StorageIntoFieldView, StorageToFieldView,
 };
 
-// TODO Update README and documentation
-
 /// Implementing the [LayoutAs] trait for a custom type allows that custom type to be used
 /// as the type of a layout field. Note that the value of this type is copied each time it
 /// is accessed, so this is only recommended for primitive wrappers of primitive types,
@@ -46,10 +44,16 @@ use super::{
 /// ```
 pub trait LayoutAs<U>: Sized {
     /// See [FieldCopyAccess::ReadError].
-    /// Set this to [core::convert::Infallible] if reading cannot fail.
+    ///
+    /// If reading cannot fail, set this to [core::convert::Infallible] because that will make
+    /// [FieldReadExt::read](crate::FieldReadExt::read) available for the type. For any other
+    /// error type, you will have to use [FieldCopyAccess::try_read] when reading the field.
     type ReadError;
     /// See [FieldCopyAccess::WriteError].
-    /// Set this to [core::convert::Infallible] if writing cannot fail.
+    ///
+    /// If writing cannot fail, set this to [core::convert::Infallible] because that will make
+    /// [FieldWriteExt::write](crate::FieldWriteExt::write) available for the type. For any other
+    /// error type, you will have to use [FieldCopyAccess::try_write] when writing the field.
     type WriteError;
 
     /// Implement this to define how the custom type is constructed from the underlying type
