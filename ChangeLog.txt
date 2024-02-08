@@ -1,19 +1,28 @@
 4.0.0 (unreleased)
 ------
+This release adds supports for types that can throw errors when reading or writing.
+
+New primitive types supported:
+ - `std::num::NonZeroXXX` types
+ - `bool as u8` (only `0` and `1` are valid representations, others will throw errors when read)
+ - `char as u32` (invalid unicode will throw errors when read)
+
+When reading any of those types, the `read()` function will not be available and instead there will be a `try_read()` function.
+
+The `LayoutAs` trait changed and if you're using that to define custom data types, then you now need to implement `try_read` / `try_write` 
+instead of `read` / `write`.
+If reading and/or writing your type cannot fail, you can set the corresponding error type to `std::convert::Infallible`.
+That will ensure that your type will have the `read() / write()` functions available on your layout fields.
+For any other error types, you will have to access the fields using calls to `try_read() / try_write()`.
+
+**Backwards compatibility:**
+Most code should remain backwards compatible, but there are a few scenarios that require you to change your code:
 - Updated MSRV to 1.59
-- The `FieldCopyAccess` trait now has `try_read()` and `try_write()` instead of `read()` and `write()`.
-  This can be used for types that can throw errors when reading or writing them.
-  The `read()` and `write()` methods are still available for data types that don't throw errors,
-  but they are now part of the `FieldReadExt` and `FieldWriteExt` traits and you need to have those traits in scope.
-  If you use `use binary_layout::prelude::*`, then you don't need to change anything. But if you used `use binary_layout::FieldCopyAccess` instead, you now
-  need to add `FieldReadExt` and `FieldWriteExt` to it.
-- Support `std::num::NonZeroXXX` data types, using `FieldTryCopyAccess::try_read()` to throw an error if a zero is read.
+- If you did not use `use binary_layout::prelude::*` but instead imported the `binary_layout` traits manually, then you may have to add an import to
+  `FieldReadExt` and `FieldWriteExt` because that is where the `read()` and `write()` methods that were previously on `FieldCopyAccess` moved to.
 - Types implementing `LayoutAs` now need to be `Sized`.
-- The `LayoutAs` trait changed. You now need to implement `try_read` and `try_write` instead of `read` and `write` and the new methods allow for errors being thrown.
-  If your `LayoutAs` implementation does not throw errors, return `Result<_, core::convert::Infallible>` to indicate that and your type
-  will be accessible via the `read()` and `write()` methods. If your error type is anything else, then your type will be accessible via `try_read()` and `try_write()`.
-- Added support for the `bool as u8` and `char as u32` data type
-- Renamed `define_layout!` macro to `binary_layout!`. For now, `define_layout!` still works but it will be removed in a future version.
+- The `LayoutAs` trait changed. You now need to implement `try_read` and `try_write` instead of `read` and `write` and define the corresponding error types.
+- Renamed `define_layout!` macro to `binary_layout!`. For now, `define_layout!` still works but will show a deprecation warning and it will be removed in a future version.
 
 3.3.0
 ------
