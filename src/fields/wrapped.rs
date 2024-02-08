@@ -11,7 +11,6 @@ use super::{
     Field, StorageIntoFieldView, StorageToFieldView,
 };
 
-// TODO Add tests for LayoutAs that can return errors only when reading, only when writing, when doing either, or in neither.go t
 // TODO Update README and documentation
 
 /// Implementing the [LayoutAs] trait for a custom type allows that custom type to be used
@@ -401,4 +400,218 @@ mod tests {
     test_wrapped_unit_field!(little, LittleEndian);
     test_wrapped_unit_field!(big, BigEndian);
     test_wrapped_unit_field!(native, NativeEndian);
+
+    mod read_error_write_infallible {
+        use super::*;
+        use crate::WrappedFieldError;
+
+        #[derive(Debug)]
+        struct ErrorType;
+
+        const SUCCESS_VALUE: u8 = 10;
+        const ERROR_VALUE: u8 = 100;
+
+        #[derive(Debug, PartialEq, Eq)]
+        struct Wrapped(u8);
+        impl LayoutAs<u8> for Wrapped {
+            type ReadError = ErrorType;
+            type WriteError = Infallible;
+
+            fn try_read(v: u8) -> Result<Self, ErrorType> {
+                if v == ERROR_VALUE {
+                    Err(ErrorType)
+                } else {
+                    Ok(Self(v))
+                }
+            }
+            fn try_write(v: Self) -> Result<u8, Infallible> {
+                Ok(v.0)
+            }
+        }
+
+        #[test]
+        fn test_metadata() {
+            type Field1 = WrappedField<u8, Wrapped, PrimitiveField<u8, LittleEndian, 5>>;
+            assert_eq!(Some(1), Field1::SIZE);
+            assert_eq!(5, Field1::OFFSET);
+        }
+
+        #[test]
+        fn test_success() {
+            let mut storage = [0; 1024];
+            type Field1 = WrappedField<u8, Wrapped, PrimitiveField<u8, LittleEndian, 5>>;
+
+            Field1::write(&mut storage, Wrapped(SUCCESS_VALUE));
+            assert_eq!(Wrapped(SUCCESS_VALUE), Field1::try_read(&storage).unwrap());
+
+            assert_eq!(
+                SUCCESS_VALUE,
+                u8::from_le_bytes((&storage[5..6]).try_into().unwrap())
+            );
+        }
+
+        #[test]
+        fn test_read_error() {
+            let mut storage = [0; 1024];
+            type Field1 = WrappedField<u8, Wrapped, PrimitiveField<u8, LittleEndian, 5>>;
+
+            storage[5..6].copy_from_slice(&ERROR_VALUE.to_le_bytes());
+            assert!(matches!(
+                Field1::try_read(&storage),
+                Err(WrappedFieldError::LayoutAsError(ErrorType)),
+            ));
+
+            assert_eq!(
+                ERROR_VALUE,
+                u8::from_le_bytes((&storage[5..6]).try_into().unwrap())
+            );
+        }
+    }
+
+    mod read_infallible_write_error {
+        use super::*;
+        use crate::WrappedFieldError;
+
+        #[derive(Debug)]
+        struct ErrorType;
+        const ERROR_VALUE: u8 = 100;
+        const SUCCESS_VALUE: u8 = 10;
+
+        #[derive(Debug, PartialEq, Eq)]
+        struct Wrapped(u8);
+        impl LayoutAs<u8> for Wrapped {
+            type ReadError = Infallible;
+            type WriteError = ErrorType;
+
+            fn try_read(v: u8) -> Result<Self, Infallible> {
+                Ok(Self(v))
+            }
+            fn try_write(v: Self) -> Result<u8, ErrorType> {
+                if v.0 == ERROR_VALUE {
+                    Err(ErrorType)
+                } else {
+                    Ok(v.0)
+                }
+            }
+        }
+
+        #[test]
+        fn test_metadata() {
+            type Field1 = WrappedField<u8, Wrapped, PrimitiveField<u8, LittleEndian, 5>>;
+            assert_eq!(Some(1), Field1::SIZE);
+            assert_eq!(5, Field1::OFFSET);
+        }
+
+        #[test]
+        fn test_success() {
+            let mut storage = [0; 1024];
+            type Field1 = WrappedField<u8, Wrapped, PrimitiveField<u8, LittleEndian, 5>>;
+
+            Field1::try_write(&mut storage, Wrapped(SUCCESS_VALUE)).unwrap();
+            assert_eq!(Wrapped(SUCCESS_VALUE), Field1::read(&storage));
+
+            assert_eq!(
+                SUCCESS_VALUE,
+                u8::from_le_bytes((&storage[5..6]).try_into().unwrap())
+            );
+        }
+
+        #[test]
+        fn test_write_error() {
+            let mut storage = [0; 1024];
+            type Field1 = WrappedField<u8, Wrapped, PrimitiveField<u8, LittleEndian, 5>>;
+
+            assert!(matches!(
+                Field1::try_write(&mut storage, Wrapped(ERROR_VALUE)),
+                Err(WrappedFieldError::LayoutAsError(ErrorType)),
+            ));
+
+            assert_eq!(0, u8::from_le_bytes((&storage[5..6]).try_into().unwrap()));
+        }
+    }
+
+    mod read_error_write_error {
+        use super::*;
+        use crate::WrappedFieldError;
+
+        #[derive(Debug)]
+        struct ReadErrorType;
+        #[derive(Debug)]
+        struct WriteErrorType;
+        const ERROR_VALUE: u8 = 100;
+        const SUCCESS_VALUE: u8 = 10;
+
+        #[derive(Debug, PartialEq, Eq)]
+        struct Wrapped(u8);
+        impl LayoutAs<u8> for Wrapped {
+            type ReadError = ReadErrorType;
+            type WriteError = WriteErrorType;
+
+            fn try_read(v: u8) -> Result<Self, ReadErrorType> {
+                if v == ERROR_VALUE {
+                    Err(ReadErrorType)
+                } else {
+                    Ok(Wrapped(v))
+                }
+            }
+            fn try_write(v: Self) -> Result<u8, WriteErrorType> {
+                if v.0 == ERROR_VALUE {
+                    Err(WriteErrorType)
+                } else {
+                    Ok(v.0)
+                }
+            }
+        }
+
+        #[test]
+        fn test_metadata() {
+            type Field1 = WrappedField<u8, Wrapped, PrimitiveField<u8, LittleEndian, 5>>;
+            assert_eq!(Some(1), Field1::SIZE);
+            assert_eq!(5, Field1::OFFSET);
+        }
+
+        #[test]
+        fn test_success() {
+            let mut storage = [0; 1024];
+            type Field1 = WrappedField<u8, Wrapped, PrimitiveField<u8, LittleEndian, 5>>;
+
+            Field1::try_write(&mut storage, Wrapped(SUCCESS_VALUE)).unwrap();
+            assert_eq!(Wrapped(SUCCESS_VALUE), Field1::try_read(&storage).unwrap());
+
+            assert_eq!(
+                SUCCESS_VALUE,
+                u8::from_le_bytes((&storage[5..6]).try_into().unwrap())
+            );
+        }
+
+        #[test]
+        fn test_read_error() {
+            let mut storage = [0; 1024];
+            type Field1 = WrappedField<u8, Wrapped, PrimitiveField<u8, LittleEndian, 5>>;
+
+            storage[5..6].copy_from_slice(&ERROR_VALUE.to_le_bytes());
+            assert!(matches!(
+                Field1::try_read(&storage),
+                Err(WrappedFieldError::LayoutAsError(ReadErrorType)),
+            ));
+
+            assert_eq!(
+                ERROR_VALUE,
+                u8::from_le_bytes((&storage[5..6]).try_into().unwrap())
+            );
+        }
+
+        #[test]
+        fn test_write_error() {
+            let mut storage = [0; 1024];
+            type Field1 = WrappedField<u8, Wrapped, PrimitiveField<u8, LittleEndian, 5>>;
+
+            assert!(matches!(
+                Field1::try_write(&mut storage, Wrapped(ERROR_VALUE)),
+                Err(WrappedFieldError::LayoutAsError(WriteErrorType)),
+            ));
+
+            assert_eq!(0, u8::from_le_bytes((&storage[5..6]).try_into().unwrap()));
+        }
+    }
 }
