@@ -1,5 +1,7 @@
 use super::endianness::Endianness;
 
+pub mod bool;
+pub mod char;
 pub mod primitive;
 pub mod wrapped;
 

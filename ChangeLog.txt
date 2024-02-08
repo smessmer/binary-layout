@@ -12,6 +12,7 @@
 - The `LayoutAs` trait changed. You now need to implement `try_read` and `try_write` instead of `read` and `write` and the new methods allow for errors being thrown.
   If your `LayoutAs` implementation does not throw errors, return `Result<_, core::convert::Infallible>` to indicate that and your type
   will be accessible via the `read()` and `write()` methods. If your error type is anything else, then your type will be accessible via `try_read()` and `try_write()`.
+- Added support for the `bool as u8` and `char as u32` data type
 
 3.3.0
 ------

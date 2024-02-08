@@ -96,6 +96,12 @@
 //! ### Non-zero primitive integer types
 //! - [NonZeroU8](https://doc.rust-lang.org/core/num/struct.NonZeroU8.html), [NonZeroU16](https://doc.rust-lang.org/core/num/struct.NonZeroU16.html), [NonZeroU32](https://doc.rust-lang.org/core/num/struct.NonZeroU32.html), [NonZeroU64](https://doc.rust-lang.org/core/num/struct.NonZeroU64.html), [NonZeroU128](https://doc.rust-lang.org/core/num/struct.NonZeroU128.html)
 //! - [NonZeroI8](https://doc.rust-lang.org/core/num/struct.NonZeroI8.html), [NonZeroI16](https://doc.rust-lang.org/core/num/struct.NonZeroI16.html), [NonZeroI32](https://doc.rust-lang.org/core/num/struct.NonZeroI32.html), [NonZeroI64](https://doc.rust-lang.org/core/num/struct.NonZeroI64.html), [NonZeroI128](https://doc.rust-lang.org/core/num/struct.NonZeroI128.html)
+//! Reading a zero values will throw an error. Because of this, [FieldReadExt::read] and [FieldView::read] are not available for those types and you need to use [FieldCopyAccess::try_read] and [FieldView::try_read].
+//!
+//! ### bool, char
+//! [bool](https://doc.rust-lang.org/stable/core/primitive.bool.html) and [char](https://doc.rust-lang.org/stable/core/primitive.char.html) are supported using the `bool as u8` and `char as u32` data type notation.
+//! Note that not only `0u8` and `1u8` are valid boolean values and not all [u32](https://doc.rust-lang.org/stable/core/primitive.u32.html) values are valid unicode code points.
+//! Reading invalid values will throw an error. Because of this, [FieldReadExt::read] and [FieldView::read] are not available for those types and you need to use [FieldCopyAccess::try_read] and [FieldView::try_read].
 //!
 //! ### Primitive Zero-Sized Types (ZSTs)
 //!
