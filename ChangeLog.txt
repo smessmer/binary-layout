@@ -1,3 +1,7 @@
+4.0.1 (unreleased)
+------
+- Fix broken links in README
+
 4.0.0
 ------
 This release adds supports for types that can throw errors when reading or writing.

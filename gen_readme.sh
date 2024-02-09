@@ -35,6 +35,12 @@ sed -i 's|\[FieldCopyAccess::\([a-zA-Z_]\+\)\]\([^(]\)|[FieldCopyAccess::\1](htt
 # Replace [FieldSliceAccess::my_method_name] with [FieldSliceAccess::my_method_name](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldSliceAccess.html#tymethod.my_method_name)
 sed -i 's|\[FieldSliceAccess::\([a-zA-Z_]\+\)\]\([^(]\)|[FieldSliceAccess::\1](https://docs.rs/binary-layout/latest/binary_layout/trait.FieldSliceAccess.html#tymethod.\1)\2|g' README.md
 
+# Replace [FieldReadExt::my_method_name] with [FieldReadExt::my_method_name](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldReadExt.html#method.my_method_name)
+sed -i 's|\[FieldReadExt::\([a-zA-Z_]\+\)\]\([^(]\)|[FieldReadExt::\1](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldReadExt.html#method.\1)\2|g' README.md
+
+# Replace [FieldWriteExt::my_method_name] with [FieldWriteExt::my_method_name](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldWriteExt.html#method.my_method_name)
+sed -i 's|\[FieldWriteExt::\([a-zA-Z_]\+\)\]\([^(]\)|[FieldWriteExt::\1](https://docs.rs/binary-layout/latest/binary_layout/struct.FieldWriteExt.html#method.\1)\2|g' README.md
+
 # Replace [...](crate::example::icmp_packet) with [...](https://docs.rs/binary-layout/latest/binary_layout/example/icmp_packet/index.html)
 sed -i 's|\[\([a-zA-Z_]\+\)\](crate::example::icmp_packet)|[\1](https://docs.rs/binary-layout/latest/binary_layout/example/icmp_packet/index.html)|g' README.md
 
