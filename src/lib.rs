@@ -56,7 +56,9 @@
 //! - Convenient and simple macro DSL to define layouts.
 //! - Define a fixed endianness in the layout, ensuring cross platform compatibility.
 //! - Fully written in safe Rust, no [std::mem::transmute](https://doc.rust-lang.org/std/mem/fn.transmute.html) or similar shenanigans.
-//! - Const generics make sure that all offset calculations happen at compile time and will not have a runtime overhead.
+//! - Const generics ensure that all offset calculations happen at compile time.
+//!   This, together with inlining annotations, makes this library zero-overhead.
+//!   Using it is just as performant as writing manual slice accesses into your code.
 //! - Comprehensive test coverage.
 //!
 //! ## Why not `#[repr(packed)]`?
