@@ -146,6 +146,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - run: RUSTDOCFLAGS="-Dwarnings" cargo doc
+  semver_checks:
+    name: Check semver
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: obi1kenobi/cargo-semver-checks-action@v2
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest

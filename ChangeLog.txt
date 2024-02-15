@@ -1,3 +1,7 @@
+4.0.2 (unreleased)
+------
+- Add CI jobs checking this crate for SemVer-breaking API changes
+
 4.0.1
 ------
 - Fix broken links in README
