@@ -104,6 +104,34 @@ jobs:
         with:
           command: ${{ matrix.command }}
           args: ${{ matrix.profile }} ${{ matrix.features }}
+  thumbv6m_no_std:
+    name: thumbv6m_no_std
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        command: [ "build" ]
+        profile: [ "", "--release" ]
+        features: [ "--no-default-features" ]
+        # Nightly because -Z direct-minimal-versions is a nightly cargo feature
+        toolchain: [ "nightly" ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          target: thumbv6m-none-eabi
+          default: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: "update"
+          args: "-Z direct-minimal-versions"
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: ${{ matrix.command }}
+          args: ${{ matrix.profile }} ${{ matrix.features }} --target thumbv6m-none-eabi
   clippy_check:
     name: Linter (clippy)
     runs-on: ubuntu-latest
