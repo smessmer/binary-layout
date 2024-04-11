@@ -16,11 +16,12 @@ version = "4.0.1"
 [dependencies]
 doc-comment = "^0.3"
 paste = "^1.0"
-thiserror = "^1.0.29"
+thiserror = { version = "^1.0.29", optional = true }
 
 [dev-dependencies]
 rand = "^0.8"
 
 [features]
 default = ["std"]
-std = []
+# TODO Once we're rust 1.60+ only, we should write "dep:thiserror" instead of "thiserror"
+std = ["thiserror"]

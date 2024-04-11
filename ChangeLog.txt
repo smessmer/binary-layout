@@ -1,6 +1,7 @@
 4.0.2 (unreleased)
 ------
 - Add CI jobs checking this crate for SemVer-breaking API changes
+- Fix no-std support and add a cI job testing for it (https://github.com/smessmer/binary-layout/pull/25 and https://github.com/smessmer/binary-layout/pull/28 )
 
 4.0.1
 ------
