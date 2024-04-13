@@ -104,8 +104,32 @@ jobs:
         with:
           command: ${{ matrix.command }}
           args: ${{ matrix.profile }} ${{ matrix.features }}
-  thumbv6m_no_std:
-    name: thumbv6m_no_std
+  no_std:
+    name: no_std
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        command: [ "build" ]
+        profile: [ "", "--release" ]
+        features: [ "--no-default-features" ]
+        # MSRV of binary-layout is 1.59 but for thumbv6m, one of our dependencies requires 1.70
+        toolchain: [ "stable", "nightly", "1.70" ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          # thumbv6m-none-eabi is a platform that doesn't have std support
+          target: thumbv6m-none-eabi
+          default: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: ${{ matrix.command }}
+          args: ${{ matrix.profile }} ${{ matrix.features }} --target thumbv6m-none-eabi
+  no_std_minimal_versions:
+    name: no_std_minimal_versions
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -120,6 +144,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
+          # thumbv6m-none-eabi is a platform that doesn't have std support
           target: thumbv6m-none-eabi
           default: true
       - uses: actions-rs/cargo@v1
