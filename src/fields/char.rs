@@ -36,7 +36,7 @@ mod tests {
 
     macro_rules! test_char {
         ($endian:ident, $endian_type:ty, $from_endian_fn:ident, $to_endian_fn:ident) => {
-            paste::paste! {
+            pastey::paste! {
                 #[allow(non_snake_case)]
                 #[test]
                 fn [<test_char_ $endian endian_viewapi_tryread_write>]() {

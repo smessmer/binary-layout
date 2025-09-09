@@ -7,7 +7,7 @@ name = "binary-layout"
 version = "4.0.2"
 dependencies = [
  "doc-comment",
- "paste",
+ "pastey",
  "rand",
  "thiserror",
 ]
@@ -42,10 +42,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c198f91728a82281a64e1f4f9eeb25d82cb32a5de251c6bd1b5154d63a8e7bd"
 
 [[package]]
-name = "paste"
-version = "1.0.14"
+name = "pastey"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de3145af08024dea9fa9914f381a17b8fc6034dfb00f3a84013f7ff43f29ed4c"
+checksum = "35fb2e5f958ec131621fdd531e9fc186ed768cbe395337403ae56c17a74c68ec"
 
 [[package]]
 name = "ppv-lite86"

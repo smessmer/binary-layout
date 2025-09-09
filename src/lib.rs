@@ -248,5 +248,5 @@ pub mod internal {
     };
     pub use crate::macro_binary_layout::{option_usize_add, unwrap_field_size};
     pub use doc_comment::doc_comment;
-    pub use paste::paste;
+    pub use pastey::paste;
 }
